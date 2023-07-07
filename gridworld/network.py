@@ -28,7 +28,14 @@ class MazeNetwork:
         self.goal = None
         self.map, self.len_x, self.len_y = create_network_from_file(mazefile)
         self.gamegraph, self.states, self.next_state_dict = self.get_gamegraph()
+        self.regions = dict()
 
+    def set_regions(self, regions):
+        for k in range(len(regions)):
+            key = "r"+str(k)
+            self.regions[key] = regions[k]
+            self.map[regions[k]] = key
+        
     def get_gamegraph(self):
         self.print_maze()
         states = []
