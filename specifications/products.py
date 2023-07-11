@@ -64,7 +64,6 @@ def async_prod(left, right):
     # result.set_acceptance(shift + right.num_sets(), left.get_acceptance() | (right.get_acceptance() << shift))
     result.set_acceptance(shift + right.num_sets(),
                           left.get_acceptance() | (right.get_acceptance() << shift)) # Not sure if the and here means both acceptances.
-
     # Build all states and edges in the product
     while todo:
         print(todo)
@@ -75,24 +74,18 @@ def async_prod(left, right):
         for lt in left.out(lsrc):
             if lt.cond != buddy.bddfalse:
                 result.new_edge(osrc, dst(lt.dst, rsrc), lt.cond, lt.acc)
+                #result.new_edge(osrc, dst(lt.dst, rsrc), lt.cond)
                 
         for rt in right.out(rsrc):
-            pdb.set_trace()
             if rt.cond != buddy.bddfalse:
                 result.new_edge(osrc, dst(lsrc, rt.dst), rt.cond, rt.acc << shift)
+                #result.new_edge(osrc, dst(lsrc, rt.dst), rt.cond)
                 # membership of this transitions to the new acceptance sets
         
         # Remember the origin of our states
         result.set_product_states(pairs)
-        
-        # Loop over all the properties we want to preserve if they hold in both automata
-        # This ensures that the product of NBAs is an NBA
-        for p in ('prop_universal', 'prop_complete', 'prop_weak', 'prop_inherently_weak', 
-                  'prop_terminal', 'prop_stutter_invariant', 'prop_state_acc'):
-            if getattr(left, p)() and getattr(right, p)():
-                getattr(result, p)(True)
     return result, sdict
-
+    
 if __name__ == "__main__":
     # Specification Product:
     a1 = spot.translate('G(tank_light -> F(refuel))', 'Buchi', 'state-based', 'complete'); a1.show("v")
