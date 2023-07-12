@@ -22,13 +22,19 @@ class TranSys():
         self.I = I
         self.AP = AP
         self.L = L
+    
+class System(TranSys):
+    def __init__(self, S=None, A=None, E=None, I=None, AP=None, L=None):
+        super().__init__(S,A,E,I,AP,L)
         # =============== Attributes: ============== #
         self.AP_dict = None
+        self.Sigma=None
         self.maze = None
         self.f = None # Formula
 
     def get_maze(self, mazefile):
         self.maze = MazeNetwork(mazefile)
+
 
     def get_APs(self):
         """
@@ -49,7 +55,7 @@ class TranSys():
         fstr = "F(sink)"
         return fstr
 
-    def set_spec(self, fstr):
+    def set_spec(self):
         fstr = self.define_spec()
         self.f = spot.formula(fstr)
     
@@ -92,6 +98,11 @@ class TranSys():
         self.construct_labels()
         self.set_spec()
 
+    def add_intermediate_nodes(self):
+        self.AP.append(spot.formula.ap("int")) # Append intermed
+        self.AP_dict[(2,2)] = self.AP[2]
+        self.construct_labels()
+
 def powerset(s):
     if type(s)==list:
         s = list(s)
@@ -100,6 +111,6 @@ def powerset(s):
 
 if __name__ == "__main__":
     mazefile = "../gridworld/maze.txt"
-    system = TranSys()
+    system = System()
     system.construct_sys(mazefile)
     pdb.set_trace()

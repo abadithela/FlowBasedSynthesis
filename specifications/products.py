@@ -6,95 +6,87 @@ import spot
 from spot.jupyter import display_inline
 import buddy
 import pdb
-from gridworld_specs import TranSys
+from collections import OrderedDict as od
+from gridworld_specs import TranSys, System
+from example_automata import *
+from automata import Automata
+import networkx as nx
+from itertools import product, chain, combinations
 spot.setup(show_default='.tvb')
 
+def powerset(s):
+    if type(s)==list:
+        s = list(s)
+    ps = list(chain.from_iterable(combinations(s, r) for r in range(len(s)+1)))
+    return ps
 
-def sync_prod(sys, aut):
-    """
-    Synchronous product between transition system T (TranSys object) and Automaton Aut.
-    """
-    # If the two automata do not have the same BDD dict, then
-    # we cannot easily detect compatible transitions.
-    bdict = aut.get_dict()
-    if aut.get_dict() != bdict:
-        raise RuntimeError("automata should share their dictionary")
-    result = spot.make_twa_graph(bdict)
-    result.copy_ap_of(left)
-    result.copy_ap_of(right)
-
-    return prod
-
-def async_prod(left, right):
-    bdict = left.get_dict()
-    # If the two automata do not have the same BDD dict, then
-    # we cannot easily detect compatible transitions.
-    if right.get_dict() != bdict:
-        raise RuntimeError("automata should share their dictionary")
-    result = spot.make_twa_graph(bdict)
-    result.copy_ap_of(left)
-    result.copy_ap_of(right)
-    # The list of output states for which we have not yet
-    # computed the successors.  Items on this list are triplets
-    # of the form (ls, rs, p) where ls,rs are the state number in
-    # the left and right automata, and p is the state number if
-    # the output automaton.
-    todo = []
-    sdict = {}
-    pairs = []   # our array of state pairs
-    # Transform a pair of state number (ls, rs) into a state number in
-    # the output automaton, creating a new state if needed.  Whenever
-    # a new state is created, we can add it to todo.
-    def dst(ls, rs):
-        pair = (ls, rs)
-        p = sdict.get(pair)
-        if p is None:
-            p = result.new_state()
-            sdict[pair] = p
-            pairs.append(pair)
-            todo.append((ls, rs, p))
-        return p
+class Product(TranSys):
+    def __init__(self, system, automaton):
+        super().__init__()
+        self.system=system
+        self.automaton=automaton
+        self.S = list(product(system.S, automaton.Q))
+        self.A = system.A
+        self.I = (system.I, automaton.qinit)
+        self.AP = automaton.Q
     
-    # Setup the initial state.  It always exists.
-    result.set_init_state(dst(left.get_init_state_number(), 
-                              right.get_init_state_number()))
-    
-    # The acceptance sets of the right automaton will be shifted by this amount
-    shift = left.num_sets()
-    # result.set_acceptance(shift + right.num_sets(), left.get_acceptance() | (right.get_acceptance() << shift))
-    result.set_acceptance(shift + right.num_sets(),
-                          left.get_acceptance() | (right.get_acceptance() << shift)) # Not sure if the and here means both acceptances.
-    # Build all states and edges in the product
-    while todo:
-        print(todo)
-        lsrc, rsrc, osrc = todo.pop()
-        print("----------------------------------")
-        print(f"new edge in todo: ({lsrc}, {rsrc}, {osrc})")
-        
-        for lt in left.out(lsrc):
-            if lt.cond != buddy.bddfalse:
-                result.new_edge(osrc, dst(lt.dst, rsrc), lt.cond, lt.acc)
-                #result.new_edge(osrc, dst(lt.dst, rsrc), lt.cond)
-                
-        for rt in right.out(rsrc):
-            if rt.cond != buddy.bddfalse:
-                result.new_edge(osrc, dst(lsrc, rt.dst), rt.cond, rt.acc << shift)
-                #result.new_edge(osrc, dst(lsrc, rt.dst), rt.cond)
-                # membership of this transitions to the new acceptance sets
-        
-        # Remember the origin of our states
-        result.set_product_states(pairs)
-    return result, sdict
-    
-if __name__ == "__main__":
-    # Specification Product:
-    a1 = spot.translate('G(tank_light -> F(refuel))', 'Buchi', 'state-based', 'complete'); a1.show("v")
-    a2 = spot.translate('G(!(empty))')
-    p2, states = async_prod(a1,a2)
+    def construct_transitions(self):
+        self.E = dict()
+        sys_state_pairs = list(product(self.system.S, self.system.S))
+        aut_state_pairs = list(product(self.automaton.Q, self.automaton.Q))
+        for s,t in sys_state_pairs:
+            for a in self.system.A:
+                if (s,a) in self.system.E.keys():
+                    for q,p in aut_state_pairs:
+                        valid_aut_transition = (self.system.E[(s,a)] == t)
+                        label = self.system.L[t]
+                        valid_sys_transition = (self.automaton.get_transition(q, label) == p)
+                        if valid_sys_transition and valid_aut_transition:
+                            self.E[((s,q), a)] = (t,p)
 
-    # System:
+    def construct_labels(self):
+        self.L = od()
+        self.Sigma = powerset(self.AP)
+        for s in self.S:
+            self.L[s] = s[1]
+    
+    def identify_SIT(self):
+        src_ap = spot.formula("src")
+        int_ap = spot.formula("int")
+        sink_ap = spot.formula("sink")
+        self.src = [s for s in self.S if s[1] == self.automaton.qinit]
+        try:
+            self.int = [s for s in self.S if s[1] in self.automaton.Acc["test"]]
+        except:
+            self.int=[]
+        self.sink = [s for s in self.S if s[1] in self.automaton.Acc["sys"]]
+
+    def to_graph(self):
+        self.G = nx.DiGraph()
+
+
+def construct_automata(AP_set=None):
+    Q, qinit, AP, tau, Acc = eventually(state_str="q", formula="sink")
+    for ap in AP:
+        assert ap in AP_set
+    aut = Automata(Q, qinit, AP_set, tau, Acc)
+    return aut
+
+def construct_system():
     mazefile = "../gridworld/maze.txt"
-    Sys = construct_sys(mazefile)
+    system = System()
+    system.construct_sys(mazefile)
+    return system
 
-    # Virtual Product Graph:
+def sync_prod(system, aut):
+    sys_prod = Product(system, aut)
+    sys_prod.construct_labels()
+    sys_prod.construct_transitions()
+    return sys_prod
+
+if __name__ == "__main__":
+    system = construct_system()
+    aut = construct_automata(AP_set = system.AP) # ensure that all system atomic propositions are maintained
+    sys_prod = sync_prod(system, aut)
+    pdb.set_trace()
     
