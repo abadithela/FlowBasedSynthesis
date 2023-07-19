@@ -30,9 +30,11 @@ class Automata:
         for k in range(len(self.ap)):
             try:
                 if not spot.contains(self.ap[k], and_prop):
-                    comp_prop.append(self.ap[k])
+                    comp_prop.append(spot.formula.Not(self.ap[k]))
             except:
                 pdb.set_trace()
+        # if propositions:
+        #     pdb.set_trace()
         and_comp_prop = spot.formula.And(comp_prop)
         complete_formula = spot.formula.And([and_prop, and_comp_prop]) # Taking complement of complete formula
         return complete_formula
@@ -43,9 +45,15 @@ class Automata:
         for k,v in self.delta.items():
             if k[0] == q0:
                 complete_formula = self.complement_negation(propositions)
-                if spot.contains(k[1], complete_formula):
-                    transition = v
-                    return transition
+                try:
+                    if k[1] == True:
+                        transition = v
+                        return transition
+                    if spot.contains(k[1], complete_formula):
+                        transition = v
+                        return transition
+                except:
+                    pdb.set_trace()
         return None
 
 class AsyncProdAut(Automata):
@@ -53,20 +61,19 @@ class AsyncProdAut(Automata):
         super().__init__(Q, qinit, ap, delta, Acc)
         self.Qdict = Qdict
 
-    def get_transition(self, q0, propositions):
-        and_prop = spot.formula.And(list(propositions))
-        transition = None
-        for k,v in self.delta.items():
-            if k[0] == q0:
-                complete_formula = self.complement_negation(propositions)
-                try:
-                    if spot.contains(k[1], complete_formula):
-                        transition = v
-                        return transition
-                except:
-                    pdb.set_trace()
-        assert transition is not None
-        
+    # def get_transition(self, q0, propositions):
+    #     and_prop = spot.formula.And(list(propositions))
+    #     transition = None
+    #     for k,v in self.delta.items():
+    #         if k[0] == q0:
+    #             complete_formula = self.complement_negation(propositions)
+    #             try:
+    #                 if spot.contains(k[1], complete_formula):
+    #                     transition = v
+    #                     return transition
+    #             except:
+    #                 pdb.set_trace()
+    #     assert transition is not None
 
 # ap, cpl, cenv, col, neg_col, varphi = get_subformulas()
 # Q = ["q0", "q1", "q2"]

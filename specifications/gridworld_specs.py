@@ -81,12 +81,11 @@ class System(TranSys):
 
     def construct_labels(self):
         self.L = od()
-        self.Sigma = powerset(self.AP)
         for s in self.maze.states:
             if s in self.AP_dict.keys():
-                self.L[s] = self.AP_dict[s]
+                self.L[s] = {self.AP_dict[s]}
             else:
-                self.L[s] = ()
+                self.L[s] = {}
     
     def construct_sys(self, mazefile):
         self.get_maze(mazefile)
@@ -98,9 +97,17 @@ class System(TranSys):
         self.construct_labels()
         self.set_spec()
 
-    def add_intermediate_nodes(self):
+    def add_intermediate_nodes(self, node_list):
         self.AP.append(spot.formula.ap("int")) # Append intermed
-        self.AP_dict[(2,2)] = self.AP[2]
+        for node in node_list:
+            self.AP_dict[node] = spot.formula.ap("int")
+        self.construct_labels()
+    
+    def add_set_intermediate_nodes(self, node_dict):
+        for node, formula in node_dict.items():
+            if formula not in self.AP:
+                self.AP.append(formula) # Append intermed
+            self.AP_dict[node] = formula
         self.construct_labels()
 
 def powerset(s):
