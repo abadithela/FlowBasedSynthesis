@@ -15,7 +15,7 @@ from copy import deepcopy
 
 def new_World(mazefile):
     network = MazeNetwork(mazefile)
-    sys = Car('sys', (4,0), (0,0), network)
+    sys = Car('sys', (4,4), (0,0), network)
     tester = Tester('tester', (4,1))
     game = Game(network, sys, tester)
     return game, network, sys
@@ -31,10 +31,14 @@ def run_sim(max_timestep, filepath):
     for t in range(1,max_timestep):
         print('Timestep {}'.format(t))
         game.agent_take_step()
+        print('agent moved to '+str(game.agent.s))
+        trace = save_scene(game,trace)
         game.random_test_strategy()
+        print('tester moved to '+str(game.tester.q))
+        # st()
         # save the trace
         trace = save_scene(game,trace)
-        print('sys in '+str(game.agent.s)+' and tester in '+str(game.tester.q))
+        print('sys in '+str(game.agent.s)+' with fuel = '+str(game.agent.fuel)+' and tester in '+str(game.tester.q))
         game.print_maze_with_agents()
         if game.is_terminal():
             break

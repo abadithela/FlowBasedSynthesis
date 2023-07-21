@@ -31,7 +31,7 @@ class MazeNetwork:
         self.goal = None
         self.park = None
         self.map, self.len_x, self.len_y = create_network_from_file(mazefile)
-        self.tester_init = (1,1)
+        self.tester_init = None
         self.G_transitions, self.single_states, self.next_state_dict = self.setup_next_states_map()
         self.G = self.create_network_graph()
 
@@ -126,10 +126,17 @@ class MazeNetwork:
                     single_states.append(((x,y)))
                 if self.map[(x,y)] == 'S':
                     self.init = (x,y)
+                    self.map[(x,y)] = ' '
                 elif self.map[(x,y)] == 'G':
                     self.goal = (x,y)
                 elif self.map[(x,y)] == 'P':
                     self.park = (x,y)
+                elif self.map[(x,y)] == 'T':
+                    self.tester_init = (x,y)
+                    self.map[(x,y)] = ' '
+                elif self.map[(x,y)] == 'R':
+                    self.refuel = (x,y)
+                    self.map[(x,y)] = ' '
 
         # st()
         next_state_dict = dict()

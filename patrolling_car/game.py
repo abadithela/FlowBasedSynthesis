@@ -139,7 +139,7 @@ class Game:
             print('Reached goal - tester waits')
 
     def random_test_strategy(self):
-        self.tester.random_move()
+        self.tester.random_move(self.agent.s)
 
     def is_terminal(self):
         terminal = False

@@ -4,9 +4,10 @@ import _pickle as pickle
 from ipdb import set_trace as st
 
 class Scene:
-    def __init__(self, timestamp, snapshot):
+    def __init__(self, timestamp, snapshot, maze):
         self.timestamp = timestamp
         self.snapshot = snapshot
+        self.maze = maze
 
 def remove_redundant_empty_sets(trans_dict):
     transition_list = []
@@ -42,8 +43,8 @@ def save_trace(filename, trace): # save the trace in pickle file for animation
 
 def save_scene(game, trace): # save each scene in trace
     print('Saving scene {}'.format(game.timestep))
-    snapshot = {'sys': game.agent.s, 'test': game.tester.q}
-    current_scene = Scene(game.timestep, snapshot)
+    snapshot = {'sys': (game.agent.s, game.agent.fuel/game.agent.fuelmax), 'test': game.tester.q}
+    current_scene = Scene(game.timestep, snapshot, game.maze)
     trace.append(current_scene)
     game.timestep += 1
     game.trace = trace
