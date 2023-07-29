@@ -40,6 +40,7 @@ class Automata:
         return complete_formula
 
     def get_transition(self, q0, propositions):
+        and_prop = spot.formula.And(list(propositions))
         transition = None
         for k,v in self.delta.items():
             if k[0] == q0:

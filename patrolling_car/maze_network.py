@@ -5,7 +5,7 @@ July 2023
 '''
 import sys
 sys.path.append('..')
-from ipdb import set_trace as st
+from pdb import set_trace as st
 import networkx as nx
 from collections import OrderedDict as od
 
@@ -32,9 +32,13 @@ class MazeNetwork:
         self.park = None
         self.map, self.len_x, self.len_y = create_network_from_file(mazefile)
         self.tester_init = None
+        self.next_sys_state_dict = None
+        self.next_tester_state_dict = None
         self.G_transitions, self.single_states, self.next_state_dict = self.setup_next_states_map()
-        self.G = self.create_network_graph()
+        self.G = self.create_network_graph_with_empty()
 
+    def player(self, node):
+        return node[0], node[1], node[2]
 
     def print_maze(self):
         key_y_old = []
@@ -50,6 +54,99 @@ class MazeNetwork:
         print(printline)
         printline = self.map[key]
 
+    def toggle_fuel_state(self, fuel_state):
+        if fuel_state == 'empty':
+            toggle = "!empty"
+        else:
+            toggle = "empty"
+        return toggle
+    
+    def create_network_graph_with_empty(self):
+        """
+        Create network graph including transitions to empty states
+        """
+        states = []
+        for x_s in range(self.len_x):
+            for y_s in range(self.len_y):
+                for x_t in range(self.len_x):
+                    for y_t in range(self.len_y):
+                        if self.map[(x_s,y_s)] != '*' and self.map[(x_t,y_t)] != '*' and y_t == 1:
+                            states.append(((x_s,y_s), (x_t, y_t)))
+
+        transitions = []
+        test_transitions = []
+        # adding tester actions
+        self.next_sys_state_dict = {}
+        for state in states: #tester can move according to
+            next_sys_states = [(state[0], state[1])]
+            for test_state in self.next_state_dict[(state[1])]:
+                next_sys_states.append((state[0], test_state))
+            self.next_sys_state_dict.update({state: next_sys_states})
+
+        # adding system actions
+        self.next_tester_state_dict = {}
+        for state in states: #tester can move according to
+            next_test_states = [(state[0], state[1])]
+            for sys_state in self.next_state_dict[(state[0])]:
+                next_test_states.append((sys_state, state[1]))
+            self.next_tester_state_dict.update({state: next_test_states})
+
+        nodes = []
+        for state in states:
+            if state[0] != self.goal: # once the agent reached its goal, test is over, no more transitions
+                nodes.append((state[0],state[1],'s', '!empty'))
+                nodes.append((state[0],state[1],'t', '!empty'))
+                nodes.append((state[0],state[1],'s', 'empty'))
+                nodes.append((state[0],state[1],'t', 'empty'))
+            
+        sys_nodes = []
+        test_nodes = []
+        for node in nodes:
+            if node[-2] == 's':
+                sys_nodes.append(node)
+            else:
+                test_nodes.append(node)
+
+        edges = []
+
+        for state in states:
+            if state[0] != state[1]:# and state[0] != self.goal: # collision states have no next state and when test done then done
+                out_node_s = (state[0],state[1],'s', "!empty")
+                in_nodes_t_empty = [(state_t[0],state_t[1],'t', "empty") for state_t in self.next_tester_state_dict[state]]
+                in_nodes_t_nonempty = [(state_t[0],state_t[1],'t', "!empty") for state_t in self.next_tester_state_dict[state]]
+                in_nodes_t = in_nodes_t_empty + in_nodes_t_nonempty
+
+                for in_node_t in in_nodes_t:
+                    sys_actions = []
+                    if in_node_t[:2] in states:
+                        sys_actions.append((out_node_s, in_node_t))
+                    edges = edges + sys_actions
+
+                if state[0] == self.refuel:
+                    # If empty at refuel state, system can refuel
+                    out_node_s = (state[0],state[1],'s', "empty")
+                    in_node_t = (state[0],state[1],'t', "!empty")
+                    edges = edges + [(out_node_s, in_node_t)]
+                    
+                    # If empty at refuel state, tester state transitions to a system state with no change
+                    out_node_t = (state[0],state[1],'t', "empty")
+                    in_node_s = (state[0],state[1],'s', "empty")
+                    edges = edges + [(out_node_t, in_node_s)]
+
+                out_node_t = (state[0],state[1],'t', "!empty")
+                in_nodes_s = [(state_s[0],state_s[1],'s', "!empty") for state_s in self.next_sys_state_dict[state]]
+                for in_node_s in in_nodes_s:
+                    test_actions = []
+                    if in_node_s[:2] in states:
+                        test_actions.append((out_node_t, in_node_s))
+                    edges = edges + test_actions
+        # st()
+        G = nx.DiGraph()
+        G.add_nodes_from(nodes)
+        G.add_edges_from(edges)
+        # st()
+        return G
+    
     def create_network_graph(self):
         states = []
         for x_s in range(self.len_x):
@@ -62,26 +159,27 @@ class MazeNetwork:
         transitions = []
         test_transitions = []
         # adding tester actions
-        next_sys_state_dict = {}
+        self.next_sys_state_dict = {}
         for state in states: #tester can move according to
             next_sys_states = [(state[0], state[1])]
             for test_state in self.next_state_dict[(state[1])]:
                 next_sys_states.append((state[0], test_state))
-            next_sys_state_dict.update({state: next_sys_states})
+            self.next_sys_state_dict.update({state: next_sys_states})
+
         # adding system actions
-        next_tester_state_dict = {}
+        self.next_tester_state_dict = {}
         for state in states: #tester can move according to
             next_test_states = [(state[0], state[1])]
             for sys_state in self.next_state_dict[(state[0])]:
                 next_test_states.append((sys_state, state[1]))
-            next_tester_state_dict.update({state: next_test_states})
+            self.next_tester_state_dict.update({state: next_test_states})
 
         nodes = []
         for state in states:
             if state[0] != self.goal: # once the agent reached its goal, test is over, no more transitions
                 nodes.append((state[0],state[1],'s'))
                 nodes.append((state[0],state[1],'t'))
-
+            
         sys_nodes = []
         test_nodes = []
         for node in nodes:
@@ -95,14 +193,14 @@ class MazeNetwork:
             # st()
             if state[0] != state[1]:# and state[0] != self.goal: # collision states have no next state and when test done then done
                 out_node_s = (state[0],state[1],'s')
-                in_nodes_t = [(state_t[0],state_t[1],'t') for state_t in next_tester_state_dict[state]]
+                in_nodes_t = [(state_t[0],state_t[1],'t') for state_t in self.next_tester_state_dict[state]]
                 for in_node_t in in_nodes_t:
                     sys_actions = []
                     if in_node_t[:2] in states:
                         sys_actions.append((out_node_s, in_node_t))
                     edges = edges + sys_actions
                 out_node_t = (state[0],state[1],'t')
-                in_nodes_s = [(state_s[0],state_s[1],'s') for state_s in next_sys_state_dict[state]]
+                in_nodes_s = [(state_s[0],state_s[1],'s') for state_s in self.next_sys_state_dict[state]]
                 for in_node_s in in_nodes_s:
                     test_actions = []
                     if in_node_s[:2] in states:
