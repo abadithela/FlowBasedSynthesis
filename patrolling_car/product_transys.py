@@ -40,7 +40,7 @@ class ProductTransys(Transys):
         Need to setup atomic propositions.
         """
         self.AP = [spot.formula.ap("home"), spot.formula.ap("park"), spot.formula.ap("refuel"), spot.formula.ap("empty")]
-        self.AP.append([spot.formula.ap("src")])
+        self.AP.append(spot.formula.ap("src"))
         self.AP_dict = od() 
         for s in self.S: # If the system state is the init or goal
             self.AP_dict[s] = []
@@ -88,13 +88,13 @@ class ProductTransys(Transys):
                 state_next = ns_test
             
             if state_next[0]==state_curr[0] + 1 and state_next[1]==state_curr[1]:
-                self.E[(s, action+'e')] = ns
-            elif state_next[0]==state_curr[0] - 1 and state_next[1]==state_curr[1]:
-                self.E[(s, action+'w')] = ns
-            elif state_next[0]==state_curr[0] and state_next[1]==state_curr[1] + 1:
                 self.E[(s, action+'s')] = ns
-            elif state_next[0]==state_curr[0] and state_next[1]==state_curr[1] - 1:
+            elif state_next[0]==state_curr[0] - 1 and state_next[1]==state_curr[1]:
                 self.E[(s, action+'n')] = ns
+            elif state_next[0]==state_curr[0] and state_next[1]==state_curr[1] + 1:
+                self.E[(s, action+'e')] = ns
+            elif state_next[0]==state_curr[0] and state_next[1]==state_curr[1] - 1:
+                self.E[(s, action+'w')] = ns
             elif state_next==state_curr:
                 self.E[(s, action+'o')] = ns
             else:
@@ -120,7 +120,7 @@ class ProductTransys(Transys):
     def construct_sys(self, mazefile):
         self.get_maze(mazefile)
         self.S = list(self.maze.G.nodes()) # All system and tester nodes
-        self.A = ['n','s','e','w', 'o']
+        self.A = ['sys_n','sys_s','sys_e','sys_w', 'sys_o', 'test_n','test_s','test_e','test_w', 'test_o']
         self.construct_transition_function()
         self.get_APs()
         self.construct_initial_conds()

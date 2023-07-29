@@ -41,10 +41,9 @@ class Product(ProductTransys):
     def construct_transitions(self):
         # Debug product
         self.E = dict()
-        sys_state_pairs = list(product(self.transys.S, self.transys.S))
+        prod_transys_states = [(si[0], sj) for si, sj in self.transys.E.items()]
         aut_state_pairs = list(product(self.automaton.Q, self.automaton.Q))
-        pdb.set_trace()
-        for s,t in sys_state_pairs:
+        for s,t in prod_transys_states:
             for a in self.transys.A:
                 if (s,a) in self.transys.E.keys():
                     for q,p in aut_state_pairs:
@@ -52,7 +51,6 @@ class Product(ProductTransys):
                         label = self.transys.L[t]
                         valid_sys_transition = (self.automaton.get_transition(q, label) == p)
                         if valid_sys_transition and valid_aut_transition:
-                            # pdb.set_trace()
                             self.E[((s,q), a)] = (t,p)
 
     def construct_labels(self):
