@@ -3,13 +3,18 @@ Script to construct transition system objects of the system and tester.
 Apurva Badithela
 7/27/23
 """
-from maze_network import MazeNetwork
+import sys
+sys.path.append("..")
+from graph.maze_network import MazeNetwork
 import spot
 import pdb
+from ast import literal_eval as make_tuple
 from buddy import bddtrue
 spot.setup()
+import matplotlib.pyplot as plt
 from itertools import chain, combinations
 from collections import OrderedDict as od
+import networkx as nx
 
 class Transys():
     def __init__(self, S=None, A=None, E=None, I=None, AP=None, L=None):
@@ -39,8 +44,8 @@ class ProductTransys(Transys):
         the relevant states to define what the agent must do.
         Need to setup atomic propositions.
         """
-        self.AP = [spot.formula.ap("home"), spot.formula.ap("park"), spot.formula.ap("refuel"), spot.formula.ap("empty")]
-        self.AP.append(spot.formula.ap("src"))
+        self.AP = [spot.formula.ap("home"), spot.formula.ap("park"), spot.formula.ap("refuel")]
+        # self.AP.append(spot.formula.ap("src"))
         self.AP_dict = od() 
         for s in self.S: # If the system state is the init or goal
             self.AP_dict[s] = []
@@ -53,10 +58,10 @@ class ProductTransys(Transys):
             elif s[0] == self.maze.refuel:
                 self.AP_dict[s].append(self.AP[2])
             
-            if s[-1] == "empty":
-                self.AP_dict[s].append(spot.formula.ap("empty"))
-            else:
-                self.AP_dict[s].append(spot.formula.Not(spot.formula.ap("empty")))
+            # if s[-1] == "empty":
+            #     self.AP_dict[s].append(spot.formula.ap("empty"))
+            # else:
+            #     self.AP_dict[s].append(spot.formula.Not(spot.formula.ap("empty")))
 
     # Add plotting feature
     def define_spec(self):
@@ -140,6 +145,67 @@ class ProductTransys(Transys):
             self.AP_dict[node] = formula
         self.construct_labels()
 
+    def to_graph(self):
+        self.G = nx.DiGraph()
+        self.G.add_nodes_from(list(self.S))
+        
+        edges = []
+        edge_attr = dict()
+        node_attr = dict()
+        for state_act, in_node in self.E.items():
+            out_node = state_act[0]
+            act = state_act[1]
+            edge = (out_node, in_node)
+            edge_attr[edge] = {"act": act}
+            edges.append(edge)
+            # pdb.set_trace()
+        self.G.add_edges_from(edges)
+        nx.set_edge_attributes(self.G, edge_attr)
+
+    def plot_product(self, fn):
+        pos = nx.kamada_kawai_layout(self.G)
+        sys_nodes = []
+        tester_nodes = []
+        for n in self.G.nodes():
+            if n[2] == 's':
+                sys_nodes.append(n)
+            else:
+                tester_nodes.append(n)
+        nx.draw_networkx_nodes(self.G, pos, nodelist=sys_nodes, node_color="yellow")
+        nx.draw_networkx_nodes(self.G, pos, nodelist=tester_nodes, node_color="blue")
+        # node_labels = nx.get_node_attributes(G,'state')
+        # nx.draw_networkx_labels(G, pos, labels = node_labels)
+        edge_labels = nx.get_edge_attributes(self.G,'act')
+        nx.draw_networkx_edges(self.G, pos, edgelist = list(self.G.edges()))
+        
+        options = {"edgecolors": "tab:gray", "node_size": 800, "alpha": 0.5}
+
+        plt.tight_layout()
+        plt.axis("off")
+        plt.savefig(fn+".pdf")
+        # plt.show()
+
+    def plot_product_dot(self, fn):
+        G_agr = nx.nx_agraph.to_agraph(self.G)
+        G_agr.node_attr['style'] = 'filled'
+        G_agr.node_attr['gradientangle'] = 90
+
+        for i in G_agr.nodes():
+            n = G_agr.get_node(i)
+            ntuple = make_tuple(n)
+            if ntuple[2] == "t":
+                n.attr['fillcolor'] = 'blue'
+                n.attr['shape'] = 'circle'
+            if ntuple[2] == 's':
+                n.attr['fillcolor'] = 'yellow'
+                n.attr['shape'] = 'diamond'
+        G_agr.draw(fn+"_dot.pdf",prog='dot')
+
+    def save_plot(self, fn):
+        self.to_graph()
+        self.plot_product(fn)
+        self.plot_product_dot(fn)
+
 def powerset(s):
     if type(s)==list:
         s = list(s)
@@ -150,5 +216,6 @@ if __name__ == "__main__":
     mazefile = "maze.txt"
     product = ProductTransys()
     product.construct_sys(mazefile)
-    product.print_transitions()
+    # product.print_transitions()
+    product.save_plot("imgs/product_transys")
     pdb.set_trace()

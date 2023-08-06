@@ -28,12 +28,36 @@ class Product(TranSys):
         self.automaton=automaton
         self.S = list(product(system.S, automaton.Q))
         self.Sdict = od()
+        self.reverse_Sdict = od()
         for k in range(len(self.S)):
             self.Sdict[self.S[k]] = "s"+str(k)
+            self.reverse_Sdict["s"+str(k)] = self.S[k]
         self.A = system.A
         self.I = (system.I, automaton.qinit)
         self.AP = automaton.Q
     
+    def get_aut_state(self, product_s):
+        '''
+        Retrieving automata state from product state
+        '''
+        return product_s[1]
+    
+    def get_sys_state(self, product_s):
+        '''
+        Retrieving system state from product state
+        '''
+        return product_s[0]
+    
+    def get_action_from_edge(self, state_act, in_node):
+        '''
+        Retrieve action causing the transition
+        '''
+        edge = (state_act, in_node)
+        assert edge in self.E
+        return state_act[1]
+
+
+
     def construct_transitions(self):
         self.E = dict()
         sys_state_pairs = list(product(self.system.S, self.system.S))
@@ -55,7 +79,7 @@ class Product(TranSys):
             self.L[s] = s[1]
     
     def identify_SIT(self):
-        self.src = [s for s in self.S if s[1] == self.automaton.qinit]
+        self.src = [s for s in self.S if s == self.I]
         try:
             self.int = [s for s in self.S if s[1] in self.automaton.Acc["test"]]
         except:
@@ -76,6 +100,10 @@ class Product(TranSys):
             if node in self.int and node in self.sink:
                 if node_st not in self.plt_sink_int:
                     self.plt_sink_int.append(node_st)
+            
+            if node in self.src:
+                if node_st not in self.plt_src:
+                    self.plt_src.append(node_st)
 
     def to_graph(self):
         self.G = nx.DiGraph()
@@ -83,6 +111,7 @@ class Product(TranSys):
         self.plt_sink_only = [] # Finding relevant nodes connected to graph with edges
         self.plt_int_only= []
         self.plt_sink_int = []
+        self.plt_src = []
         edges = []
         edge_attr = dict()
         node_attr = dict()
@@ -148,6 +177,10 @@ class Product(TranSys):
     def list_edges(self):
         for e, in_e in self.E.items():
             print(e," : ", in_e)
+    
+    def list_nodes(self):
+        for n, n_st in self.Sdict.items():
+            print(n, " : ", n_st)
         
 def construct_automata_simple(AP_set=None):
     Q, qinit, AP, tau, Acc = eventually(state_str="q", formula="sink")
@@ -158,6 +191,13 @@ def construct_automata_simple(AP_set=None):
 
 def construct_automata_async(AP_set=None):
     Q, qinit, AP, tau, Acc, Qdict = async_eventually(state_str="q")
+    for ap in AP:
+        assert ap in AP_set
+    aut = Automata(Q, qinit, AP_set, tau, Acc)
+    return aut
+
+def construct_automata_sync(AP_set=None):
+    Q, qinit, AP, tau, Acc, Qdict = sync_eventually(state_str="q")
     for ap in AP:
         assert ap in AP_set
     aut = Automata(Q, qinit, AP_set, tau, Acc)
@@ -204,7 +244,16 @@ def async_example():
     system = construct_system()
     aut = construct_automata_async(AP_set = system.AP)
     prod_graph = sync_prod(system, aut)
-    prod_graph.save_plot("imgs/prod_graph")
+    # prod_graph.save_plot("imgs/prod_graph")
+    return system, aut, prod_graph
+
+def sync_example():
+    system = construct_system()
+    aut = construct_automata_sync(AP_set = system.AP)
+    prod_graph = sync_prod(system, aut)
+    # prod_graph.save_plot("imgs/prod_graph")
+    return system, aut, prod_graph
+
 
 def quadruped_example():
     # Needs to be fixed!!!!

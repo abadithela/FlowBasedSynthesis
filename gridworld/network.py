@@ -6,7 +6,7 @@ from collections import OrderedDict as od
 import _pickle as pickle
 import os
 import networkx as nx
-
+import pdb
 
 def create_network_from_file(mazefile):
     map = od()
@@ -47,8 +47,10 @@ class MazeNetwork:
                         states.append((ii,jj))
                     if self.map[(ii,jj)] == 'S':
                         self.source = (ii,jj)
-                    elif self.map[(ii,jj)] == 'G':
+                    if self.map[(ii,jj)] == 'G':
                         self.goal = (ii,jj)
+                    # if self.map[(ii,jj)] == '*':
+                    #     pdb.set_trace()
         # create edges
         next_state_dict = dict()
         for node in states:

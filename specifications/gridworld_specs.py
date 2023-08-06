@@ -86,6 +86,7 @@ class System(TranSys):
                 self.L[s] = {self.AP_dict[s]}
             else:
                 self.L[s] = {}
+        
     
     def construct_sys(self, mazefile):
         self.get_maze(mazefile)

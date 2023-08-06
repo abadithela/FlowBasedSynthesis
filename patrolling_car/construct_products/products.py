@@ -3,14 +3,15 @@ File to construct asynchronous product and synchronous product.
 Apurva Badithela
 """
 import sys
+sys.path.append("..")
 import spot
 import buddy
 from matplotlib import pyplot as plt
 import pdb
 from collections import OrderedDict as od
 from product_transys import ProductTransys, Transys
-from example_automata import *
-from automata import Automata
+from automata.example_automata import *
+from automata.automata import Automata
 import networkx as nx
 from itertools import product, chain, combinations
 spot.setup(show_default='.tvb')
@@ -28,8 +29,10 @@ class Product(ProductTransys):
         self.automaton=spec_prod_automaton
         self.S = list(product(product_transys.S, spec_prod_automaton.Q))
         self.Sdict = od()
+        self.reverse_Sdict = od()
         for k in range(len(self.S)):
             self.Sdict[self.S[k]] = "s"+str(k)
+            self.reverse_Sdict["s"+str(k)] = self.S[k]
         self.A = product_transys.A
         self.I = [(init, spec_prod_automaton.qinit) for init in product_transys.I]
         self.AP = spec_prod_automaton.Q
@@ -103,30 +106,43 @@ class Product(ProductTransys):
     def plot_product(self, fn):
         pos = nx.kamada_kawai_layout(self.G)
         nx.draw(self.G, pos, node_color="gray")
-        # node_labels = nx.get_node_attributes(G,'state')
-        # nx.draw_networkx_labels(G, pos, labels = node_labels)
+        
+        node_attrs = dict()
+        for node, n in self.Sdict.items():
+            if node[0][2] == 's':
+                node_attrs[n] = {'node_shape': 'diamond'}
+            else:
+                node_attrs[n] = {'node_shape': 'circle'}
+        
         edge_labels = nx.get_edge_attributes(self.G,'act')
         nx.draw_networkx_edges(self.G, pos, edgelist = list(self.G.edges()))
         
-        options = {"edgecolors": "tab:gray", "node_size": 800, "alpha": 0.5}
-        nx.draw_networkx_nodes(self.G, pos, nodelist=self.plt_sink_only, node_color="tab:red", **options)
-        nx.draw_networkx_nodes(self.G, pos, nodelist=self.plt_int_only, node_color="tab:blue", **options)
-        nx.draw_networkx_nodes(self.G, pos, nodelist=self.plt_sink_int, node_color="tab:purple", **options)
+        # options = {"edgecolors": "gray", "node_size": 800, "alpha": 0.5}
+        options = {"edgecolors": "gray"}
+        nx.draw_networkx_nodes(self.G, pos, nodelist=self.plt_sink_only, node_color="yellow", **options)
+        nx.draw_networkx_nodes(self.G, pos, nodelist=self.plt_int_only, node_color="blue", **options)
+        nx.draw_networkx_nodes(self.G, pos, nodelist=self.plt_sink_int, node_color="green", **options)
+        nx.set_node_attributes(self.G, node_attrs)
 
         plt.tight_layout()
         plt.axis("off")
-        plt.savefig(fn+".png")
-        plt.show()
+        plt.savefig(fn+".pdf")
+        # plt.show()
 
     def plot_product_dot(self, fn):
         G_agr = nx.nx_agraph.to_agraph(self.G)
 
         G_agr.node_attr['style'] = 'filled'
-        G_agr.node_attr['shape'] = 'circle'
+        # G_agr.node_attr['shape'] = 'circle'
         G_agr.node_attr['gradientangle'] = 90
 
         for i in G_agr.nodes():
             n = G_agr.get_node(i)
+            node = self.reverse_Sdict[n]
+            if node[0][2] == 's':
+                n.attr['shape'] = 'diamond'
+            else:
+                n.attr['shape'] = 'circle'          
             if n in self.plt_sink_only:
                 n.attr['fillcolor'] = 'yellow'
             elif n in self.plt_int_only:
@@ -136,13 +152,15 @@ class Product(ProductTransys):
             else:
                 n.attr['fillcolor'] = 'gray'
 
-        G_agr.draw(fn+"_dot.png",prog='dot')
+        print("Commencing the print process")
+        G_agr.draw(fn+"_dot.pdf",prog='dot')
 
     def save_plot(self, fn):
         self.identify_SIT()
         self.to_graph()
         self.plot_product(fn)
         self.plot_product_dot(fn)
+
 
     def list_edges(self):
         for e, in_e in self.E.items():
@@ -174,8 +192,7 @@ def async_example():
     system = construct_system()
     aut = construct_automata_async(AP_set = system.AP)
     prod_graph = sync_prod(system, aut)
-    pdb.set_trace()
-    # prod_graph.save_plot("imgs/prod_graph")
+    prod_graph.save_plot("imgs/prod_graph")
 
 if __name__ == "__main__":
     async_example()
