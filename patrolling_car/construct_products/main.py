@@ -67,7 +67,6 @@ def construct_system_parking_test():
 
 def parking_test_async():
     system = construct_system_parking_test()
-    pdb.set_trace()
     aut = construct_async_aut_parking_test(AP_set = system.AP)
     prod_graph = sync_prod(system, aut)
     if not os.path.exists("imgs/parking_test/async_spec_product"):
@@ -75,10 +74,10 @@ def parking_test_async():
     system.save_plot("imgs/parking_test/async_spec_product/product_transys")
     # aut.save_plot("imgs/parking_test/async_spec_product/specification_product")
     prod_graph.save_plot("imgs/parking_test/async_spec_product/prod_graph")
+    pdb.set_trace()
 
 def parking_test_sync():
     system = construct_system_parking_test()
-    pdb.set_trace()
     aut = construct_sync_aut_parking_test(AP_set = system.AP)
     prod_graph = sync_prod(system, aut)
     if not os.path.exists("imgs/parking_test/sync_spec_product"):
@@ -86,6 +85,7 @@ def parking_test_sync():
     system.save_plot("imgs/parking_test/sync_spec_product/product_transys")
     # aut.save_plot("imgs/parking_test/sync_spec_product/specification_product")
     prod_graph.save_plot("imgs/parking_test/sync_spec_product/prod_graph")
+    pdb.set_trace()
 
 if __name__ == "__main__":
     parking_test_async()

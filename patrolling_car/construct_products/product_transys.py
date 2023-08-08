@@ -45,16 +45,13 @@ class ProductTransys(Transys):
         Need to setup atomic propositions.
         """
         self.AP = [spot.formula.ap("home"), spot.formula.ap("park"), spot.formula.ap("refuel")]
-        # self.AP.append(spot.formula.ap("src"))
         self.AP_dict = od() 
         for s in self.S: # If the system state is the init or goal
             self.AP_dict[s] = []
             if s[0] == self.maze.init and s[1] == self.maze.tester_init:
-                self.AP_dict[s].append(spot.formula.ap("src"))
-            elif s[0] == self.maze.goal:
-                self.AP_dict[s].append(self.AP[0])
+                self.AP_dict[s].append(spot.formula.ap("home"))
             elif s[0] == self.maze.park:
-                self.AP_dict[s].append(self.AP[1])
+                self.AP_dict[s].append(spot.formula.ap("park"))
             elif s[0] == self.maze.refuel:
                 self.AP_dict[s].append(self.AP[2])
             

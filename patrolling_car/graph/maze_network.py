@@ -28,7 +28,7 @@ def create_network_from_file(mazefile):
 class MazeNetwork:
     def __init__(self, mazefile):
         self.init = None
-        self.goal = None
+        self.goal = None # Not always easy to define transition system goal
         self.park = None
         self.map, self.len_x, self.len_y = create_network_from_file(mazefile)
         self.tester_init = None
@@ -133,7 +133,7 @@ class MazeNetwork:
                     self.init = (x,y)
                     self.map[(x,y)] = ' '
                 elif self.map[(x,y)] == 'G':
-                    self.goal = (x,y)
+                    self.park = (x,y)
                 elif self.map[(x,y)] == 'P':
                     self.park = (x,y)
                 elif self.map[(x,y)] == 'T':
