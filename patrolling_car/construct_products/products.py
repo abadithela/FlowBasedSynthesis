@@ -55,6 +55,21 @@ class Product(ProductTransys):
                         valid_sys_transition = (self.automaton.get_transition(q, label) == p)
                         if valid_sys_transition and valid_aut_transition:
                             self.E[((s,q), a)] = (t,p)
+    
+    def construct_transitions_player_labeled(self):
+        # Debug product
+        self.E = dict()
+        prod_transys_states = [(si[0], sj) for si, sj in self.transys.E.items()]
+        aut_state_pairs = list(product(self.automaton.Q, self.automaton.Q))
+        for s,t in prod_transys_states:
+            for a in self.transys.A:
+                if (s,a) in self.transys.E.keys():
+                    for q,p in aut_state_pairs:
+                        valid_aut_transition = (self.transys.E[(s,a)] == t)
+                        label = self.transys.L[t]
+                        valid_sys_transition = (self.automaton.get_transition(q, label) == p)
+                        if valid_sys_transition and valid_aut_transition:
+                            self.E[((s,q), a)] = (t,p)
 
     def construct_labels(self):
         self.L = od()
@@ -83,6 +98,26 @@ class Product(ProductTransys):
             if node in self.int and node in self.sink:
                 if node_st not in self.plt_sink_int:
                     self.plt_sink_int.append(node_st)
+
+    def highlight_states(self, state_color_dict, fn):
+        G_agr = self.base_dot_graph()
+        for color, state_list in state_color_dict.items():
+            if not isinstance(state_list, list):
+                state_list = [state_list]
+            # pdb.set_trace()
+            
+            for node in state_list:
+                if not isinstance(node, str):
+                    node_st = self.Sdict[node]
+                else:
+                    node_st = node
+
+                for i in G_agr.nodes():
+                    n = G_agr.get_node(i)
+                    if n == node_st:
+                        n.attr['color'] = color
+                        n.attr['fillcolor'] = color
+        G_agr.draw(fn+"_highlight_dot.pdf",prog='dot')
 
     def to_graph(self):
         self.G = nx.DiGraph()
@@ -129,7 +164,7 @@ class Product(ProductTransys):
         plt.savefig(fn+".pdf")
         # plt.show()
 
-    def plot_product_dot(self, fn):
+    def base_dot_graph(self):
         G_agr = nx.nx_agraph.to_agraph(self.G)
 
         G_agr.node_attr['style'] = 'filled'
@@ -151,8 +186,10 @@ class Product(ProductTransys):
                 n.attr['fillcolor'] = 'blue;0.5:yellow'
             else:
                 n.attr['fillcolor'] = 'gray'
+        return G_agr
 
-        print("Commencing the print process")
+    def plot_product_dot(self, fn):
+        G_agr = self.base_dot_graph()
         G_agr.draw(fn+"_dot.pdf",prog='dot')
 
     def save_plot(self, fn):
@@ -161,6 +198,20 @@ class Product(ProductTransys):
         self.plot_product(fn)
         self.plot_product_dot(fn)
 
+    def print_neighbors(self, node):
+        if not isinstance(node, str):
+            node_st = self.Sdict[node]
+        else:
+            node_st = node
+        predecessors = self.G.predecessors(node_st)
+        successors = self.G.successors(node_st)
+        print("List of predecessor nodes: ")
+        for p in predecessors:
+            print(p)
+        print("\n")
+        print("List of successor nodes: ")
+        for p in successors:
+            print(p)
 
     def list_edges(self):
         for e, in_e in self.E.items():

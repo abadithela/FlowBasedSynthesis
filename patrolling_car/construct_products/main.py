@@ -74,6 +74,12 @@ def parking_test_async():
     system.save_plot("imgs/parking_test/async_spec_product/product_transys")
     # aut.save_plot("imgs/parking_test/async_spec_product/specification_product")
     prod_graph.save_plot("imgs/parking_test/async_spec_product/prod_graph")
+    highlight_states={'red': [(((0, 0), (0, 1), 's'), 'q0'), (((0, 0), (1, 1), 's'), 'q0'), (((0, 0), (2, 1), 's'), 'q0')],
+                      'magenta': [(((0, 0), (0, 1), 's'), 'q1'), (((0, 0), (1, 1), 's'), 'q1'), (((0, 0), (2, 1), 's'), 'q1')],
+                      'cyan': [(((0, 0), (0, 1), 's'), 'q2'), (((0, 0), (1, 1), 's'), 'q2'), (((0, 0), (2, 1), 's'), 'q2')],
+                      'green': [(((0, 0), (0, 1), 's'), 'q3'), (((0, 0), (1, 1), 's'), 'q3'), (((0, 0), (2, 1), 's'), 'q3')]
+                      }
+    prod_graph.highlight_states(highlight_states, "imgs/parking_test/async_spec_product/prod_graph")
     pdb.set_trace()
 
 def parking_test_sync():
