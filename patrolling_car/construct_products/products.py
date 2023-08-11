@@ -47,6 +47,7 @@ class Product(ProductTransys):
         prod_transys_states = [(si[0], sj) for si, sj in self.transys.E.items()]
         aut_state_pairs = list(product(self.automaton.Q, self.automaton.Q))
         for s,t in prod_transys_states:
+            pdb.set_trace()
             for a in self.transys.A:
                 if (s,a) in self.transys.E.keys():
                     for q,p in aut_state_pairs:
@@ -62,14 +63,18 @@ class Product(ProductTransys):
         prod_transys_states = [(si[0], sj) for si, sj in self.transys.E.items()]
         aut_state_pairs = list(product(self.automaton.Q, self.automaton.Q))
         for s,t in prod_transys_states:
+            player = s[2]
             for a in self.transys.A:
                 if (s,a) in self.transys.E.keys():
                     for q,p in aut_state_pairs:
                         valid_aut_transition = (self.transys.E[(s,a)] == t)
                         label = self.transys.L[t]
-                        valid_sys_transition = (self.automaton.get_transition(q, label) == p)
+                        valid_sys_transition = (self.automaton.get_player_labeled_transition(q, label, player) == p)
                         if valid_sys_transition and valid_aut_transition:
                             self.E[((s,q), a)] = (t,p)
+
+    def prune_unreachable_nodes(self):
+        pdb.set_trace()
 
     def construct_labels(self):
         self.L = od()
@@ -190,6 +195,30 @@ class Product(ProductTransys):
 
     def plot_product_dot(self, fn):
         G_agr = self.base_dot_graph()
+        G_agr.draw(fn+"_dot.pdf",prog='dot')
+
+    def parse_cut(self, cut_edge):
+        graph_cut_edges = []
+        for state_act, in_node in self.E.items():
+            out_node = state_act[0]
+            # pdb.set_trace()
+            if out_node[0] == cut_edge[0] and in_node[0] == cut_edge[1]:
+                graph_cut_edges.append((self.Sdict[out_node], self.Sdict[in_node]))
+        return graph_cut_edges
+
+    def plot_cut_prod_graph(self, cut_edge, fn):
+        """
+        Plot cut edges specified in list cut_edges on the abstract graph. If the cuts are within a cluster, 
+        we would have to refine the cluster to view the cuts.
+        """
+        graph_cut_edges = self.parse_cut(cut_edge)
+        G_agr = self.base_dot_graph()
+        for e in G_agr.edges():
+            edge = G_agr.get_edge(*e)
+            if e in graph_cut_edges:
+                e.attr['color'] = 'red'
+                e.attr['style'] = 'dashed'
+                e.attr['penwidth'] = 2.0
         G_agr.draw(fn+"_dot.pdf",prog='dot')
 
     def save_plot(self, fn):

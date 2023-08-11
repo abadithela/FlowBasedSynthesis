@@ -5,6 +5,7 @@ import numpy as np
 import spot
 from itertools import chain, combinations
 import pdb
+import networkx as nx
 
 def powerset(s):
     if type(s)==list:
@@ -21,6 +22,12 @@ class Automata:
         self.Sigma = powerset(ap)
         self.Acc = Acc
     
+    def is_player_labeled(self):
+        if 's' in self.delta.keys() and 't' in self.delta.keys():
+            return True
+        else:
+            return False
+
     def complement_negation(self, propositions):
         """
         Negation of all atomic propositions not listed in propositions
@@ -39,6 +46,24 @@ class Automata:
         complete_formula = spot.formula.And([and_prop, and_comp_prop]) # Taking complement of complete formula
         return complete_formula
 
+    def get_player_labeled_transition(self, q0, propositions, player):
+        and_prop = spot.formula.And(list(propositions))
+        transition = None
+        player_delta = self.delta[player]
+        for k,v in player_delta.items():
+            if k[0] == q0:
+                complete_formula = self.complement_negation(propositions)
+                try:
+                    if k[1] == True:
+                        transition = v
+                        return transition
+                    if spot.contains(k[1], complete_formula):
+                        transition = v
+                        return transition
+                except:
+                    pdb.set_trace()
+        return None
+
     def get_transition(self, q0, propositions):
         and_prop = spot.formula.And(list(propositions))
         transition = None
@@ -56,11 +81,37 @@ class Automata:
                     pdb.set_trace()
         return None
     
+    def to_graph(self):
+        self.G = nx.MultiGraph()
+        self.G.add_nodes_from(list(self.Q))
+        edges = []
+        edge_attr = dict()
+        node_attr = dict()
+        for state_prop, state_in in self.delta.items():
+            state_out, prop = state_prop
+            self.G.add_edge(state_out, state_in, label=str(prop))
+
     def save_plot(self, fn):
         """
         To Do. Either implement and save the graph from spot or convert to nx graph and save.
         second option preferred since it will then show if any mistakes have been made in transcribing 
         from Spot.
         """
-        pass
+        self.to_graph()
+        G_agr = nx.nx_agraph.to_agraph(self.G)
+        G_agr.node_attr['style'] = 'filled'
+        # G_agr.node_attr['shape'] = 'circle'
+        G_agr.node_attr['gradientangle'] = 90
+        for i in G_agr.nodes():
+            n = G_agr.get_node(i)
+            if n in self.Acc["sys"] and n not in self.Acc["test"]:
+                n.attr['fillcolor'] = 'yellow'
+            elif n in self.Acc["test"] and n not in self.Acc["sys"]:
+                n.attr['fillcolor'] = 'blue'          
+            elif n in self.Acc["test"] and n in self.Acc["sys"]:
+                n.attr['fillcolor'] = 'blue;0.5:yellow'
+            else:
+                n.attr['fillcolor'] = 'white'
+        G_agr.draw(fn+"_dot.pdf",prog='dot')
+ 
 
