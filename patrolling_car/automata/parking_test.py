@@ -21,6 +21,51 @@ def conjunction(formula_list):
 def disjunction(formula_list):
     return spot.formula.Or(formula_list)
 
+def system_spec(state_str="q"):
+    """
+    System Buchi automaton for F(park & F home)
+    """
+    nstates=3
+    home = spot.formula.ap("home")
+    park = spot.formula.ap("park")
+    AP = [home, park]
+    Q = [state_str+str(k) for k in range(nstates)]
+    qinit = state_str+str(0)
+    tau = {
+            ("q0", neg(park)): "q0",
+            ("q0", conjunction([neg(home), park])): "q1",
+            ("q0", conjunction([home, park])): "q3",
+
+            ("q1", neg(home)): "q1",
+            ("q1", home): "q3",
+
+            ("q2", True): "q2",
+          }
+
+    Acc = ("q2") # accepting sets of states
+    return Q, qinit, AP, tau, Acc
+
+def tester_spec(state_str="q"):
+    """
+    System Buchi automaton for F(park & F home)
+    """
+    nstates=2
+    park = spot.formula.ap("park")
+    refuel = spot.formula.ap("refuel")
+    AP = [refuel, park]
+    Q = [state_str+str(k) for k in range(nstates)]
+    qinit = state_str+str(0)
+    tau = {
+            ("q0", disjunction([neg(park), refuel])): "q0",
+            ("q0", conjunction([neg(refuel), park])): "q1",
+
+            ("q1", neg(refuel)): "q1",
+            ("q1", refuel): "q0",
+          }
+
+    Acc = ("q0") # accepting sets of states
+    return Q, qinit, AP, tau, Acc
+
 def async_product(state_str="q"):
     """
     Asynchronous product automaton for the system and test specifications
