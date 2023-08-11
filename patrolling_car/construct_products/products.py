@@ -73,8 +73,27 @@ class Product(ProductTransys):
                         if valid_sys_transition and valid_aut_transition:
                             self.E[((s,q), a)] = (t,p)
 
-    def prune_unreachable_nodes(self):
-        pdb.set_trace()
+    def prune_unreachable_nodes(self, fn):
+        self.G_initial = nx.DiGraph()
+        s_init = [self.Sdict[i] for i in self.I]
+        init_dfs_tree = [nx.dfs_tree(self.G, source=src) for src in s_init]
+        init_dfs_tree_nodes = []
+        for tree in init_dfs_tree:
+            for n in tree.nodes():
+                if n not in init_dfs_tree_nodes:
+                    init_dfs_tree_nodes.append(n)
+        edges = []
+        for state_act, in_node in self.E.items():
+            out_node = state_act[0]
+            act = state_act[1]
+            s_out = self.Sdict[out_node]
+            s_in = self.Sdict[in_node]
+            edge = (s_out, s_in)
+            if s_out in init_dfs_tree_nodes:
+                edges.append(edge)
+        self.G_initial.add_edges_from(edges)
+        G_agr = self.base_dot_graph(graph=self.G_initial)
+        G_agr.draw(fn+"_pruned_unreach_nodes_dot.pdf",prog='dot')
 
     def construct_labels(self):
         self.L = od()
@@ -169,8 +188,11 @@ class Product(ProductTransys):
         plt.savefig(fn+".pdf")
         # plt.show()
 
-    def base_dot_graph(self):
-        G_agr = nx.nx_agraph.to_agraph(self.G)
+    def base_dot_graph(self, graph=None):
+        if graph == None:
+            G_agr = nx.nx_agraph.to_agraph(self.G)
+        else:
+            G_agr = nx.nx_agraph.to_agraph(graph)
 
         G_agr.node_attr['style'] = 'filled'
         # G_agr.node_attr['shape'] = 'circle'

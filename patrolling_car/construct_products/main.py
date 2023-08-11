@@ -115,6 +115,7 @@ def parking_test_async_player_labeled():
     system.save_plot("imgs/parking_test/async_spec_product_player_labeled/product_transys")
     # aut.save_plot("imgs/parking_test/sync_spec_product/specification_product")
     prod_graph.save_plot("imgs/parking_test/async_spec_product_player_labeled/prod_graph")
+    prod_graph.prune_unreachable_nodes("imgs/parking_test/async_spec_product_player_labeled/prod_graph")
     pdb.set_trace()
 
 if __name__ == "__main__":
