@@ -5,7 +5,7 @@ Apurva Badithela
 """
 
 import sys
-sys.path.append("../gridworld/")
+sys.path.append("../simulations/")
 from network import MazeNetwork
 import spot
 import pdb
@@ -110,6 +110,67 @@ class System(TranSys):
                 self.AP.append(formula) # Append intermed
             self.AP_dict[node] = formula
         self.construct_labels()
+    
+    def to_graph(self):
+        self.G = nx.DiGraph()
+        self.G.add_nodes_from(list(self.S))
+        
+        edges = []
+        edge_attr = dict()
+        node_attr = dict()
+        for state_act, in_node in self.E.items():
+            out_node = state_act[0]
+            act = state_act[1]
+            edge = (out_node, in_node)
+            edge_attr[edge] = {"act": act}
+            edges.append(edge)
+            # pdb.set_trace()
+        self.G.add_edges_from(edges)
+        nx.set_edge_attributes(self.G, edge_attr)
+
+    def plot_product(self, fn):
+        pos = nx.kamada_kawai_layout(self.G)
+        sys_nodes = []
+        tester_nodes = []
+        for n in self.G.nodes():
+            if n[2] == 's':
+                sys_nodes.append(n)
+            else:
+                tester_nodes.append(n)
+        nx.draw_networkx_nodes(self.G, pos, nodelist=sys_nodes, node_color="yellow")
+        nx.draw_networkx_nodes(self.G, pos, nodelist=tester_nodes, node_color="blue")
+        # node_labels = nx.get_node_attributes(G,'state')
+        # nx.draw_networkx_labels(G, pos, labels = node_labels)
+        edge_labels = nx.get_edge_attributes(self.G,'act')
+        nx.draw_networkx_edges(self.G, pos, edgelist = list(self.G.edges()))
+        
+        options = {"edgecolors": "tab:gray", "node_size": 800, "alpha": 0.5}
+
+        plt.tight_layout()
+        plt.axis("off")
+        plt.savefig(fn+".pdf")
+        # plt.show()
+
+    def plot_product_dot(self, fn):
+        G_agr = nx.nx_agraph.to_agraph(self.G)
+        G_agr.node_attr['style'] = 'filled'
+        G_agr.node_attr['gradientangle'] = 90
+
+        for i in G_agr.nodes():
+            n = G_agr.get_node(i)
+            ntuple = make_tuple(n)
+            if ntuple[2] == "t":
+                n.attr['fillcolor'] = 'blue'
+                n.attr['shape'] = 'circle'
+            if ntuple[2] == 's':
+                n.attr['fillcolor'] = 'yellow'
+                n.attr['shape'] = 'diamond'
+        G_agr.draw(fn+"_dot.pdf",prog='dot')
+
+    def save_plot(self, fn):
+        self.to_graph()
+        self.plot_product(fn)
+        self.plot_product_dot(fn)
 
 def powerset(s):
     if type(s)==list:

@@ -1,1 +1,0 @@
-This folder takes specifications and converts them into automata using Spot.
