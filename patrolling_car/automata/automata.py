@@ -81,16 +81,21 @@ class Automata:
                     pdb.set_trace()
         return None
     
+    def list_edges(self):
+        pass
+
     def to_graph(self):
         self.G = nx.MultiGraph()
         self.G.add_nodes_from(list(self.Q))
         edges = []
         edge_attr = dict()
         node_attr = dict()
+        # Will not work for player labeled states
         for state_prop, state_in in self.delta.items():
+            # pdb.set_trace()
             state_out, prop = state_prop
             self.G.add_edge(state_out, state_in, label=str(prop))
-
+    
     def save_plot(self, fn):
         """
         To Do. Either implement and save the graph from spot or convert to nx graph and save.
