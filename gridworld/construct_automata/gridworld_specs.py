@@ -11,8 +11,10 @@ import spot
 import pdb
 from buddy import bddtrue
 spot.setup()
+import networkx as nx
 from itertools import chain, combinations
 from collections import OrderedDict as od
+import matplotlib.pyplot as plt
 
 class TranSys():
     def __init__(self, S=None, A=None, E=None, I=None, AP=None, L=None):
@@ -35,7 +37,6 @@ class System(TranSys):
     def get_maze(self, mazefile):
         self.maze = MazeNetwork(mazefile)
 
-
     def get_APs(self):
         """
         Set of atomic propositions required to define a specification
@@ -50,14 +51,6 @@ class System(TranSys):
             for k in self.maze.regions.keys():
                 self.AP.append(k)
                 self.AP_dict[k] = self.maze.regions[k]
-
-    def define_spec(self):
-        fstr = "F(sink)"
-        return fstr
-
-    def set_spec(self):
-        fstr = self.define_spec()
-        self.f = spot.formula(fstr)
     
     def construct_transition_function(self):
         self.E = dict()
@@ -124,7 +117,6 @@ class System(TranSys):
             edge = (out_node, in_node)
             edge_attr[edge] = {"act": act}
             edges.append(edge)
-            # pdb.set_trace()
         self.G.add_edges_from(edges)
         nx.set_edge_attributes(self.G, edge_attr)
 
@@ -132,15 +124,9 @@ class System(TranSys):
         pos = nx.kamada_kawai_layout(self.G)
         sys_nodes = []
         tester_nodes = []
-        for n in self.G.nodes():
-            if n[2] == 's':
-                sys_nodes.append(n)
-            else:
-                tester_nodes.append(n)
-        nx.draw_networkx_nodes(self.G, pos, nodelist=sys_nodes, node_color="yellow")
-        nx.draw_networkx_nodes(self.G, pos, nodelist=tester_nodes, node_color="blue")
-        # node_labels = nx.get_node_attributes(G,'state')
-        # nx.draw_networkx_labels(G, pos, labels = node_labels)
+
+        node_labels = nx.get_node_attributes(self.G,'state')
+        nx.draw_networkx_labels(self.G, pos, labels = node_labels)
         edge_labels = nx.get_edge_attributes(self.G,'act')
         nx.draw_networkx_edges(self.G, pos, edgelist = list(self.G.edges()))
         
@@ -158,13 +144,11 @@ class System(TranSys):
 
         for i in G_agr.nodes():
             n = G_agr.get_node(i)
-            ntuple = make_tuple(n)
-            if ntuple[2] == "t":
+            n.attr['shape'] = 'circle'
+            if self.AP_dict[node] == spot.formula.ap("int"):
                 n.attr['fillcolor'] = 'blue'
-                n.attr['shape'] = 'circle'
-            if ntuple[2] == 's':
+            if self.AP_dict[node] == spot.formula.ap("sink"):
                 n.attr['fillcolor'] = 'yellow'
-                n.attr['shape'] = 'diamond'
         G_agr.draw(fn+"_dot.pdf",prog='dot')
 
     def save_plot(self, fn):

@@ -151,6 +151,7 @@ class Product(TranSys):
         self.plt_sink_only = [] # Finding relevant nodes connected to graph with edges
         self.plt_int_only= []
         self.plt_sink_int = []
+        self.plt_src = []
         edges = []
         edge_attr = dict()
         node_attr = dict()
@@ -167,24 +168,14 @@ class Product(TranSys):
     def plot_product(self, fn):
         pos = nx.kamada_kawai_layout(self.G)
         nx.draw(self.G, pos, node_color="gray")
-        
-        node_attrs = dict()
-        for node, n in self.Sdict.items():
-            if node[0][2] == 's':
-                node_attrs[n] = {'node_shape': 'diamond'}
-            else:
-                node_attrs[n] = {'node_shape': 'circle'}
-        
+                
         edge_labels = nx.get_edge_attributes(self.G,'act')
         nx.draw_networkx_edges(self.G, pos, edgelist = list(self.G.edges()))
         
-        # options = {"edgecolors": "gray", "node_size": 800, "alpha": 0.5}
-        options = {"edgecolors": "gray"}
-        nx.draw_networkx_nodes(self.G, pos, nodelist=self.plt_sink_only, node_color="yellow", **options)
-        nx.draw_networkx_nodes(self.G, pos, nodelist=self.plt_int_only, node_color="blue", **options)
-        nx.draw_networkx_nodes(self.G, pos, nodelist=self.plt_sink_int, node_color="green", **options)
-        nx.set_node_attributes(self.G, node_attrs)
-
+        options = {"edgecolors": "tab:gray", "node_size": 800, "alpha": 0.5}
+        nx.draw_networkx_nodes(self.G, pos, nodelist=self.plt_sink_only, node_color="tab:red", **options)
+        nx.draw_networkx_nodes(self.G, pos, nodelist=self.plt_int_only, node_color="tab:blue", **options)
+        nx.draw_networkx_nodes(self.G, pos, nodelist=self.plt_sink_int, node_color="tab:purple", **options)
         plt.tight_layout()
         plt.axis("off")
         plt.savefig(fn+".pdf")
@@ -197,16 +188,11 @@ class Product(TranSys):
             G_agr = nx.nx_agraph.to_agraph(graph)
 
         G_agr.node_attr['style'] = 'filled'
-        # G_agr.node_attr['shape'] = 'circle'
+        G_agr.node_attr['shape'] = 'circle'
         G_agr.node_attr['gradientangle'] = 90
 
         for i in G_agr.nodes():
-            n = G_agr.get_node(i)
-            node = self.reverse_Sdict[n]
-            if node[0][2] == 's':
-                n.attr['shape'] = 'diamond'
-            else:
-                n.attr['shape'] = 'circle'          
+            n = G_agr.get_node(i)        
             if n in self.plt_sink_only:
                 n.attr['fillcolor'] = 'yellow'
             elif n in self.plt_int_only:
@@ -270,6 +256,9 @@ class Product(TranSys):
         for e, in_e in self.E.items():
             print(e," : ", in_e)
 
+    def list_nodes(self):
+        for n, n_st in self.Sdict.items():
+            print(n, " : ", n_st)
 
 def construct_automata_simple(AP_set=None):
     Q, qinit, AP, tau, Acc = eventually(state_str="q", formula="sink")
