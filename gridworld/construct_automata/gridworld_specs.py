@@ -5,14 +5,16 @@ Apurva Badithela
 """
 
 import sys
-sys.path.append("../gridworld/")
+sys.path.append("../simulations/")
 from network import MazeNetwork
 import spot
 import pdb
 from buddy import bddtrue
 spot.setup()
+import networkx as nx
 from itertools import chain, combinations
 from collections import OrderedDict as od
+import matplotlib.pyplot as plt
 
 class TranSys():
     def __init__(self, S=None, A=None, E=None, I=None, AP=None, L=None):
@@ -35,7 +37,6 @@ class System(TranSys):
     def get_maze(self, mazefile):
         self.maze = MazeNetwork(mazefile)
 
-
     def get_APs(self):
         """
         Set of atomic propositions required to define a specification
@@ -50,14 +51,6 @@ class System(TranSys):
             for k in self.maze.regions.keys():
                 self.AP.append(k)
                 self.AP_dict[k] = self.maze.regions[k]
-
-    def define_spec(self):
-        fstr = "F(sink)"
-        return fstr
-
-    def set_spec(self):
-        fstr = self.define_spec()
-        self.f = spot.formula(fstr)
     
     def construct_transition_function(self):
         self.E = dict()
@@ -110,6 +103,58 @@ class System(TranSys):
                 self.AP.append(formula) # Append intermed
             self.AP_dict[node] = formula
         self.construct_labels()
+    
+    def to_graph(self):
+        self.G = nx.DiGraph()
+        self.G.add_nodes_from(list(self.S))
+        
+        edges = []
+        edge_attr = dict()
+        node_attr = dict()
+        for state_act, in_node in self.E.items():
+            out_node = state_act[0]
+            act = state_act[1]
+            edge = (out_node, in_node)
+            edge_attr[edge] = {"act": act}
+            edges.append(edge)
+        self.G.add_edges_from(edges)
+        nx.set_edge_attributes(self.G, edge_attr)
+
+    def plot_product(self, fn):
+        pos = nx.kamada_kawai_layout(self.G)
+        sys_nodes = []
+        tester_nodes = []
+
+        node_labels = nx.get_node_attributes(self.G,'state')
+        nx.draw_networkx_labels(self.G, pos, labels = node_labels)
+        edge_labels = nx.get_edge_attributes(self.G,'act')
+        nx.draw_networkx_edges(self.G, pos, edgelist = list(self.G.edges()))
+        
+        options = {"edgecolors": "tab:gray", "node_size": 800, "alpha": 0.5}
+
+        plt.tight_layout()
+        plt.axis("off")
+        plt.savefig(fn+".pdf")
+        # plt.show()
+
+    def plot_product_dot(self, fn):
+        G_agr = nx.nx_agraph.to_agraph(self.G)
+        G_agr.node_attr['style'] = 'filled'
+        G_agr.node_attr['gradientangle'] = 90
+
+        for i in G_agr.nodes():
+            n = G_agr.get_node(i)
+            n.attr['shape'] = 'circle'
+            if self.AP_dict[node] == spot.formula.ap("int"):
+                n.attr['fillcolor'] = 'blue'
+            if self.AP_dict[node] == spot.formula.ap("sink"):
+                n.attr['fillcolor'] = 'yellow'
+        G_agr.draw(fn+"_dot.pdf",prog='dot')
+
+    def save_plot(self, fn):
+        self.to_graph()
+        self.plot_product(fn)
+        self.plot_product_dot(fn)
 
 def powerset(s):
     if type(s)==list:

@@ -47,7 +47,7 @@ class Product(ProductTransys):
         prod_transys_states = [(si[0], sj) for si, sj in self.transys.E.items()]
         aut_state_pairs = list(product(self.automaton.Q, self.automaton.Q))
         for s,t in prod_transys_states:
-            pdb.set_trace()
+            #pdb.set_trace()
             for a in self.transys.A:
                 if (s,a) in self.transys.E.keys():
                     for q,p in aut_state_pairs:
