@@ -85,7 +85,7 @@ def call_pyomo(GD, S):
 
     for cut in cuts:
         print('Cutting {0} to {1}'.format(GD.node_dict[cut[0]], GD.node_dict[cut[1]]))
-    # st()
+    st()
     return cuts, flow, bypass_flow
 
 

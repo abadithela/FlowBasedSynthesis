@@ -1,9 +1,35 @@
 import pyomo.environ as pyo
 from ipdb import set_trace as st
 
-def add_feasibility_constraints(model, G, S):
-    map_G_to_S = find_map_G_S(G,S)
-    model = feasibility_vars_and_constraints(model, S, map_G_to_S)
+def add_static_obstacle_constraints(model, GD):
+    G_truncated = {}
+    S_annot = {}
+    map_G_to_S = {}
+    for node in GD.node_dict:
+        G_truncated.update({node: (str(GD.node_dict[node][0]))})
+
+    flip_dict = {}
+    for key in G_truncated.keys():
+        if G_truncated[key] in flip_dict.keys():
+            new_mapping = flip_dict[G_truncated[key]] + key
+            flip_dict.update({G_truncated[key]: new_mapping})
+
+    model.static_cut_cons = pyo.ConstraintList()
+    edge_list = list(GD.graph.edges)
+
+    for count,(i,j) in enumerate(edge_list):
+        # st()
+        for (imap, jmap) in edge_list[count+1:]:
+            if G_truncated[i] == G_truncated[imap] and G_truncated[j] == G_truncated[jmap]:
+                expression = model.y['d_e', i, j] == model.y['d_e', imap, jmap]
+                model.static_cut_cons.add(expr = expression)
+
+    return model
+
+
+def add_feasibility_constraints(model, GD, SD):
+    map_G_to_S = find_map_G_S(GD,SD)
+    model = feasibility_vars_and_constraints(model, SD, map_G_to_S)
     return model
 
 def find_map_G_S(GD,SD):
@@ -47,12 +73,12 @@ def feasibility_vars_and_constraints(model, S, map_G_to_S):
 
     # Match the edge cuts from G to S
     def match_cut_constraints(model, i, j):
-        if i not in map_G_to_S.keys() or j not in map_G_to_S.keys():
-            return pyo.Constraint.Skip
-        else:
-            imap = map_G_to_S[i]
-            jmap = map_G_to_S[j]
-            return model.s_var['fS_e', imap, jmap] + model.y['d_e', i, j] <= model.t
+        # if i not in map_G_to_S.keys() or j not in map_G_to_S.keys():
+        #     return pyo.Constraint.Skip
+        # else:
+        imap = map_G_to_S[i]
+        jmap = map_G_to_S[j]
+        return model.s_var['fS_e', imap, jmap] + model.y['d_e', i, j] <= model.t
     model.de_cut = pyo.Constraint(model.edges, rule=match_cut_constraints)
 
     # Conservation constraints:
