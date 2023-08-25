@@ -23,6 +23,12 @@ def solve_bilevel(GD, SD):
     # st()
     cleaned_intermed = [x for x in GD.acc_test if x not in GD.acc_sys]
     G = GD.graph
+    to_remove = []
+    for i, j in G.edges:
+        if i == j:
+            # st()
+            to_remove.append((i,j))
+    G.remove_edges_from(to_remove)
     S = SD.graph
 
     model = pyo.ConcreteModel()
@@ -157,41 +163,41 @@ def solve_bilevel(GD, SD):
     model.L.cap3 = pyo.Constraint(model.L.edges, rule=capacity)
 
     # Conservation constraints
-    def conservation(model, l):
+    def conservation(mdl, l):
         if l in sink or l in src:
             return pyo.Constraint.Skip
-        incoming  = sum(model.f3[i,j] for (i,j) in model.edges if j == l)
-        outgoing = sum(model.f3[i,j] for (i,j) in model.edges if i == l)
+        incoming  = sum(mdl.f3[i,j] for (i,j) in model.edges if j == l)
+        outgoing = sum(mdl.f3[i,j] for (i,j) in model.edges if i == l)
         return incoming == outgoing
-    model.L.con = pyo.Constraint(model.L.nodes, rule=conservation)
+    model.L.cons3 = pyo.Constraint(model.L.nodes, rule=conservation)
 
     # nothing enters the source
-    def no_in_source(model, i,j):
+    def no_in_source(mdl, i,j):
         if j in src:
-            return model.f3[i,j] == 0
+            return mdl.f3[i,j] == 0
         else:
             return pyo.Constraint.Skip
-    model.L.no_in_source = pyo.Constraint(model.L.edges, rule=no_in_source)
+    model.L.no_in_source3 = pyo.Constraint(model.L.edges, rule=no_in_source)
 
     # nothing leaves sink
-    def no_out_sink(model, i,j):
+    def no_out_sink(mdl, i,j):
         if i in sink:
-            return model.f3[i,j] == 0
+            return mdl.f3[i,j] == 0
         else:
             return pyo.Constraint.Skip
-    model.L.no_out_sink = pyo.Constraint(model.L.edges, rule=no_out_sink)
+    model.L.no_out_sink3 = pyo.Constraint(model.L.edges, rule=no_out_sink)
 
     # nothing enters the intermediate or leaves the intermediate
-    def no_in_interm(model, i,j):
+    def no_in_interm(mdl, i,j):
         if j in int:
-            return model.f3[i,j] == 0
+            return mdl.f3[i,j] == 0
         else:
             return pyo.Constraint.Skip
     model.L.no_in_interm = pyo.Constraint(model.L.edges, rule=no_in_interm)
 
-    def no_out_interm(model, i,j):
+    def no_out_interm(mdl, i,j):
         if i in int:
-            return model.f3[i,j] == 0
+            return mdl.f3[i,j] == 0
         else:
             return pyo.Constraint.Skip
     model.L.no_out_interm = pyo.Constraint(model.L.edges, rule=no_out_interm)
@@ -204,6 +210,7 @@ def solve_bilevel(GD, SD):
     print(" ==== Successfully added objective and constraints! ==== ")
     if debug:
         model.pprint()
+    # st()
 
     with Solver('pao.pyomo.REG') as solver:
         results = solver.solve(model, tee=True)
@@ -227,7 +234,7 @@ def solve_bilevel(GD, SD):
     # print(F)
     for key in d_e.keys():
         print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],d_e[key]))
-
+    st()
     return f1_e, f2_e, f3_e, d_e, F
 
 def postprocess_cuts(G, cuts, acc_test, init, node_dict, state_map):
