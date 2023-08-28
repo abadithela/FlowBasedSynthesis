@@ -34,7 +34,7 @@ def solve_bilevel(GD):
 
     src = GD.init
     sink = GD.sink
-    int = GD.int
+    inter = cleaned_intermed
 
     vars = ['f1_e', 'f2_e', 'd_e']
     model.y = pyo.Var(vars, model.edges, within=pyo.NonNegativeReals)
@@ -71,7 +71,7 @@ def solve_bilevel(GD):
     def flow_src1(model):
         return 1 <= sum(model.y['f1_e', i,j] for (i, j) in model.edges if i in src)
     def flow_src2(model):
-        return 1 <= sum(model.y['f2_e', i,j] for (i, j) in model.edges if i in int)
+        return 1 <= sum(model.y['f2_e', i,j] for (i, j) in model.edges if i in inter)
     model.min_constr1 = pyo.Constraint(rule=flow_src1)
     model.min_constr2 = pyo.Constraint(rule=flow_src2)
 
@@ -84,7 +84,7 @@ def solve_bilevel(GD):
 
     # conservation constraints
     def conservation1(model, l):
-        if l in src or l in int:
+        if l in src or l in inter:
             return pyo.Constraint.Skip
         incoming  = sum(model.y['f1_e', i,j] for (i,j) in model.edges if j == l)
         outgoing = sum(model.y['f1_e',i,j] for (i,j) in model.edges if i == l)
@@ -92,7 +92,7 @@ def solve_bilevel(GD):
     model.cons1 = pyo.Constraint(model.nodes, rule=conservation1)
 
     def conservation2(model, l):
-        if l in int or l in sink:
+        if l in inter or l in sink:
             return pyo.Constraint.Skip
         incoming  = sum(model.y['f2_e', i,j] for (i,j) in model.edges if j == l)
         outgoing = sum(model.y['f2_e', i,j] for (i,j) in model.edges if i == l)
@@ -108,14 +108,14 @@ def solve_bilevel(GD):
     model.no_in_source1 = pyo.Constraint(model.edges, rule=no_in_source1)
     # nothing leaves sink
     def no_out_sink1(model, i,j):
-        if i in int:
+        if i in inter:
             return model.y['f1_e', i,j] == 0
         else:
             return pyo.Constraint.Skip
     model.no_out_sink1 = pyo.Constraint(model.edges, rule=no_out_sink1)
     # =================================================================== #
     def no_in_source2(model, i,j):
-        if j in int:
+        if j in inter:
             return model.y['f2_e',i,j] == 0
         else:
             return pyo.Constraint.Skip
@@ -187,14 +187,14 @@ def solve_bilevel(GD):
 
     # nothing enters the intermediate or leaves the intermediate
     def no_in_interm(model, i,j):
-        if j in int:
+        if j in inter:
             return model.f3[i,j] == 0
         else:
             return pyo.Constraint.Skip
     model.L.no_in_interm = pyo.Constraint(model.L.edges, rule=no_in_interm)
 
     def no_out_interm(model, i,j):
-        if i in int:
+        if i in inter:
             return model.f3[i,j] == 0
         else:
             return pyo.Constraint.Skip

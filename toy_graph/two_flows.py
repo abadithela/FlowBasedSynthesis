@@ -35,7 +35,7 @@ def solve_bilevel(GD):
 
     src = GD.init
     sink = GD.sink
-    inter = GD.int
+    inter = cleaned_intermed
 
     # 'ft': tester flow, and d: cut values
     vars = ['ft', 'd']
