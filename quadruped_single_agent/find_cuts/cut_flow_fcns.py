@@ -21,13 +21,11 @@ from copy import deepcopy
 debug = True
 
 def solve_bilevel(GD, SD):
-    # st()
     cleaned_intermed = [x for x in GD.acc_test if x not in GD.acc_sys]
     G = GD.graph
     to_remove = []
     for i, j in G.edges:
         if i == j:
-            # st()
             to_remove.append((i,j))
     G.remove_edges_from(to_remove)
     S = SD.graph
@@ -38,7 +36,7 @@ def solve_bilevel(GD, SD):
 
     src = GD.init
     sink = GD.sink
-    int = GD.int
+    intermed = cleaned_intermed
 
     vars = ['f1_e', 'f2_e', 'd_e']
     model.y = pyo.Var(vars, model.edges, within=pyo.NonNegativeReals)
@@ -61,8 +59,7 @@ def solve_bilevel(GD, SD):
     # model = add_static_obstacle_constraints(model, GD)
 
     # initialize the flows
-    f1_init, f2_init, f3_init = initialize_max_flow(G, src, int, sink)
-    st()
+    f1_init, f2_init, f3_init = initialize_max_flow(G, src, intermed, sink)
 
     for (i,j) in model.edges:
         model.y['d_e', i, j] = 0
@@ -73,9 +70,9 @@ def solve_bilevel(GD, SD):
 
     # Objective - minimize 1/F + lambda*f_3/F
     def mcf_flow(model):
-        lam = 0.1
+        lam = 1000
         flow_3 = sum(model.L.f3[i,j] for (i, j) in model.L.edges if i in src)
-        return model.t# + lam*flow_3
+        return model.t + lam*flow_3
 
 
     model.o = pyo.Objective(rule=mcf_flow, sense=pyo.minimize)
@@ -85,7 +82,7 @@ def solve_bilevel(GD, SD):
     def flow_src1(model):
         return 1 <= sum(model.y['f1_e', i,j] for (i, j) in model.edges if i in src)
     def flow_src2(model):
-        return 1 <= sum(model.y['f2_e', i,j] for (i, j) in model.edges if i in int)
+        return 1 <= sum(model.y['f2_e', i,j] for (i, j) in model.edges if i in intermed)
     model.min_constr1 = pyo.Constraint(rule=flow_src1)
     model.min_constr2 = pyo.Constraint(rule=flow_src2)
 
@@ -98,7 +95,7 @@ def solve_bilevel(GD, SD):
 
     # conservation constraints
     def conservation1(model, l):
-        if l in src or l in int:
+        if l in src or l in intermed:
             return pyo.Constraint.Skip
         incoming  = sum(model.y['f1_e', i,j] for (i,j) in model.edges if j == l)
         outgoing = sum(model.y['f1_e',i,j] for (i,j) in model.edges if i == l)
@@ -106,7 +103,7 @@ def solve_bilevel(GD, SD):
     model.cons1 = pyo.Constraint(model.nodes, rule=conservation1)
 
     def conservation2(model, l):
-        if l in int or l in sink:
+        if l in intermed or l in sink:
             return pyo.Constraint.Skip
         incoming  = sum(model.y['f2_e', i,j] for (i,j) in model.edges if j == l)
         outgoing = sum(model.y['f2_e', i,j] for (i,j) in model.edges if i == l)
@@ -122,14 +119,14 @@ def solve_bilevel(GD, SD):
     model.no_in_source1 = pyo.Constraint(model.edges, rule=no_in_source1)
     # nothing leaves sink
     def no_out_sink1(model, i,j):
-        if i in int:
+        if i in intermed:
             return model.y['f1_e', i,j] == 0
         else:
             return pyo.Constraint.Skip
     model.no_out_sink1 = pyo.Constraint(model.edges, rule=no_out_sink1)
     # =================================================================== #
     def no_in_source2(model, i,j):
-        if j in int:
+        if j in intermed:
             return model.y['f2_e',i,j] == 0
         else:
             return pyo.Constraint.Skip
@@ -152,16 +149,6 @@ def solve_bilevel(GD, SD):
     def cut_cons2(model,  i, j):
         return model.y['f2_e', i, j] + model.y['d_e', i, j]<= model.t
     model.cut_cons2 = pyo.Constraint(model.edges, rule=cut_cons2)
-
-    # do not cut system actions
-    # def conserve_sys_act(model, i,j):
-    #     if state_map[node_dict[i][0]][-1] == 's':
-    #         return model.y['d_e',i,j] == 0
-    #     else:
-    #         return pyo.Constraint.Skip
-    # model.no_cut_sys_act = pyo.Constraint(model.edges, rule=conserve_sys_act)
-
-    # no trap states (postprocessing)
 
     # SUBMODEL
     # Objective - Maximize the flow into the sink
@@ -201,14 +188,14 @@ def solve_bilevel(GD, SD):
 
     # nothing enters the intermediate or leaves the intermediate
     def no_in_interm(model, i,j):
-        if j in int:
+        if j in intermed:
             return model.f3[i,j] == 0
         else:
             return pyo.Constraint.Skip
     model.L.no_in_interm = pyo.Constraint(model.L.edges, rule=no_in_interm)
 
     def no_out_interm(model, i,j):
-        if i in int:
+        if i in intermed:
             return model.f3[i,j] == 0
         else:
             return pyo.Constraint.Skip

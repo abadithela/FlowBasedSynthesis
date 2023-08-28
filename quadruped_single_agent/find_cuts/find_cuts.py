@@ -105,7 +105,7 @@ def find_cuts():
 
     GD, S = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
     #
-    st()
+    # st()
     cuts = []
     cuts, flow, bypass = call_pyomo(GD, S)
     st()
