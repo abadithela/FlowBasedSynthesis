@@ -14,6 +14,7 @@ from pao.pyomo import *
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
 from feasibility_constraints import add_feasibility_constraints, add_static_obstacle_constraints
+from initialize_max_flow import initialize_max_flow
 from setup_graphs import setup_graphs_for_optimization
 from copy import deepcopy
 
@@ -59,11 +60,22 @@ def solve_bilevel(GD, SD):
     # model = add_feasibility_constraints(model, GD, SD)
     # model = add_static_obstacle_constraints(model, GD)
 
+    # initialize the flows
+    f1_init, f2_init, f3_init = initialize_max_flow(G, src, int, sink)
+    st()
+
+    for (i,j) in model.edges:
+        model.y['d_e', i, j] = 0
+        model.y['f1_e', i, j] = f1_init[(i,j)]
+        model.y['f2_e', i, j] = f2_init[(i,j)]
+        model.L.f3[i, j] = f3_init[(i,j)]
+
+
     # Objective - minimize 1/F + lambda*f_3/F
     def mcf_flow(model):
-        lam = 1000
+        lam = 0.1
         flow_3 = sum(model.L.f3[i,j] for (i, j) in model.L.edges if i in src)
-        return model.t + lam*flow_3
+        return model.t# + lam*flow_3
 
 
     model.o = pyo.Objective(rule=mcf_flow, sense=pyo.minimize)
@@ -163,41 +175,41 @@ def solve_bilevel(GD, SD):
     model.L.cap3 = pyo.Constraint(model.L.edges, rule=capacity)
 
     # Conservation constraints
-    def conservation(mdl, l):
+    def conservation(model, l):
         if l in sink or l in src:
             return pyo.Constraint.Skip
-        incoming  = sum(mdl.f3[i,j] for (i,j) in model.edges if j == l)
-        outgoing = sum(mdl.f3[i,j] for (i,j) in model.edges if i == l)
+        incoming  = sum(model.f3[i,j] for (i,j) in model.edges if j == l)
+        outgoing = sum(model.f3[i,j] for (i,j) in model.edges if i == l)
         return incoming == outgoing
     model.L.cons3 = pyo.Constraint(model.L.nodes, rule=conservation)
 
     # nothing enters the source
-    def no_in_source(mdl, i,j):
+    def no_in_source(model, i,j):
         if j in src:
-            return mdl.f3[i,j] == 0
+            return model.f3[i,j] == 0
         else:
             return pyo.Constraint.Skip
     model.L.no_in_source3 = pyo.Constraint(model.L.edges, rule=no_in_source)
 
     # nothing leaves sink
-    def no_out_sink(mdl, i,j):
+    def no_out_sink(model, i,j):
         if i in sink:
-            return mdl.f3[i,j] == 0
+            return model.f3[i,j] == 0
         else:
             return pyo.Constraint.Skip
     model.L.no_out_sink3 = pyo.Constraint(model.L.edges, rule=no_out_sink)
 
     # nothing enters the intermediate or leaves the intermediate
-    def no_in_interm(mdl, i,j):
+    def no_in_interm(model, i,j):
         if j in int:
-            return mdl.f3[i,j] == 0
+            return model.f3[i,j] == 0
         else:
             return pyo.Constraint.Skip
     model.L.no_in_interm = pyo.Constraint(model.L.edges, rule=no_in_interm)
 
-    def no_out_interm(mdl, i,j):
+    def no_out_interm(model, i,j):
         if i in int:
-            return mdl.f3[i,j] == 0
+            return model.f3[i,j] == 0
         else:
             return pyo.Constraint.Skip
     model.L.no_out_interm = pyo.Constraint(model.L.edges, rule=no_out_interm)
