@@ -6,6 +6,27 @@ def add_feasibility_constraints(model, G, S):
     model = feasibility_vars_and_constraints(model, S, map_G_to_S)
     return model
 
+def add_static_obstacle_constraints_on_G(model, GD): # only works for single tester flow
+    G_truncated = {}
+    for node in GD.node_dict:
+        G_truncated.update({node: (str(GD.node_dict[node][0]))})
+
+    flip_dict = {}
+    for key in G_truncated.keys():
+        if G_truncated[key] in flip_dict.keys():
+            new_mapping = flip_dict[G_truncated[key]] + key
+            flip_dict.update({G_truncated[key]: new_mapping})
+
+    model.static_cut_cons = pyo.ConstraintList()
+    edge_list = list(GD.graph.edges)
+
+    for count,(i,j) in enumerate(edge_list):
+        for (imap, jmap) in edge_list[count+1:]:
+            if G_truncated[i] == G_truncated[imap] and G_truncated[j] == G_truncated[jmap]:
+                expression = model.y['d', i, j] == model.y['d', imap, jmap]
+                model.static_cut_cons.add(expr = expression)
+    return model
+
 def find_map_G_S(GD,SD):
     # st()
     G_truncated = {}

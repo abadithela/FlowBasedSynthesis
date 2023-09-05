@@ -4,7 +4,7 @@ import numpy as np
 from ipdb import set_trace as st
 import networkx as nx
 import pdb
-from cut_flow_fcns import solve_bilevel, postprocess_cuts
+from cut_flow_fcns import solve_bilevel
 # from construct_automata import get_gamegraph, construct_automata
 # from runnerblocker_network import RunnerBlockerNetwork
 from construct_automata.main import quad_test_sync
@@ -74,7 +74,7 @@ def call_pyomo(GD, S):
 
     ftest, fsys, d, F = solve_bilevel(GD, S)
     cuts = [x for x in d.keys() if d[x] >= 0.9]
-    pdb.set_trace()
+    # pdb.set_trace()
     flow = F
     bypass_flow = sum([ftest[j] for j in ftest.keys() if j[1] in GD.sink])
     print('Cut {} edges in the virtual game graph.'.format(len(cuts)))

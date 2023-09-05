@@ -42,7 +42,9 @@ def initialize_max_flow(G, src, intermed, sink):
         else:
             f3_e.update({edge: 0.0})
 
-    return f1_e, f2_e, f3_e
+    t_init = 1/flow
+
+    return f1_e, f2_e, f3_e, t_init
 
 def max_flow(graph, start, goal):
     model = pyo.ConcreteModel()
@@ -87,8 +89,8 @@ def max_flow(graph, start, goal):
             return pyo.Constraint.Skip
     model.no_out_sink = pyo.Constraint(model.edges, rule=no_out_sink)
     # =================================================================== #
-    print(" ==== Successfully added objective and constraints! ==== ")
-    model.pprint()
+    # print(" ==== Successfully added objective and constraints! ==== ")
+    # model.pprint()
 
     opt = SolverFactory('glpk')
     if not opt:

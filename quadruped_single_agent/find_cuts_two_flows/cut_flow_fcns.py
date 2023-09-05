@@ -15,11 +15,13 @@ import pao
 import pdb
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
-from feasibility_constraints import add_feasibility_constraints
+from feasibility_constraints import add_feasibility_constraints, add_static_obstacle_constraints_on_G
 from setup_graphs import setup_graphs_for_optimization
+from initialize_max_flow import initialize_max_flow
 from copy import deepcopy
 
 debug = True
+init = True
 
 def solve_bilevel(GD, SD):
     cleaned_intermed = [x for x in GD.acc_test if x not in GD.acc_sys]
@@ -32,7 +34,7 @@ def solve_bilevel(GD, SD):
 
     src = GD.init
     sink = GD.sink
-    inter = GD.int
+    inter = cleaned_intermed
 
     # 'ft': tester flow, and d: cut values
     vars = ['ft', 'd']
@@ -52,10 +54,20 @@ def solve_bilevel(GD, SD):
 
     # Add constraints that system will always have a path
     # model = add_feasibility_constraints(model, GD, SD)
+    model = add_static_obstacle_constraints_on_G(model, GD)
+
+    if init: # initialize the flows with valid max flow
+        f_init, fs_init, t_init = initialize_max_flow(G, src, inter, sink)
+
+        for (i,j) in model.edges:
+            model.y['d', i, j] = 0
+            model.y['ft', i, j] = f_init[(i,j)]
+            model.L.fs[i, j] = fs_init[(i,j)]
+        model.t = t_init
 
     # Objective - minimize 1/F + lambda*f_sys/F
     def mcf_flow(model):
-        lam = 1
+        lam = 1000
         bypass_flow = sum(model.L.fs[i,j] for (i, j) in model.L.edges if i in src)
         return model.t + lam*bypass_flow
     model.o = pyo.Objective(rule=mcf_flow, sense=pyo.minimize)
@@ -163,8 +175,8 @@ def solve_bilevel(GD, SD):
     # with Solver('pao.pyomo.REG') as solver:
     #     results = solver.solve(model, tee=True)
 
-    opt = pao.Solver("pao.pyomo.FA")
-    results = opt.solve(model)
+    with Solver('pao.pyomo.REG') as solver:
+        results = solver.solve(model, tee=True, max_iter=5000)
 
     # model.pprint()
     ftest = dict()
@@ -179,49 +191,7 @@ def solve_bilevel(GD, SD):
     for (i,j) in model.L.edges:
         fsys.update({(i,j): model.L.fs[i,j].value*F})
 
-    # print(d_e)
-    # print(F)
     for key in d.keys():
         print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],d[key]))
 
     return ftest, fsys, d, F
-
-def postprocess_cuts(G, cuts, acc_test, init, node_dict, state_map):
-    for cut in cuts: # remove the cuts from the graph
-        print(cut)
-        G.remove_edge(cut[0],cut[1])
-
-    dead_ends = []
-    for cut in cuts: # prune the trap states / dead ends
-        ok = True
-        for target in acc_test:
-            if not nx.has_path(G,cut[0],target):
-                ok = False
-        if not ok:
-            dead_ends.append(cut[0])
-    for dead_end in dead_ends:
-        in_edges = G.in_edges(dead_end)
-        sys_nodes_to_prune = []
-        for edge in in_edges:
-            for target in acc_test:
-                need_cut = False
-                if nx.has_path(G, edge[0], target):
-                    need_cut = True
-            if need_cut:
-                sys_nodes_to_prune.append(edge[0])
-
-    new_cuts = []
-    for node in sys_nodes_to_prune:
-        in_edges = deepcopy(G.in_edges(node))
-        for edge in in_edges:
-            cut_ok = False
-            for target in acc_test:
-                if nx.has_path(G,edge[0],target) and nx.has_path(G,init[0],edge[0]):
-                    cut_ok = True
-
-            if cut_ok:
-                G.remove_edge(edge[0],edge[1])
-                new_cuts.append(edge)
-
-
-    return G, new_cuts

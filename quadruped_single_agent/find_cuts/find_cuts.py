@@ -3,7 +3,7 @@ sys.path.append('..')
 import numpy as np
 from ipdb import set_trace as st
 import networkx as nx
-from cut_flow_fcns import solve_bilevel, postprocess_cuts
+from cut_flow_fcns import solve_bilevel
 # from construct_automata import get_gamegraph, construct_automata
 # from runnerblocker_network import RunnerBlockerNetwork
 from construct_automata.main import quad_test_sync
@@ -52,11 +52,11 @@ def setup_nodes_and_edges(virtual_game_graph, virtual_sys, b_pi):
     # find initial state
     S_init = []
     for initial in virtual_sys.I:
-        S_init.append(inv_node_dict[initial])
+        S_init.append(S_inv_node_dict[initial])
     # find accepting states for system
     S_acc_sys = []
-    for node in nodes:
-        if node_dict[node] in virtual_sys.sink:
+    for node in S_nodes:
+        if S_node_dict[node] in virtual_sys.sink:
             S_acc_sys.append(node)
     # setup edges
     S_edges = []
@@ -64,9 +64,6 @@ def setup_nodes_and_edges(virtual_game_graph, virtual_sys, b_pi):
         out_node = virtual_sys.reverse_Sdict[edge[0]]
         in_node = virtual_sys.reverse_Sdict[edge[1]]
         S_edges.append((S_inv_node_dict[out_node],S_inv_node_dict[in_node]))
-
-
-
 
     GD = GraphData(nodes, edges, node_dict, inv_node_dict, acc_sys, acc_test, init)
     S = GraphData(S_nodes, S_edges, S_node_dict, S_inv_node_dict, S_acc_sys, [], S_init)

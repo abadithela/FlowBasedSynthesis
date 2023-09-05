@@ -13,15 +13,18 @@ import networkx as nx
 from pao.pyomo import *
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
-from feasibility_constraints import add_feasibility_constraints, add_static_obstacle_constraints
+from feasibility_constraints import add_feasibility_constraints
 from initialize_max_flow import initialize_max_flow
 from setup_graphs import setup_graphs_for_optimization
 from copy import deepcopy
 
 debug = True
+init = False
 
 def solve_bilevel(GD, SD):
     cleaned_intermed = [x for x in GD.acc_test if x not in GD.acc_sys]
+
+    # create G and remove self-loops
     G = GD.graph
     to_remove = []
     for i, j in G.edges:
@@ -30,10 +33,12 @@ def solve_bilevel(GD, SD):
     G.remove_edges_from(to_remove)
     S = SD.graph
 
+    # build model and variables
     model = pyo.ConcreteModel()
     model.nodes = G.nodes
     model.edges = G.edges
 
+    # set S,I,T nodes
     src = GD.init
     sink = GD.sink
     intermed = cleaned_intermed
@@ -43,37 +48,37 @@ def solve_bilevel(GD, SD):
     model.t = pyo.Var(within=pyo.NonNegativeReals)
 
     # Introduce SUBMODEL
-    # fixed variables defined by the upper level (tester)
+    # fixed variables defined by the outer player
     fixed_variables = [model.y['d_e',i,j] for i,j in model.edges] # Cut edges
     fixed_variables.extend([model.y['f1_e',i,j] for i,j in model.edges]) # Flow 1
     fixed_variables.extend([model.y['f2_e',i,j] for i,j in model.edges]) # Flow 2
     fixed_variables.extend([model.t]) # 1/F
-    # Submodel - variables defined by the system under test
+    # Submodel - variables defined by the inner player
     model.L = SubModel(fixed=fixed_variables)
     model.L.edges = model.edges
     model.L.nodes = model.nodes
     model.L.f3 = pyo.Var(model.L.edges, within=pyo.NonNegativeReals) # Flow 3 (from s to t not through i)
 
     # Add constraints that system will always have a path
-    # model = add_feasibility_constraints(model, GD, SD)
+    model = add_feasibility_constraints(model, GD, SD)
     # model = add_static_obstacle_constraints(model, GD)
 
-    # initialize the flows
-    f1_init, f2_init, f3_init = initialize_max_flow(G, src, intermed, sink)
+    if init: # initialize the flows with valid max flow
+        f1_init, f2_init, f3_init, t_init = initialize_max_flow(G, src, intermed, sink)
 
-    for (i,j) in model.edges:
-        model.y['d_e', i, j] = 0
-        model.y['f1_e', i, j] = f1_init[(i,j)]
-        model.y['f2_e', i, j] = f2_init[(i,j)]
-        model.L.f3[i, j] = f3_init[(i,j)]
-
+        for (i,j) in model.edges:
+            model.y['d_e', i, j] = 0
+            model.y['f1_e', i, j] = f1_init[(i,j)]
+            model.y['f2_e', i, j] = f2_init[(i,j)]
+            model.L.f3[i, j] = f3_init[(i,j)]
+        model.t = t_init
 
     # Objective - minimize 1/F + lambda*f_3/F
     def mcf_flow(model):
-        lam = 1000
+        lam = len(model.edges)
         flow_3 = sum(model.L.f3[i,j] for (i, j) in model.L.edges if i in src)
-        return model.t + lam*flow_3
-
+        # cut_value = sum(model.y['d_e', (i,j)] for (i,j) in model.edges)
+        return model.t + lam*flow_3# + cut_value
 
     model.o = pyo.Objective(rule=mcf_flow, sense=pyo.minimize)
 
@@ -86,6 +91,7 @@ def solve_bilevel(GD, SD):
     model.min_constr1 = pyo.Constraint(rule=flow_src1)
     model.min_constr2 = pyo.Constraint(rule=flow_src2)
 
+    # capacity constraints
     def capacity1(model, i, j):
         return model.y['f1_e',i, j] <= model.t
     def capacity2(model, i, j):
@@ -229,49 +235,8 @@ def solve_bilevel(GD, SD):
     for (i,j) in model.L.edges:
         f3_e.update({(i,j): model.L.f3[i,j].value*F})
 
-    # print(d_e)
-    # print(F)
     for key in d_e.keys():
         print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],d_e[key]))
-    st()
+    if debug:
+        st()
     return f1_e, f2_e, f3_e, d_e, F
-
-def postprocess_cuts(G, cuts, acc_test, init, node_dict, state_map):
-    for cut in cuts: # remove the cuts from the graph
-        print(cut)
-        G.remove_edge(cut[0],cut[1])
-
-    dead_ends = []
-    for cut in cuts: # prune the trap states / dead ends
-        ok = True
-        for target in acc_test:
-            if not nx.has_path(G,cut[0],target):
-                ok = False
-        if not ok:
-            dead_ends.append(cut[0])
-    for dead_end in dead_ends:
-        in_edges = G.in_edges(dead_end)
-        sys_nodes_to_prune = []
-        for edge in in_edges:
-            for target in acc_test:
-                need_cut = False
-                if nx.has_path(G, edge[0], target):
-                    need_cut = True
-            if need_cut:
-                sys_nodes_to_prune.append(edge[0])
-
-    new_cuts = []
-    for node in sys_nodes_to_prune:
-        in_edges = deepcopy(G.in_edges(node))
-        for edge in in_edges:
-            cut_ok = False
-            for target in acc_test:
-                if nx.has_path(G,edge[0],target) and nx.has_path(G,init[0],edge[0]):
-                    cut_ok = True
-
-            if cut_ok:
-                G.remove_edge(edge[0],edge[1])
-                new_cuts.append(edge)
-
-
-    return G, new_cuts

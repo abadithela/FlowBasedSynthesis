@@ -24,12 +24,21 @@ class MazeNetwork:
     def __init__(self, mazefile):
         self.init = None
         self.goal = None
+        self.int_1 = None
+        self.int_2 = None
         self.map, self.len_x, self.len_z = create_network_from_file(mazefile)
         self.len_y = self.len_z
-        # self.tester_init = (4,1)
+        self.tester_init = (4,2)
         self.G_transitions, self.single_states, self.next_state_dict = self.setup_next_states_map()
         self.G = self.create_network_graph()
 
+    def set_int_1_and_2(self, int_1, int_2):
+        self.int_1 = int_1
+        self.int_2 = int_2
+
+    def state_info(self, node):
+        # returns system_state, tester_state, player
+        return node[0], node[1], node[2]
 
     def print_maze(self):
         key_y_old = []
