@@ -79,9 +79,10 @@ def solve_bilevel(GD, SD):
 
     # Objective - minimize 1/F + lambda*f_sys/F
     def mcf_flow(model):
-        lam = 1000
+        lam = 1
         bypass_flow = sum(model.L.fs[i,j] for (i, j) in model.L.edges if i in src)
         return model.t + lam*bypass_flow
+        # return bypass_flow
     model.o = pyo.Objective(rule=mcf_flow, sense=pyo.minimize)
 
     # Constraints
