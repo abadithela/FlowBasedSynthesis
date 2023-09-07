@@ -53,11 +53,11 @@ def setup_nodes_and_edges(virtual_game_graph, virtual_sys, b_pi):
     # find initial state
     S_init = []
     for initial in virtual_sys.I:
-        S_init.append(inv_node_dict[initial])
+        S_init.append(S_inv_node_dict[initial])
     # find accepting states for system
     S_acc_sys = []
-    for node in nodes:
-        if node_dict[node] in virtual_sys.sink:
+    for node in S_nodes:
+        if S_node_dict[node] in virtual_sys.sink:
             S_acc_sys.append(node)
     # setup edges
     S_edges = []
@@ -76,7 +76,7 @@ def call_pyomo(GD, S):
     cuts = [x for x in d.keys() if d[x] >= 0.9]
     # pdb.set_trace()
     flow = F
-    bypass_flow = sum([ftest[j] for j in ftest.keys() if j[1] in GD.sink])
+    bypass_flow = sum([fsys[j] for j in fsys.keys() if j[1] in GD.sink])
     print('Cut {} edges in the virtual game graph.'.format(len(cuts)))
     print('The max flow through I is {}'.format(F))
     print('The bypass flow is {}'.format(bypass_flow))

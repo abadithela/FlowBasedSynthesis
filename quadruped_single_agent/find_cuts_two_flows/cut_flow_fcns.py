@@ -15,7 +15,7 @@ import pao
 import pdb
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
-from feasibility_constraints import add_feasibility_constraints, add_static_obstacle_constraints_on_G
+from feasibility_constraints import add_static_obstacle_constraints_on_S, add_static_obstacle_constraints_on_G
 from setup_graphs import setup_graphs_for_optimization
 from initialize_max_flow import initialize_max_flow
 from copy import deepcopy
@@ -25,8 +25,20 @@ init = True
 
 def solve_bilevel(GD, SD):
     cleaned_intermed = [x for x in GD.acc_test if x not in GD.acc_sys]
+    # create G and remove self-loops
     G = GD.graph
+    to_remove = []
+    for i, j in G.edges:
+        if i == j:
+            to_remove.append((i,j))
+    G.remove_edges_from(to_remove)
+    # create S and remove self-loops
     S = SD.graph
+    to_remove = []
+    for i, j in S.edges:
+        if i == j:
+            to_remove.append((i,j))
+    S.remove_edges_from(to_remove)
 
     model = pyo.ConcreteModel()
     model.nodes = G.nodes
@@ -53,8 +65,8 @@ def solve_bilevel(GD, SD):
     model.L.fs = pyo.Var(model.L.edges, within=pyo.NonNegativeReals) # Flow 3 (from s to t not through i)
 
     # Add constraints that system will always have a path
-    # model = add_feasibility_constraints(model, GD, SD)
-    model = add_static_obstacle_constraints_on_G(model, GD)
+    model = add_static_obstacle_constraints_on_S(model, GD, SD)
+    # model = add_static_obstacle_constraints_on_G(model, GD)
 
     # compute max flow for lower bound on t
     f_init, fs_init, t_lower = initialize_max_flow(G, src, inter, sink)
