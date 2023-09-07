@@ -56,14 +56,14 @@ def solve_bilevel(GD, SD):
     # model = add_feasibility_constraints(model, GD, SD)
     model = add_static_obstacle_constraints_on_G(model, GD)
 
+    # compute max flow for lower bound on t
+    f_init, fs_init, t_lower = initialize_max_flow(G, src, inter, sink)
     if init: # initialize the flows with valid max flow
-        f_init, fs_init, t_init = initialize_max_flow(G, src, inter, sink)
-
         for (i,j) in model.edges:
             model.y['d', i, j] = 0
             model.y['ft', i, j] = f_init[(i,j)]
             model.L.fs[i, j] = fs_init[(i,j)]
-        model.t = t_init
+        model.t = t_lower
 
     # Objective - minimize 1/F + lambda*f_sys/F
     def mcf_flow(model):
@@ -75,8 +75,16 @@ def solve_bilevel(GD, SD):
     # Constraints
     # Maximize the flow into the sink
     def flow_src_test(model):
-        return 1 <= sum(model.y['ft', i,j] for (i, j) in model.edges if i in src)
+        return 1 == sum(model.y['ft', i,j] for (i, j) in model.edges if i in src)
     model.min_constr = pyo.Constraint(rule=flow_src_test)
+
+    # constraints on t
+    model.bounded_t = pyo.ConstraintList()
+    t_lower_bound = t_lower <= model.t
+    model.bounded_t.add(expr = t_lower_bound)
+    t_upper_bound = model.t <= 1.0
+    model.bounded_t.add(expr = t_upper_bound)
+
 
     def capacity_test(model, i, j):
         return model.y['ft',i, j] <= model.t
