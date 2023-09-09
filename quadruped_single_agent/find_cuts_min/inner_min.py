@@ -101,7 +101,7 @@ def solve_inner_min(GD, SD):
     for (i,j) in model.edges:
         lam.update({(i,j): model.l[i,j].value})
     for k in model.nodes:
-        mu.update({(i): model.m[i].value})
+        mu.update({(k): model.m[k].value})
 
     st()
     return lam, mu

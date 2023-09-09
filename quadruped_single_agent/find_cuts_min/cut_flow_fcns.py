@@ -23,6 +23,8 @@ from copy import deepcopy
 debug = True
 init = False
 
+chosen_solver = 'gurobi'
+
 def solve_min(GD, SD):
     cleaned_intermed = [x for x in GD.acc_test if x not in GD.acc_sys]
     # create G and remove self-loops
@@ -70,7 +72,7 @@ def solve_min(GD, SD):
             model.y['ft', i, j] = f_init[(i,j)]
         model.t = t_lower
 
-    # Objective - minimize (1-gamma)*1/F + gamma*sum(lam*(t-de))
+    # Objective - minimize (1-gamma)*t + gamma*sum(lam*(t-de))
     def obj(model):
         gam = 0.999
         second_term = sum(model.l[i,j]*(model.t-model.y['d',i,j]) for (i, j) in model.edges)
@@ -128,8 +130,8 @@ def solve_min(GD, SD):
     # partition constraint for max flow dual
     model.max_flow_partitions = pyo.ConstraintList()
     node_list = list(G.nodes)
-    for count,i in enumerate(node_list):
-        for j in node_list:
+    for count, i in enumerate(node_list):
+        for j in node_list[count+1:]:
             if i in src and j in sink:
                 expression = model.m[i] - model.m[j] >= 1
                 model.max_flow_partitions.add(expr = expression)
@@ -139,8 +141,7 @@ def solve_min(GD, SD):
 
     # max flow cut constraint
     def max_flow_cut(model, i,j):
-        expr = model.l[i,j] - model.m[i] + model.m[j] >= 0
-        return expr
+        return model.l[i,j] - model.m[i] + model.m[j] >= 0
     model.max_flow_cut = pyo.Constraint(model.edges, rule=max_flow_cut)
 
     # no cuts on edges for intermediate nodes to get max flow
@@ -155,8 +156,12 @@ def solve_min(GD, SD):
     if debug:
         model.pprint()
 
-    opt = SolverFactory("gurobi", solver_io="python")
-    opt.options['NonConvex'] = 2
+    if chosen_solver == 'gurobi':
+        opt = SolverFactory("gurobi", solver_io="python")
+        opt.options['NonConvex'] = 2
+    elif chosen_solver == 'cplex':
+        opt = SolverFactory("cplex", executable="/Applications/CPLEX_Studio2211/cplex/bin/x86-64_osx/cplex")
+        opt.options['optimalitytarget']=3
 
     opt.solve(model, tee= True)
 
@@ -166,7 +171,6 @@ def solve_min(GD, SD):
     d = dict()
     lam = dict()
     mu = dict()
-    F = 0
 
     for (i,j) in model.edges:
         F = (1.0)/(model.t.value)
@@ -174,7 +178,7 @@ def solve_min(GD, SD):
         d.update({(i,j): model.y['d', i,j].value*F})
         lam.update({(i,j): model.l[i,j].value})
     for k in model.nodes:
-        mu.update({(i): model.m[i].value})
+        mu.update({(k): model.m[k].value})
 
     for key in d.keys():
         print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],d[key]))
