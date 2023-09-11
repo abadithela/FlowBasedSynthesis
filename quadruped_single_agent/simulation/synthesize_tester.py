@@ -41,8 +41,8 @@ class Quadruped_Tester:
         intermediate_dynamics |= {'I2 = 1 -> X(I2 = 1)'}
         intermediate_dynamics |= {'I = 1 -> X(I = 1)'}
         intermediate_dynamics |= {'(I1 = 1 && I2 = 1) -> (I = 1)'}
-        visited_I1 = {'('+ self.zstr + '=' + str(self.I1[0]) + ' & ' + self.xstr + '=' + str(self.I1[1]) +') -> (I1=1)'}
-        visited_I2 = {'('+ self.zstr + '=' + str(self.I2[0]) + ' & ' + self.xstr + '=' + str(self.I2[1]) +') -> (I2=1)'}
+        visited_I1 = {'('+ self.sys_zstr + '=' + str(self.I1[0]) + ' & ' + self.sys_xstr + '=' + str(self.I1[1]) +') -> (I1=1)'}
+        visited_I2 = {'('+ self.sys_zstr + '=' + str(self.I2[0]) + ' & ' + self.sys_xstr + '=' + str(self.I2[1]) +') -> (I2=1)'}
         intermediate_dynamics |= visited_I1
         intermediate_dynamics |= visited_I2
         return intermediate_dynamics
@@ -65,6 +65,8 @@ class Quadruped_Tester:
     
     def construct_env_specs(self):
         self.specs = env_specs(self.maze, self.sys_specs.zstr, self.sys_specs.xstr)
+        self.sys_zstr = self.sys_specs.zstr
+        self.sys_xstr = self.sys_specs.xstr
         self.specs.setup_specs(self.tester_init)
         
     def synthesize_controller(self):
