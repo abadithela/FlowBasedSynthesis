@@ -3,6 +3,9 @@ import logging
 from tulip import transys, spec, synth
 from tulip import dumpsmach
 from ipdb import set_trace as st
+import sys
+sys.path.append('..')
+from maze_network import MazeNetwork
 # from quadruped_interface import quadruped_move
 
 class Tester:
@@ -100,3 +103,10 @@ class Quadruped:
         self.z = output['z']
         self.s = (self.z,self.x)
         # quadruped_move((self.y,self.x))
+
+if __name__ == "__main__":
+    mazefile = 'maze.txt'
+    maze = MazeNetwork(mazefile)
+    tester = Tester("tester", (4,2))
+    sys_quad = Quadruped("sys_quad", (4,0), (0,0), maze, tester)
+    st()
