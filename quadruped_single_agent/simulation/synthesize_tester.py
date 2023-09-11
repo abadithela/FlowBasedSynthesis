@@ -29,7 +29,7 @@ class Quadruped_Tester:
     def default_setup(self):
         mazefile = 'maze.txt'
         self.maze = MazeNetwork(mazefile)
-        self.tester_init = (4,2)
+        self.tester_init = (1,2)
 
     def set_intermediate_states(self, I1=(3,4), I2=(1,0)):
         self.I1 = I1
@@ -107,17 +107,19 @@ class Quadruped_Tester:
         M = exe_globals['TesterCtrl']()  # previous line creates the class `AgentCtrl`
         return M
 
-    def agent_move(self, tester_pos):
+    def agent_move(self, system_pos):
         # st()
-        output = self.controller.move(tester_pos[0],tester_pos[1])
-        self.x = output['x']
-        self.z = output['z']
+        output = self.controller.move(system_pos[0],system_pos[1])
+        self.x = output['env_x']
+        self.z = output['env_z']
         self.s = (self.z,self.x)
+        st()
         # quadruped_move((self.y,self.x))
 
 if __name__ == "__main__":
     quadruped = Quadruped_Tester(name="tulip_tester_quad")
     quadruped.synthesize_controller()
+    quadruped.agent_move((4,0))
     st()
 
     
