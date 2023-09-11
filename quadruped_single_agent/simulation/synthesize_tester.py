@@ -29,7 +29,7 @@ class Quadruped_Tester:
     def default_setup(self):
         mazefile = 'maze.txt'
         self.maze = MazeNetwork(mazefile)
-        self.tester_init = (1,2)
+        self.tester_init = (0,2)
 
     def set_intermediate_states(self, I1=(3,4), I2=(1,0)):
         self.I1 = I1
@@ -50,6 +50,14 @@ class Quadruped_Tester:
     def add_intermediate_progress(self):
         intermediate_progress = {'I=1'}
         return intermediate_progress
+    
+    def not_stay_in_bad_states_forever(self):
+        bad_states = [(0,2), (2,2), (4,2)]
+        safety_specs = set()
+        for (zbad, xbad) in bad_states:
+            safety_str = '!('+ self.zstr + '=' + str(zbad) + ' & ' + self.xstr + '=' + str(xbad) +')'
+            safety_specs |= {safety_str}
+        return safety_specs
 
     def add_visit_intermed_specs(self):
         self.specs.vars["I1"] = (0,1)
@@ -57,6 +65,7 @@ class Quadruped_Tester:
         self.specs.vars["I"] = (0,1)
         self.specs.init |= {'I1 = 0 && I2 = 0 && I = 0'}
         self.specs.safety |= self.add_intermediate_dynamics()
+        self.specs.progress |= self.not_stay_in_bad_states_forever()
         self.specs.progress |= self.add_intermediate_progress()
 
     def construct_sys_specs(self):
