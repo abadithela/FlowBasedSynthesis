@@ -15,9 +15,14 @@ import pao
 import pdb
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
-from feasibility_constraints import add_static_obstacle_constraints_on_S, add_static_obstacle_constraints_on_G
-from setup_graphs import setup_graphs_for_optimization
-from initialize_max_flow import initialize_max_flow
+try:
+    from feasibility_constraints import add_static_obstacle_constraints_on_S, add_static_obstacle_constraints_on_G, feasibility_vars_and_constraints
+    from setup_graphs import setup_graphs_for_optimization
+    from initialize_max_flow import initialize_max_flow
+except:
+    from find_cuts_two_flows.feasibility_constraints import add_static_obstacle_constraints_on_S, add_static_obstacle_constraints_on_G, feasibility_vars_and_constraints
+    from find_cuts_two_flows.setup_graphs import setup_graphs_for_optimization
+    from find_cuts_two_flows.initialize_max_flow import initialize_max_flow
 from copy import deepcopy
 
 debug = True
@@ -65,6 +70,7 @@ def solve_bilevel(GD, SD):
     model.L.fs = pyo.Var(model.L.edges, within=pyo.NonNegativeReals) # Flow 3 (from s to t not through i)
 
     # Add constraints that system will always have a path
+    # model = add_static_obstacle_constraints_on_S(model, GD, SD)
     model = add_static_obstacle_constraints_on_S(model, GD, SD)
     # model = add_static_obstacle_constraints_on_G(model, GD)
 
@@ -79,7 +85,7 @@ def solve_bilevel(GD, SD):
 
     # Objective - minimize 1/F + lambda*f_sys/F
     def mcf_flow(model):
-        lam = 1
+        lam = len(model.edges)
         bypass_flow = sum(model.L.fs[i,j] for (i, j) in model.L.edges if i in src)
         return model.t + lam*bypass_flow
         # return bypass_flow

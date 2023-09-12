@@ -68,8 +68,8 @@ def solve_min(GD):
         gam1 = 0.999
         gam2 = 1000
         second_term = sum(model.l[i,j]*(model.t-model.y['d',i,j]) for (i, j) in model.edges)
-        # return (1-gam)*model.t + gam*second_term
-        return model.t + gam2*second_term
+        return (1-gam1)*model.t + gam1*second_term
+        # return model.t + gam2*second_term
     model.o = pyo.Objective(rule=obj, sense=pyo.minimize)
 
     # Constraints
