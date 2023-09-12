@@ -1,1 +1,0 @@
-ERROR:pyomo.core:Model contains an expression (o) that contains a variable (L.fby[26,24]) that is not attached to an active block on the submodel being written
