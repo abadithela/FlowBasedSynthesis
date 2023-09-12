@@ -94,7 +94,10 @@ def get_graph(nodes, edges):
 
 def find_cuts():
 
-    virtual, system, b_pi, virtual_sys = sys_test_sync()
+    ints = [(2,0), (0,2)]
+    goals = [(0,0)]
+
+    virtual, system, b_pi, virtual_sys = sys_test_sync(ints, goals)
 
     # network = RunnerBlockerNetwork([1,2,3])
     # ts, prod_ba, virtual, sys_virtual, state_map = construct_automata(network)
@@ -102,7 +105,7 @@ def find_cuts():
     GD, S = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
     #
     cuts = []
-    cuts, flow, bypass = call_pyomo(GD, S)
+    cuts, flow, bypass, f_on_s = call_pyomo(GD, S)
     st()
 
     # G = get_graph(nodes, edges) # virtual graph in networkx graph form

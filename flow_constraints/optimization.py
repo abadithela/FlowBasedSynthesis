@@ -15,13 +15,15 @@ import pao
 import pdb
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
-from flow_constraints.feasibility_constraints import add_static_obstacle_constraints_on_S, add_static_obstacle_constraints_on_G
+from flow_constraints.feasibility_constraints import add_static_obstacle_constraints_on_S
 # from setup_graphs import setup_graphs_for_optimization
 from flow_constraints.initialize_max_flow import initialize_max_flow
 from copy import deepcopy
+import logging
+from pyomo.util.infeasible import log_infeasible_constraints
 
 debug = True
-init = True
+init = False
 
 def solve_bilevel(GD, SD):
     cleaned_intermed = [x for x in GD.acc_test if x not in GD.acc_sys]
@@ -32,13 +34,6 @@ def solve_bilevel(GD, SD):
         if i == j:
             to_remove.append((i,j))
     G.remove_edges_from(to_remove)
-    # create S and remove self-loops
-    S = SD.graph
-    to_remove = []
-    for i, j in S.edges:
-        if i == j:
-            to_remove.append((i,j))
-    S.remove_edges_from(to_remove)
 
     model = pyo.ConcreteModel()
     model.nodes = G.nodes
@@ -62,26 +57,25 @@ def solve_bilevel(GD, SD):
     model.L = SubModel(fixed=fixed_variables)
     model.L.edges = model.edges
     model.L.nodes = model.nodes
-    model.L.fs = pyo.Var(model.L.edges, within=pyo.NonNegativeReals) # Flow 3 (from s to t not through i)
+    model.L.fby = pyo.Var(model.L.edges, within=pyo.NonNegativeReals) # Flow 3 (from s to t not through i)
     model.L.ts = pyo.Var(within=pyo.NonNegativeReals)
 
     # Add constraints that system will always have a path
     model = add_static_obstacle_constraints_on_S(model, GD, SD)
-    # model = add_static_obstacle_constraints_on_G(model, GD)
 
     # compute max flow for lower bound on t
-    f_init, fs_init, t_lower = initialize_max_flow(G, src, inter, sink)
+    f_init, fby_init, t_lower = initialize_max_flow(G, src, inter, sink)
     if init: # initialize the flows with valid max flow
         for (i,j) in model.edges:
             model.y['d', i, j] = 0
             model.y['ft', i, j] = f_init[(i,j)]
-            model.L.fs[i, j] = fs_init[(i,j)]
+            model.L.fby[i, j] = fby_init[(i,j)]
         model.t = t_lower
 
     # Objective - minimize 1/F + lambda*f_sys/F
     def mcf_flow(model):
-        lam = 2*len(model.edges)
-        bypass_flow = sum(model.L.fs[i,j] for (i, j) in model.L.edges if i in src)
+        lam = 1000
+        bypass_flow = sum(model.L.fby[i,j] for (i, j) in model.L.edges if i in src)
         # sum_de = sum(model.y['d', i, j] for (i,j) in model.edges)
         return model.t + lam*bypass_flow# + sum_de
         # return bypass_flow
@@ -138,32 +132,32 @@ def solve_bilevel(GD, SD):
     # SUBMODEL
     # Objective - Maximize the flow into the sink
     def flow_sink(model):
-        return model.ts + sum(model.fs[i,j] for (i, j) in model.edges if j in sink)
+        return sum(model.fby[i,j] for (i, j) in model.edges if j in sink)
     model.L.o = pyo.Objective(rule=flow_sink, sense=pyo.maximize)
 
     # set t equals
-    model.L.equal_t = pyo.ConstraintList()
-    t_equals = model.L.ts == model.t
-    model.L.equal_t.add(expr = t_equals)
+    # model.L.equal_t = pyo.ConstraintList()
+    # t_equals = model.L.ts == model.t
+    # model.L.equal_t.add(expr = t_equals)
 
     # Capacity constraints
     def capacity_sys(mdl, i, j):
-        return mdl.fs[i, j] <= model.t
+        return mdl.fby[i, j] <= model.t
     model.L.cap_sys = pyo.Constraint(model.L.edges, rule=capacity_sys)
 
     # Conservation constraints
     def conservation_sys(model, l):
         if l in sink or l in src:
             return pyo.Constraint.Skip
-        incoming  = sum(model.fs[i,j] for (i,j) in model.edges if j == l)
-        outgoing = sum(model.fs[i,j] for (i,j) in model.edges if i == l)
+        incoming  = sum(model.fby[i,j] for (i,j) in model.edges if j == l)
+        outgoing = sum(model.fby[i,j] for (i,j) in model.edges if i == l)
         return incoming == outgoing
     model.L.cons_sys = pyo.Constraint(model.L.nodes, rule=conservation_sys)
 
     # nothing enters the source
     def no_in_source(model, i,j):
         if j in src:
-            return model.fs[i,j] == 0
+            return model.fby[i,j] == 0
         else:
             return pyo.Constraint.Skip
     model.L.no_in_source = pyo.Constraint(model.L.edges, rule=no_in_source)
@@ -171,7 +165,7 @@ def solve_bilevel(GD, SD):
     # nothing leaves sink
     def no_out_sink(model, i,j):
         if i in sink:
-            return model.fs[i,j] == 0
+            return model.fby[i,j] == 0
         else:
             return pyo.Constraint.Skip
     model.L.no_out_sink = pyo.Constraint(model.L.edges, rule=no_out_sink)
@@ -179,21 +173,21 @@ def solve_bilevel(GD, SD):
     # nothing enters the intermediate or leaves the intermediate
     def no_in_interm(model, i,j):
         if j in inter:
-            return model.fs[i,j] == 0
+            return model.fby[i,j] == 0
         else:
             return pyo.Constraint.Skip
     model.L.no_in_interm = pyo.Constraint(model.L.edges, rule=no_in_interm)
 
     def no_out_interm(model, i,j):
         if i in inter:
-            return model.fs[i,j] == 0
+            return model.fby[i,j] == 0
         else:
             return pyo.Constraint.Skip
     model.L.no_out_interm = pyo.Constraint(model.L.edges, rule=no_out_interm)
 
     # Cut constraints for flow 3
     def cut_cons_sys(mdl, i, j):
-        return mdl.fs[i,j] + model.y['d',i,j]<= model.t
+        return mdl.fby[i,j] + model.y['d',i,j]<= model.t
     model.L.cut_cons_sys = pyo.Constraint(model.L.edges, rule=cut_cons_sys)
 
     print(" ==== Successfully added objective and constraints! ==== ")
@@ -206,20 +200,41 @@ def solve_bilevel(GD, SD):
     with Solver('pao.pyomo.REG') as solver:
         results = solver.solve(model, tee=True, max_iter=5000)
 
+    log_infeasible_constraints(model, log_expression=True, log_variables=True)
+    logging.basicConfig(filename='optimization.log', encoding='utf-8', level=logging.INFO)
+
     # model.pprint()
     ftest = dict()
-    fsys = dict()
+    fby = dict()
     d = dict()
     F = 0
+    f_on_s = dict()
+
+    for (i,j) in model.s_edges:
+        f_on_s.update({(i,j): model.f_on_S[i,j].value*F})
 
     for (i,j) in model.edges:
         F = (1.0)/(model.t.value)
         ftest.update({(i,j): model.y['ft', i,j].value*F})
         d.update({(i,j): model.y['d', i,j].value*F})
     for (i,j) in model.L.edges:
-        fsys.update({(i,j): model.L.fs[i,j].value*F})
+        fby.update({(i,j): model.L.fby[i,j].value*F})
 
-    for key in d.keys():
-        print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],d[key]))
+    # for key in d.keys():
+    #     print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],d[key]))
+    #
+    # for key in ftest.keys():
+    #     print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],ftest[key]))
+    #
+    print('------- f_on_s -------')
+    for key in f_on_s.keys():
+        print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],f_on_s[key]))
+    print('------- f_by -------')
+    for key in fby.keys():
+        print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],fby[key]))
 
-    return ftest, fsys, d, F
+
+    print('printing constraint')
+    print(sum(f_on_s[i,j] for (i, j) in model.s_edges if i in SD.init))
+    st()
+    return ftest, fby, d, F, f_on_s

@@ -108,31 +108,49 @@ class Product(ProductTransys):
         # from ipdb import set_trace as st
         # st()
 
-    def plot_product(self, fn):
-        pos = nx.kamada_kawai_layout(self.G)
-        nx.draw(self.G, pos, node_color="gray")
+    def plot_graph(self, fn):
+        self.identify_SIT()
+        self.to_graph()
+        # prune unreachable nodes
+        self.G_initial = nx.DiGraph()
+        s_init = [self.Sdict[i] for i in self.I]
+        init_dfs_tree = [nx.dfs_tree(self.G, source=src) for src in s_init]
+        init_dfs_tree_nodes = []
+        for tree in init_dfs_tree:
+            for n in tree.nodes():
+                if n not in init_dfs_tree_nodes:
+                    init_dfs_tree_nodes.append(n)
+        edges = []
+        for state_act, in_node in self.E.items():
+            out_node = state_act[0]
+            act = state_act[1]
+            s_out = self.Sdict[out_node]
+            s_in = self.Sdict[in_node]
+            edge = (s_out, s_in)
+            if s_out in init_dfs_tree_nodes:
+                edges.append(edge)
+        self.G_initial.add_edges_from(edges)
+        G_agr = self.base_dot_graph(graph=self.G_initial)
+        # highlight initial nodes
+        state_color_dict = {'red': self.I}
+        for color, state_list in state_color_dict.items():
+            if not isinstance(state_list, list):
+                state_list = [state_list]
 
-        node_attrs = dict()
-        for node, n in self.Sdict.items():
-            # if node[0][2] == 's':
-            #     node_attrs[n] = {'node_shape': 'diamond'}
-            # else:
-            node_attrs[n] = {'node_shape': 'circle'}
+            for node in state_list:
+                if not isinstance(node, str):
+                    node_st = self.Sdict[node]
+                else:
+                    node_st = node
 
-        edge_labels = nx.get_edge_attributes(self.G,'act')
-        nx.draw_networkx_edges(self.G, pos, edgelist = list(self.G.edges()))
+                for i in G_agr.nodes():
+                    n = G_agr.get_node(i)
+                    if n == node_st:
+                        n.attr['color'] = color
+                        n.attr['fillcolor'] = color
+        G_agr.draw(fn+".pdf",prog='dot')
 
-        # options = {"edgecolors": "gray", "node_size": 800, "alpha": 0.5}
-        options = {"edgecolors": "gray"}
-        nx.draw_networkx_nodes(self.G, pos, nodelist=self.plt_sink_only, node_color="yellow", **options)
-        nx.draw_networkx_nodes(self.G, pos, nodelist=self.plt_int_only, node_color="blue", **options)
-        nx.draw_networkx_nodes(self.G, pos, nodelist=self.plt_sink_int, node_color="green", **options)
-        nx.set_node_attributes(self.G, node_attrs)
 
-        plt.tight_layout()
-        plt.axis("off")
-        plt.savefig(fn+".pdf")
-        # plt.show()
 
     def prune_unreachable_nodes(self, fn):
         self.G_initial = nx.DiGraph()
@@ -210,7 +228,7 @@ class Product(ProductTransys):
     def save_plot(self, fn):
         self.identify_SIT()
         self.to_graph()
-        self.plot_product(fn)
+        # self.plot_product(fn)
         self.plot_product_dot(fn)
 
 

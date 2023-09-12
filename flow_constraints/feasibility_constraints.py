@@ -1,30 +1,10 @@
 import pyomo.environ as pyo
 from ipdb import set_trace as st
 
-def add_static_obstacle_constraints_on_S(model, G, S):
-    map_G_to_S = find_map_G_S(G,S)
-    model = feasibility_vars_and_constraints(model, S, map_G_to_S)
-    return model
+def add_static_obstacle_constraints_on_S(model, GD, SD):
+    map_G_to_S = find_map_G_S(GD,SD)
 
-def add_static_obstacle_constraints_on_G(model, GD): # only works for single tester flow
-    G_truncated = {}
-    for node in GD.node_dict:
-        G_truncated.update({node: (str(GD.node_dict[node][0]))})
-
-    flip_dict = {}
-    for key in G_truncated.keys():
-        if G_truncated[key] in flip_dict.keys():
-            new_mapping = flip_dict[G_truncated[key]] + key
-            flip_dict.update({G_truncated[key]: new_mapping})
-
-    model.static_cut_cons = pyo.ConstraintList()
-    edge_list = list(GD.graph.edges)
-
-    for count,(i,j) in enumerate(edge_list):
-        for (imap, jmap) in edge_list[count+1:]:
-            if G_truncated[i] == G_truncated[imap] and G_truncated[j] == G_truncated[jmap]:
-                expression = model.y['d', i, j] == model.y['d', imap, jmap]
-                model.static_cut_cons.add(expr = expression)
+    model = preserve_flow_on_S(model, SD, map_G_to_S)
     return model
 
 def find_map_G_S(GD,SD):
@@ -42,46 +22,56 @@ def find_map_G_S(GD,SD):
     # st()
     return map_G_to_S
 
-def feasibility_vars_and_constraints(model, S, map_G_to_S):
-    vars = ['fS']
+def preserve_flow_on_S(model, SD, map_G_to_S):
+
+    # create S and remove self-loops
+    S = SD.graph
+    to_remove = []
+    for i, j in S.edges:
+        if i == j:
+            to_remove.append((i,j))
+    S.remove_edges_from(to_remove)
 
     model.s_edges = S.edges
     model.s_nodes = S.nodes
-    model.s_var = pyo.Var(vars, model.s_edges, within=pyo.NonNegativeReals)
+    model.f_on_S = pyo.Var(model.s_edges, within=pyo.NonNegativeReals)
     # model.s_p = pyo.Var(within=pyo.NonNegativeReals)
-    src = S.init
-    sink = S.acc_sys
+    src = SD.init
+    sink = SD.acc_sys
 
     # Preserve flow of 1 in S
     def preserve_f_s(model):
-        return model.t <= sum(model.s_var['fS', i,j] for (i, j) in model.s_edges if i in src)
+        return model.t <= sum(model.f_on_S[i,j] for (i, j) in model.s_edges if i in src)
     model.preserve_f_s = pyo.Constraint(rule=preserve_f_s)
 
     # Capacity constraint on flow
-    def cap_constraint(model, i, j):
-        return model.s_var['fS',  i, j] <= model.t
-    model.cap_s = pyo.Constraint(model.s_edges, rule=cap_constraint)
+    def s_cap_constraint(model, i, j):
+        return model.f_on_S[i, j] <= model.t
+    model.cap_s = pyo.Constraint(model.s_edges, rule=s_cap_constraint)
 
     # Match the edge cuts from G to S
-    def match_cut_constraints(model, i, j):
+    def match_cut_constraints_to_s(model, i, j):
         imap = map_G_to_S[i]
         jmap = map_G_to_S[j]
-        return model.s_var['fS', imap, jmap] + model.y['d', i, j] <= model.t
-    model.de_cut = pyo.Constraint(model.edges, rule=match_cut_constraints)
+        if (imap,jmap) not in model.s_edges:
+            return pyo.Constraint.Skip
+        else:
+            return model.f_on_S[imap, jmap] + model.y['d', i, j] <= model.t
+    model.se_de_cut = pyo.Constraint(model.edges, rule=match_cut_constraints_to_s)
 
     # Conservation constraints:
     def s_conservation(model,k):
         if k in src or k in sink:
             return pyo.Constraint.Skip
-        incoming  = sum(model.s_var['fS',i,j] for (i,j) in model.s_edges if (j == k))
-        outgoing = sum(model.s_var['fS', i,j] for (i,j) in model.s_edges if (i == k))
+        incoming  = sum(model.f_on_S[i,j] for (i,j) in model.s_edges if (j == k))
+        outgoing = sum(model.f_on_S[i,j] for (i,j) in model.s_edges if (i == k))
         return incoming == outgoing
     model.s_cons = pyo.Constraint(model.s_nodes, rule=s_conservation)
 
     # no flow into sources and out of sinks
     def s_no_in_source(model,i,k):
         if k in src:
-            return model.s_var['fS',i,k] == 0
+            return model.f_on_S[i,k] == 0
         else:
             return pyo.Constraint.Skip
     model.s_no_in_source = pyo.Constraint(model.s_edges, rule=s_no_in_source)
@@ -89,9 +79,10 @@ def feasibility_vars_and_constraints(model, S, map_G_to_S):
     # nothing leaves sink
     def s_no_out_sink(model,i,k):
         if i in sink:
-            return model.s_var['fS',i,k] == 0
+            return model.f_on_S[i,k] == 0
         else:
             return pyo.Constraint.Skip
     model.s_no_out_sink = pyo.Constraint(model.s_edges, rule=s_no_out_sink)
 
+    # st()
     return model

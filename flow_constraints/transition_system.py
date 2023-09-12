@@ -35,9 +35,10 @@ class ProductTransys(Transys):
         self.maze = None
         self.f = None # Formula
 
-    def get_maze(self, mazefile, int):
+    def get_maze(self, mazefile, int, goals):
         self.maze = MazeNetwork(mazefile)
         self.maze.set_int(int)
+        self.maze.set_goal(goals)
 
     def get_APs(self):
         """
@@ -50,7 +51,7 @@ class ProductTransys(Transys):
         self.AP_dict = od()
         for s in self.S: # If the system state is the init or goal
             self.AP_dict[s] = []
-            if s == self.maze.goal:
+            if s in self.maze.goal:
                 self.AP_dict[s].append(spot.formula.ap("goal"))
             elif s in self.maze.int:
                 self.AP_dict[s].append(spot.formula.ap("int"))
@@ -91,9 +92,8 @@ class ProductTransys(Transys):
             if s == self.maze.init:
                 self.I.append(s)
 
-    def construct_sys(self, mazefile):
-        int = [(2,0), (0,2)]
-        self.get_maze(mazefile, int)
+    def construct_sys(self, mazefile, ints, goals):
+        self.get_maze(mazefile, ints, goals)
         self.S = list(self.maze.G_single.nodes()) # All system and tester nodes
         self.A = ['sys_n','sys_s','sys_e','sys_w', 'sys_o']
         self.construct_transition_function()
