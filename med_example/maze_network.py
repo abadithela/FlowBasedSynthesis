@@ -22,7 +22,7 @@ def create_network_from_file(mazefile):
 class MazeNetwork:
     def __init__(self, mazefile):
         self.init = None
-        self.goal = None
+        self.goal = [(0,0), (0,4)]
         self.int = None
         self.map, self.len_x, self.len_z = create_network_from_file(mazefile)
         self.len_y = self.len_z
@@ -75,14 +75,14 @@ class MazeNetwork:
 
         edges = []
         for state in states:
-            # if state != self.goal: # collision states have no next state and when test done then done
-            out_node = state
-            in_nodes = [next_state for next_state in next_state_dict[state]]
-            for in_node in in_nodes:
-                actions = []
-                if in_node in states:
-                    actions.append((out_node, in_node))
-                edges = edges + actions
+            if state not in self.goal: # collision states have no next state and when test done then done
+                out_node = state
+                in_nodes = [next_state for next_state in next_state_dict[state]]
+                for in_node in in_nodes:
+                    actions = []
+                    if in_node in states:
+                        actions.append((out_node, in_node))
+                    edges = edges + actions
 
         G = nx.DiGraph()
         G.add_nodes_from(nodes)
@@ -101,11 +101,11 @@ class MazeNetwork:
                         self.init = (z,x)
                     # if (z,x) == (0,0):
                     #     self.goal = (z,x)
-
+        # st()
         next_state_dict = dict()
         for node in single_states:
             next_states = [(node[0], node[1])]
-            if node != self.goal:
+            if node not in self.goal:
                 for a in [-1,1]: # can always move horizontally!
                     if (node[0],node[1]+a) in single_states:
                         next_states.append((node[0], node[1]+a))

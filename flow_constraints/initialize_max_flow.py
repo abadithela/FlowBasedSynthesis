@@ -16,7 +16,7 @@ from copy import deepcopy
 import matplotlib.pyplot as plt
 
 
-def initialize_max_flow(G, src, intermed, sink):
+def initialize_max_flow(G, src, intermed, sink, S, S_src, S_sink):
 
     f_e = max_flow(G, src, sink)
     flow = sum([f_e[(i,j)] for (i,j) in f_e.keys() if j in sink])
@@ -29,18 +29,23 @@ def initialize_max_flow(G, src, intermed, sink):
             to_remove.append(edge)
     G_minus_I.remove_edges_from(to_remove)
 
-    fs_e = max_flow(G_minus_I, src, sink)
+    fby_e = max_flow(G_minus_I, src, sink)
 
     for edge in G.edges:
         f_e.update({edge: f_e[edge]/flow})
         if edge in G_minus_I.edges:
-            fs_e.update({edge: fs_e[edge]/flow})
+            fby_e.update({edge: fby_e[edge]/flow})
         else:
-            fs_e.update({edge: 0.0})
+            fby_e.update({edge: 0.0})
 
     t_init = 1/flow
 
-    return f_e, fs_e, t_init
+    f_s = max_flow(S, S_src, S_sink)
+
+    for edge in S.edges:
+        f_s.update({edge: f_s[edge]/flow})
+
+    return f_e, fby_e, t_init, f_s
 
 def max_flow(graph, start, goal):
     model = pyo.ConcreteModel()

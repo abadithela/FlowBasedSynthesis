@@ -1,10 +1,10 @@
 import pyomo.environ as pyo
 from ipdb import set_trace as st
 
-def add_static_obstacle_constraints_on_S(model, GD, SD):
+def add_static_obstacle_constraints_on_S(model, GD, SD, initialize):
     map_G_to_S = find_map_G_S(GD,SD)
 
-    model = preserve_flow_on_S(model, SD, map_G_to_S)
+    model = preserve_flow_on_S(model, SD, map_G_to_S, initialize)
     return model
 
 def find_map_G_S(GD,SD):
@@ -17,12 +17,11 @@ def find_map_G_S(GD,SD):
         S_annot.update({node: (str(SD.node_dict[node][0]))})
     for node in G_truncated:
         for sys_node in S_annot:
-            if G_truncated[node]  == S_annot[sys_node]:
+            if G_truncated[node] == S_annot[sys_node]:
                 map_G_to_S.update({node: sys_node})
-    # st()
     return map_G_to_S
 
-def preserve_flow_on_S(model, SD, map_G_to_S):
+def preserve_flow_on_S(model, SD, map_G_to_S, initialize):
 
     # create S and remove self-loops
     S = SD.graph
@@ -53,10 +52,10 @@ def preserve_flow_on_S(model, SD, map_G_to_S):
     def match_cut_constraints_to_s(model, i, j):
         imap = map_G_to_S[i]
         jmap = map_G_to_S[j]
-        if (imap,jmap) not in model.s_edges:
-            return pyo.Constraint.Skip
-        else:
-            return model.f_on_S[imap, jmap] + model.y['d', i, j] <= model.t
+        # if (imap,jmap) not in model.s_edges:
+        #     return pyo.Constraint.Skip
+        # else:
+        return model.f_on_S[imap, jmap] + model.y['d', i, j] <= model.t
     model.se_de_cut = pyo.Constraint(model.edges, rule=match_cut_constraints_to_s)
 
     # Conservation constraints:
@@ -83,6 +82,9 @@ def preserve_flow_on_S(model, SD, map_G_to_S):
         else:
             return pyo.Constraint.Skip
     model.s_no_out_sink = pyo.Constraint(model.s_edges, rule=s_no_out_sink)
+
+    if initialize:
+        pass
 
     # st()
     return model
