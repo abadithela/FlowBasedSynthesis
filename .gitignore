@@ -1,0 +1,11 @@
+*.csv
+*.png
+*.mypy_cache*
+*.pyc
+*.gif
+__pycache__/
+*.p
+*.png
+*.pdf
+*.svg
+*.ipynb_checkpoints
