@@ -7,6 +7,8 @@ import networkx as nx
 import find_cuts_two_flows.find_cuts as find_cuts
 from construct_automata.main import quad_test_sync
 import find_cuts_two_flows.feasibility_constraints as feasibility_constraints 
+from synthesize_tester_from_constraints import Quadruped_Tester
+from maze_network import MazeNetwork
 
 class FindConstraint:
     def __init__(self):
@@ -61,9 +63,19 @@ class FindConstraint:
 
     def parse_cuts_to_states(self):
         self.cuts_to_blocked_states()
-        st()
+        # With reactive obstacles, implement code here to convert blocked states to system and tester states. This
+        # would require reasoning over Bpi.
+        constraints_i1 = [((4,1),(3,2)), ((4,2),(3,2)), ((4,3),(3,2)), ((4,4), (3,2)), ((2,2),(1,2))]
+        constraints_i2 = [((4,2),(3,2)), ((2,2),(1,2)), ((2,3),(1,2))]
+        return constraints_i1, constraints_i2
 
 if __name__ == "__main__":
+    mazefile = 'maze.txt'
+    maze = MazeNetwork(mazefile)
     opt_constr = FindConstraint()
-    opt_constr.parse_cuts_to_states()
+    constraints_i1, constraints_i2 = opt_constr.parse_cuts_to_states()
+    quadruped = Quadruped_Tester(name="tulip_tester_quad", maze = maze, tester_init=(2,2))
+    quadruped.set_constraints_opt(constraints_i2)
+    quadruped.synthesize_controller()
+    quadruped.agent_move((4,0))
     st()

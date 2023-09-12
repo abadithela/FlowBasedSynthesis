@@ -15,9 +15,13 @@ class Quadruped_Tester:
         self.index = 0
         if maze is not None:
             self.maze = maze
+        else:
+            self.default_maze()
+
+        if tester_init is not None:
             self.tester_init = tester_init
         else:
-            self.default_setup()
+            self.default_tester()
         self.zstr = "env_z"
         self.xstr = "env_x"
         self.construct_sys_specs()
@@ -26,10 +30,12 @@ class Quadruped_Tester:
         self.z = self.maze.init[0]
         self.x = self.maze.init[1]
         
-    def default_setup(self):
+    def default_maze(self):
         mazefile = 'maze.txt'
         self.maze = MazeNetwork(mazefile)
-        self.tester_init = (0,2)
+        
+    def default_tester(self):
+        self.tester_init = (4,2)
 
     def set_intermediate_states(self, I1=(3,4), I2=(1,0)):
         self.I1 = I1
@@ -81,7 +87,7 @@ class Quadruped_Tester:
         print(spc.pretty())
         spc.moore = False
         spc.qinit = r'\A \E'
-        spc.plus_one = False
+        # spc.plus_one = False
 
         if not synth.is_realizable(spc, solver='omega'):
             print("Not realizable.")
@@ -108,7 +114,7 @@ class Quadruped_Tester:
         self.x = output['env_x']
         self.z = output['env_z']
         self.s = (self.z,self.x)
-        st()
+        print(output)
         # quadruped_move((self.y,self.x))
 
 if __name__ == "__main__":
