@@ -44,8 +44,8 @@ class env_specs:
         return dynamics_spec
 
     def set_safety(self):
-        dynamics = self.maze.transition_specs(self.zstr, self.xstr)
-        #dynamics = self.restrictive_dynamics()
+        # dynamics = self.maze.transition_specs(self.zstr, self.xstr)
+        dynamics = self.restrictive_dynamics()
         no_collide = self.no_collide()
         self.safety |= dynamics
         self.safety |= no_collide

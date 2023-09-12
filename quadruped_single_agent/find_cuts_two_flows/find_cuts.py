@@ -4,11 +4,13 @@ import numpy as np
 from ipdb import set_trace as st
 import networkx as nx
 import pdb
-from cut_flow_fcns import solve_bilevel
-# from construct_automata import get_gamegraph, construct_automata
-# from runnerblocker_network import RunnerBlockerNetwork
 from construct_automata.main import quad_test_sync
-from setup_graphs import GraphData
+try:
+    from cut_flow_fcns import solve_bilevel
+    from setup_graphs import GraphData
+except:
+    from find_cuts_two_flows.cut_flow_fcns import solve_bilevel
+    from find_cuts_two_flows.setup_graphs import GraphData
 
 def setup_automata(network):
     ts, prod_ba, virtual, sys_virtual, snr_to_nr, snr_to_label, label_to_snr = create_ts_automata_and_virtual_game_graph(network)
@@ -105,14 +107,11 @@ def find_cuts():
     #
     cuts = []
     cuts, flow, bypass = call_pyomo(GD, S)
-    st()
 
     G = get_graph(nodes, edges) # virtual graph in networkx graph form
     # prune the dead ends
     # G, new_cuts = postprocess_cuts(GD, cuts)
-    st()
     return GD,cuts
-
 
 
 if __name__ == '__main__':
