@@ -207,11 +207,7 @@ def solve_bilevel(GD, SD):
     ftest = dict()
     fby = dict()
     d = dict()
-    F = 0
     f_on_s = dict()
-
-    for (i,j) in model.s_edges:
-        f_on_s.update({(i,j): model.f_on_S[i,j].value*F})
 
     for (i,j) in model.edges:
         F = (1.0)/(model.t.value)
@@ -219,6 +215,9 @@ def solve_bilevel(GD, SD):
         d.update({(i,j): model.y['d', i,j].value*F})
     for (i,j) in model.L.edges:
         fby.update({(i,j): model.L.fby[i,j].value*F})
+
+    for (i,j) in model.s_edges:
+        f_on_s.update({(i,j): model.f_on_S[i,j].value*F})
 
     # for key in d.keys():
     #     print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],d[key]))

@@ -70,7 +70,7 @@ def setup_nodes_and_edges(virtual_game_graph, virtual_sys, b_pi):
 
 def call_pyomo(GD, S):
 
-    ftest, fsys, d, F = solve_bilevel(GD, S)
+    ftest, fsys, d, F, f_on_s = solve_bilevel(GD, S)
     cuts = [x for x in d.keys() if d[x] >= 0.9]
     # pdb.set_trace()
     flow = F
@@ -82,7 +82,7 @@ def call_pyomo(GD, S):
     for cut in cuts:
         print('Cutting {0} to {1}'.format(GD.node_dict[cut[0]], GD.node_dict[cut[1]]))
     # st()
-    return cuts, flow, bypass_flow
+    return cuts, flow, bypass_flow, f_on_s
 
 
 def get_graph(nodes, edges):
