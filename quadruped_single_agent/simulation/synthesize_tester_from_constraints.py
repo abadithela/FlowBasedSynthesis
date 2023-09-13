@@ -65,7 +65,8 @@ class Quadruped_Tester:
         # self.specs.vars["I"] = (0,1)
         self.specs.init |= {'I1 = 0 && I2 = 0'}
         self.specs.safety |= self.add_intermediate_dynamics()
-        self.specs.safety |= self.not_stay_in_bad_states_forever()
+        # self.specs.safety |= self.not_stay_in_bad_states_forever()
+        # self.specs.progress |= {'I1=1 && I2 = 1'}
 
     
     def not_stay_in_bad_states_forever(self):
