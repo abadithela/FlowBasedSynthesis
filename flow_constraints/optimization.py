@@ -26,7 +26,7 @@ debug = True
 init = False
 feasibility = True
 
-GAMMA = 1
+GAMMA = 1000
 
 def solve_bilevel(GD, SD):
     cleaned_intermed = [x for x in GD.acc_test if x not in GD.acc_sys]
@@ -213,8 +213,8 @@ def solve_bilevel(GD, SD):
     # with Solver('pao.pyomo.REG') as solver:
     #     results = solver.solve(model, tee=True)
 
-    with Solver('pao.pyomo.REG') as solver:
-        results = solver.solve(model, tee=True, max_iter=5000, warmstart=True)
+    with Solver('pao.pyomo.PCCG') as solver:
+        results = solver.solve(model, tee=True, max_iter=5000, warmstart=True, quiet=False)
 
     log_infeasible_constraints(model, log_expression=True, log_variables=True)
     logging.basicConfig(filename='optimization.log', encoding='utf-8', level=logging.INFO)
