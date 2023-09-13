@@ -13,14 +13,29 @@ from maze_network import MazeNetwork
 class FindConstraint:
     def __init__(self):
         virtual, system, b_pi, virtual_sys = quad_test_sync()
+        self.blocked_edges = []
+        self.blocked_states = []
         self.GD, self.S = find_cuts.setup_nodes_and_edges(virtual, virtual_sys, b_pi)
         # self.cuts, self.flow, self.bypass = find_cuts.call_pyomo(self.GD, self.S)
         self.cuts = [(34, 50), (44, 28)]
+        self.cuts_to_blocked_edges()
         self.get_map_G_to_S()
         self.cuts_to_blocked_states()
         
+    def get_virtual_product_graph(self):
+        return self.GD
+
+    def get_system_product_graph(self):
+        return self.S
+
     def get_map_G_to_S(self):
         self.map_G_to_S = feasibility_constraints.find_map_G_S(self.GD, self.S)
+
+    def get_blocked_states(self):
+        return self.blocked_states
+
+    def get_blocked_edges(self):
+        return self.blocked_edges
 
     def check_path_in_S(self,node):
         '''
@@ -47,6 +62,24 @@ class FindConstraint:
                     return True
         return False
 
+    def cuts_to_blocked_edges(self):
+        for edge_cut in self.cuts:
+            u, v = edge_cut
+            u_st = self.GD.node_dict[u]
+            v_st = self.GD.node_dict[v]
+            self.blocked_edges.append((u_st, v_st))
+
+    def map_system_state_to_blocked_states(self):
+        '''
+        When a state is blocked by the tester, we also need information of
+        the corresponding system state
+        TO-DO: Finish implementing.
+        '''
+        self.constraint_map = dict()
+        for blocked_st in self.blocked_states:
+            tester_st = blocked_st[0]
+            self.constraint_map[tester_st] = None
+
     def cuts_to_blocked_states(self):
         self.blocked_states = []
         for edge_cut in self.cuts:
@@ -54,9 +87,11 @@ class FindConstraint:
             exist_path_u = self.check_path_in_S(u)
             exist_path_v = self.check_path_in_S(v)
             if exist_path_u:
-                self.blocked_states.append(u)
+                u_st = self.GD.node_dict[u]
+                self.blocked_states.append(u_st)
             elif exist_path_v:
-                self.blocked_states.append(v)
+                v_st = self.GD.node_dict[v]
+                self.blocked_states.append(v_st)
             else:
                 print("Cannot place static obstacle. Must constrain edge instead")
                 st()
@@ -66,16 +101,19 @@ class FindConstraint:
         # With reactive obstacles, implement code here to convert blocked states to system and tester states. This
         # would require reasoning over Bpi.
         constraints_i1 = [((4,1),(3,2)), ((4,2),(3,2)), ((4,3),(3,2)), ((4,4), (3,2)), ((2,2),(1,2))]
-        constraints_i2 = [((4,2),(3,2)), ((2,2),(1,2)), ((2,3),(1,2))]
-        return constraints_i1, constraints_i2
+        constraints_i2 = [((4,2),(3,2)), ((2,2),(1,2))]
+        constraints = [((4,2),(3,2), "q0"), ((2,2),(1,2), "q3")]
+        return constraints
 
 if __name__ == "__main__":
     mazefile = 'maze.txt'
     maze = MazeNetwork(mazefile)
     opt_constr = FindConstraint()
-    constraints_i1, constraints_i2 = opt_constr.parse_cuts_to_states()
-    quadruped = Quadruped_Tester(name="tulip_tester_quad", maze = maze, tester_init=(2,2))
-    quadruped.set_constraints_opt(constraints_i2)
+    constraints = opt_constr.parse_cuts_to_states()
+    blocked_states = opt_constr.get_blocked_states()
+    blocked_edges= opt_constr.get_blocked_edges()
+    quadruped = Quadruped_Tester(name="tulip_tester_quad", maze = maze, tester_init=(4,2))
+    quadruped.set_constraints_opt(constraints)
     quadruped.synthesize_controller()
     quadruped.agent_move((4,0))
     st()

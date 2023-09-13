@@ -29,6 +29,8 @@ class Quadruped_Tester:
         self.s = self.maze.init
         self.z = self.maze.init[0]
         self.x = self.maze.init[1]
+        self.set_intermediate_states()
+        self.add_visit_intermed_specs()
         
     def default_maze(self):
         mazefile = 'maze.txt'
@@ -40,13 +42,53 @@ class Quadruped_Tester:
     def set_intermediate_states(self, I1=(3,4), I2=(1,0)):
         self.I1 = I1
         self.I2 = I2
+    
+    def add_intermediate_dynamics(self):
+        intermediate_dynamics = set()
+        intermediate_dynamics |= {'I1 = 1 -> X(I1 = 1)'}
+        intermediate_dynamics |= {'(I1 = 0 && ' + '!('+ self.sys_zstr + '=' + str(self.I1[0]) + ' & ' + self.sys_xstr + '=' + str(self.I1[1]) +')) -> X(I1 = 0)'}
+        intermediate_dynamics |= {'I2 = 1 -> X(I2 = 1)'}
+        intermediate_dynamics |= {'(I2 = 0 && ' + '!('+ self.sys_zstr + '=' + str(self.I2[0]) + ' & ' + self.sys_xstr + '=' + str(self.I2[1]) +')) -> X(I2 = 0)'}
+        # intermediate_dynamics |= {'I = 1 -> X(I = 1)'}
+        # intermediate_dynamics |= {'I1 = 0 -> I = 0'}
+        # intermediate_dynamics |= {'I2 = 0 -> I = 0'}
+        # intermediate_dynamics |= {'(I1 = 1 && I2 = 1) -> (I = 1)'}
+        visited_I1 = {'('+ self.sys_zstr + '=' + str(self.I1[0]) + ' & ' + self.sys_xstr + '=' + str(self.I1[1]) +') -> X(I1=1)'}
+        visited_I2 = {'('+ self.sys_zstr + '=' + str(self.I2[0]) + ' & ' + self.sys_xstr + '=' + str(self.I2[1]) +') -> X(I2=1)'}
+        intermediate_dynamics |= visited_I1
+        intermediate_dynamics |= visited_I2
+        return intermediate_dynamics
+    
+    def add_visit_intermed_specs(self):
+        self.specs.vars["I1"] = (0,1)
+        self.specs.vars["I2"] = (0,1)
+        # self.specs.vars["I"] = (0,1)
+        self.specs.init |= {'I1 = 0 && I2 = 0'}
+        self.specs.safety |= self.add_intermediate_dynamics()
+        self.specs.safety |= self.not_stay_in_bad_states_forever()
+
+    
+    def not_stay_in_bad_states_forever(self):
+        safety_specs = set()
+        safety_str1 = {'!((z=4 && x=1) && (env_z=4 && env_x=2 && I1=0))'}
+        safety_str2 = {'!((z=2 && x=3) && (env_z=2 && env_x=2 && I2=0))'}
+        safety_specs |= safety_str1
+        safety_specs |= safety_str2
+        return safety_specs
+
 
     def add_constraints_from_opt(self):
         constraints = set()
-        for (sys_state, tester_state) in self.opt_constraints:
+        for (sys_state, tester_state, qstate) in self.opt_constraints:
             zsys, xsys = sys_state
             ztest, xtest = tester_state
-            constr = '(('+ self.sys_zstr + '=' + str(zsys) + ' & ' + self.sys_xstr + '=' + str(xsys) +') -> ('+ self.zstr + '=' + str(ztest) + ' & ' + self.xstr + '=' + str(xtest) +'))'
+            if qstate == "q0":
+                constr = '((I1 = 0 && I2 = 0 && ('+ self.sys_zstr + '=' + str(zsys) + ' & ' + self.sys_xstr + '=' + str(xsys) +')) -> ('+ self.zstr + '=' + str(ztest) + ' & ' + self.xstr + '=' + str(xtest) +'))'
+            elif qstate =="q3": 
+                constr = '((I1 = 1 && I2 = 0 && ('+ self.sys_zstr + '=' + str(zsys) + ' & ' + self.sys_xstr + '=' + str(xsys) +')) -> ('+ self.zstr + '=' + str(ztest) + ' & ' + self.xstr + '=' + str(xtest) +'))'
+            else:
+                print("Something wrong in parsing optimization constraints")
+                st()
             constraints |= {constr}
         self.specs.safety |= constraints
         return constraints
@@ -72,6 +114,7 @@ class Quadruped_Tester:
         self.specs.setup_specs(self.tester_init)
         
     def synthesize_controller(self):
+
         constraints = self.add_constraints_from_opt()
         self.controller = self.find_controller(self.maze, self.specs)
 
@@ -87,7 +130,7 @@ class Quadruped_Tester:
         print(spc.pretty())
         spc.moore = False
         spc.qinit = r'\A \E'
-        # spc.plus_one = False
+        spc.plus_one = False
 
         if not synth.is_realizable(spc, solver='omega'):
             print("Not realizable.")

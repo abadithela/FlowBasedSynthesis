@@ -33,6 +33,8 @@ class env_specs:
             for z in range(0,self.maze.len_z):
                 no_collide_str = '!((' + self.sys_zstr + ' = '+str(z)+' && '+ self.sys_xstr + ' = '+str(x) +') && (' + self.zstr + ' = '+str(z)+' && '+ self.xstr + ' = '+str(x) +'))'
                 no_collide_spec |= {no_collide_str}
+                # no_collide_next_str = '!((' + self.zstr + ' = '+str(z)+' && '+ self.xstr + ' = '+str(x) +') && X(' + self.sys_zstr + ' = '+str(z)+' && '+ self.sys_xstr + ' = '+str(x) +'))'
+                # no_collide_spec |= {no_collide_next_str}
         return no_collide_spec
 
     def restrictive_dynamics(self):
@@ -44,7 +46,7 @@ class env_specs:
         return dynamics_spec
 
     def set_safety(self):
-        dynamics = self.maze.transition_specs(self.zstr, self.xstr)
+        # dynamics = self.maze.transition_specs(self.zstr, self.xstr)
         dynamics = self.restrictive_dynamics()
         no_collide = self.no_collide()
         self.safety |= dynamics
@@ -58,6 +60,7 @@ class env_specs:
             else:
                 progress_str = "(" + self.zstr + ' = ' + str(zgoal) + ' & ' + self.xstr + ' = ' + str(xgoal) + ") "
         self.progress |= {progress_str}
+        
     
     def set_env_progress_goals(self):
         '''
@@ -72,6 +75,8 @@ class env_specs:
         self.set_init(env_init)
         self.set_safety()
         self.set_progress()
+        system_progress = '(' + self.sys_zstr + ' = '+str(0)+' && '+ self.sys_xstr + ' = '+str(4) +')'
+        # self.progress |= {system_progress}
 
 
 class sys_specs:
@@ -102,15 +107,15 @@ class sys_specs:
             for z in range(0,self.maze.len_z):
                 no_collide_str = '!((' + self.env_zstr + ' = '+str(z)+' && '+ self.env_xstr + ' = '+str(x) +') && (' + self.zstr + ' = '+str(z)+' && '+ self.xstr + ' = '+str(x) +'))'
                 no_collide_spec |= {no_collide_str}
-                # no_collide_str = '!((' + self.env_zstr + ' = '+str(z)+' && '+ self.env_xstr + ' = '+str(x) +') && X(' + self.zstr + ' = '+str(z)+' && '+ self.xstr + ' = '+str(x) +'))'
-                # no_collide_spec |= {no_collide_str}
+                # no_collide_next_str = '!((' + self.env_zstr + ' = '+str(z)+' && '+ self.env_xstr + ' = '+str(x) +') && X (' + self.zstr + ' = '+str(z)+' && '+ self.xstr + ' = '+str(x) +'))'
+                # no_collide_spec |= {no_collide_next_str}
         return no_collide_spec
 
     def set_safety(self):
         dynamics = self.maze.transition_specs(self.zstr, self.xstr)
         no_collide = self.no_collide()
         self.safety |= dynamics
-        self.safety |= no_collide
+        # self.safety |= no_collide
     
     def set_progress(self):
         self.zgoal, self.xgoal = self.maze.goal
