@@ -36,7 +36,7 @@ class Product(ProductTransys):
         self.A = product_transys.A
         self.I = [(init, spec_prod_automaton.qinit) for init in product_transys.I]
         self.AP = spec_prod_automaton.Q
-    
+
     def print_transitions(self):
         for e_out, e_in in self.E.items():
             print("node out: " + str(e_out) +  " node in: " + str(e_in))
@@ -56,7 +56,7 @@ class Product(ProductTransys):
                         valid_sys_transition = (self.automaton.get_transition(q, label) == p)
                         if valid_sys_transition and valid_aut_transition:
                             self.E[((s,q), a)] = (t,p)
-    
+
     def construct_transitions_player_labeled(self):
         # Debug product
         self.E = dict()
@@ -99,7 +99,7 @@ class Product(ProductTransys):
         self.L = od()
         for s in self.S:
             self.L[s] = s[1]
-    
+
     def identify_SIT(self):
         self.src = [s for s in self.S if s[1] == self.automaton.qinit]
         try:
@@ -107,18 +107,18 @@ class Product(ProductTransys):
         except:
             self.int=[]
         self.sink = [s for s in self.S if s[1] in self.automaton.Acc["sys"]]
-    
+
     def process_nodes(self, node_list):
         for node in node_list:
             node_st = self.Sdict[node]
             if node in self.sink and node not in self.int:
                 if node_st not in self.plt_sink_only:
                     self.plt_sink_only.append(node_st)
-            
+
             if node in self.int and node not in self.sink:
                 if node_st not in self.plt_int_only:
                     self.plt_int_only.append(node_st)
-            
+
             if node in self.int and node in self.sink:
                 if node_st not in self.plt_sink_int:
                     self.plt_sink_int.append(node_st)
@@ -129,7 +129,7 @@ class Product(ProductTransys):
             if not isinstance(state_list, list):
                 state_list = [state_list]
             # pdb.set_trace()
-            
+
             for node in state_list:
                 if not isinstance(node, str):
                     node_st = self.Sdict[node]
@@ -165,17 +165,17 @@ class Product(ProductTransys):
     def plot_product(self, fn):
         pos = nx.kamada_kawai_layout(self.G)
         nx.draw(self.G, pos, node_color="gray")
-        
+
         node_attrs = dict()
         for node, n in self.Sdict.items():
             if node[0][2] == 's':
                 node_attrs[n] = {'node_shape': 'diamond'}
             else:
                 node_attrs[n] = {'node_shape': 'circle'}
-        
+
         edge_labels = nx.get_edge_attributes(self.G,'act')
         nx.draw_networkx_edges(self.G, pos, edgelist = list(self.G.edges()))
-        
+
         # options = {"edgecolors": "gray", "node_size": 800, "alpha": 0.5}
         options = {"edgecolors": "gray"}
         nx.draw_networkx_nodes(self.G, pos, nodelist=self.plt_sink_only, node_color="yellow", **options)
@@ -204,12 +204,13 @@ class Product(ProductTransys):
             if node[0][2] == 's':
                 n.attr['shape'] = 'diamond'
             else:
-                n.attr['shape'] = 'circle'          
+                n.attr['shape'] = 'circle'
             if n in self.plt_sink_only:
                 n.attr['fillcolor'] = 'yellow'
             elif n in self.plt_int_only:
                 n.attr['fillcolor'] = 'blue'
             elif n in self.plt_sink_int:
+                # st()
                 n.attr['fillcolor'] = 'blue;0.5:yellow'
             else:
                 n.attr['fillcolor'] = 'gray'
@@ -282,13 +283,13 @@ def construct_system():
     mazefile = "maze.txt"
     system = ProductTransys()
     system.construct_sys(mazefile)
-    return system  
+    return system
 
 def sync_prod(system, aut):
     sys_prod = Product(system, aut)
     sys_prod.construct_labels()
     sys_prod.construct_transitions()
-    return sys_prod  
+    return sys_prod
 
 def async_example():
     system = construct_system()
@@ -299,4 +300,3 @@ def async_example():
 if __name__ == "__main__":
     async_example()
     pdb.set_trace()
-    

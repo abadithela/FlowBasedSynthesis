@@ -10,6 +10,8 @@ from inner_min import solve_inner_min
 # from runnerblocker_network import RunnerBlockerNetwork
 from construct_automata.main import quad_test_sync
 from setup_graphs import GraphData
+from gurobi_cuts import solve_min_gurobi
+from min_min_bilevel import solve_min_min_bilevel
 
 def setup_automata(network):
     ts, prod_ba, virtual, sys_virtual, snr_to_nr, snr_to_label, label_to_snr = create_ts_automata_and_virtual_game_graph(network)
@@ -126,5 +128,19 @@ def debug_inner_min():
 
     st()
 
+def debug_gurobi():
+    virtual, system, b_pi, virtual_sys = quad_test_sync()
+    GD, S = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
+
+    d = solve_min_gurobi(GD,S)
+    st()
+
+def run_min_min_bilevel():
+    virtual, system, b_pi, virtual_sys = quad_test_sync()
+    GD, S = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
+
+    d = solve_min_min_bilevel(GD,S)
+    st()
+
 if __name__ == '__main__':
-    find_cuts()
+    run_min_min_bilevel()

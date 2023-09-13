@@ -138,7 +138,7 @@ def solve_min(GD):
             elif i in sink and j in src:
                 expression = model.m[j] - model.m[i] >= 1
                 model.max_flow_partitions.add(expr = expression)
-    num_constraints += len(src)*len(sink) 
+    num_constraints += len(src)*len(sink)
 
     # max flow cut constraint
     def max_flow_cut(model, i,j):

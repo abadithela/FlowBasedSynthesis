@@ -84,8 +84,54 @@ def async_product(state_str="q"):
     Acc = {"sys": ("q1","q5", "q6", "q7"), "test": ("q2","q6")} # accepting sets of states
     return Q, qinit, AP, tau, Acc
 
-
 def load_sync_product(state_str="q"):
+    """
+    Asynchronous product automaton for the system and test specifications
+    """
+    nstates=4
+    goal = spot.formula.ap("goal")
+    int = spot.formula.ap("int")
+    adjacent = spot.formula.ap("adjacent")
+    AP = [goal, int]
+    Q = [state_str+str(k) for k in range(nstates)]
+    state_dict = {{(1, 1): "q0",
+                   (0, 1): "q1",
+                   (2, 1): "q2",
+                   (1, 0): "q3",
+                   (0, 0): "q4",
+                   (2, 0): "q5"}
+
+    qinit = state_str+str(0)
+
+    tau = {
+            ("q0", conjunction([conjunction([neg(goal), neg(int)]), neg(adjacent)])): "q0",
+            ("q0", conjunction([conjunction([goal, neg(int)], neg(adjacent)])): "q1",
+            ("q0", conjunction([neg(int), adjacent])): "q2",
+            ("q0", conjunction([conjunction([neg(adjacent), neg(goal)]), int])): "q3",
+
+            ("q1", conjunction([neg(int), neg(adjacent)]): "q1",
+            ("q1", conjunction([int, adjacent])): "q5",
+            ("q1", conjunction([int, neg(adjacent)])): "q4",
+            ("q1", conjunction([neg(int), adjacent])): "q2",
+
+            ("q2", neg(int)): "q2",
+            ("q2", int): "q5",
+
+            ("q3", conjunction([neg(goal), neg(adjacent)]): "q3",
+            ("q3", conjunction([goal, neg(adjacent)]): "q4",
+            ("q3", adjacent): "q5",
+
+            ("q4", neg(adjacent)): "q4",
+            ("q4", adjacent): "q5",
+
+            ("q5", True): "q5",
+
+            }
+    Acc = {"sys": ("q1", "q4"), "test": ("q3","q4", "q5")} # accepting sets of states
+    return Q, qinit, AP, tau, Acc
+
+
+def load_sync_product_wo_adjacent(state_str="q"):
     """
     Asynchronous product automaton for the system and test specifications
     """

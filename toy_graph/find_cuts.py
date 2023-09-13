@@ -4,103 +4,88 @@ import numpy as np
 from ipdb import set_trace as st
 import networkx as nx
 import pdb
-from three_flows import solve_bilevel as solve_bilevel_three_flows
-from two_flows import solve_bilevel as solve_bilevel_two_flows
-from two_flows_nonneg_vars import solve_bilevel as solve_bilevel_two_flows_nonneg_vars
+from cut_flow_fcns import solve_bilevel
+# from construct_automata import get_gamegraph, construct_automata
+# from runnerblocker_network import RunnerBlockerNetwork
+from construct_automata.main import quad_test_sync
 from setup_graphs import GraphData
 
-def graph1():
+def setup_automata(network):
+    ts, prod_ba, virtual, sys_virtual, snr_to_nr, snr_to_label, label_to_snr = create_ts_automata_and_virtual_game_graph(network)
+    return virtual, sys_virtual, snr_to_nr, snr_to_label, label_to_snr
+
+def setup_nodes_and_edges(virtual_game_graph, virtual_sys, b_pi):
     # setup nodes and map
-    # Node labels:: 1: S, 4,5,6: I, 7: T
-    # Edges: (1,2), (2,1), (1,3), (3,1), (2,7), (3,7), (2,4), (3,5), (4,6), (5,6), (6,7)
-    n = 7
-    nodes = [i for i in range(1,n+1)]
+    nodes = []
     node_dict = {}
     inv_node_dict = {}
-    for i in range(1,n+1):
-        node_dict[i]=i
-        inv_node_dict[i] = i
+    for i, node in enumerate(virtual_game_graph.G_initial.nodes):
+        nodes.append(i)
+        node_dict.update({i: virtual_game_graph.reverse_Sdict[node]})
+        inv_node_dict.update({virtual_game_graph.reverse_Sdict[node]: i})
     # find initial state
-    init = [1]
-    
+    init = []
+    for initial in virtual_game_graph.I:
+        init.append(inv_node_dict[initial])
     # find accepting states for system and tester
-    acc_sys = [7]
-    acc_test = [4,5,6]
-    
+    acc_sys = []
+    acc_test = []
+    for node in nodes:
+        if node_dict[node] in virtual_game_graph.sink:
+            acc_sys.append(node)
+        if node_dict[node] in virtual_game_graph.int:
+            acc_test.append(node)
     # setup edges
-    edges = [(1,2), (2,1), (1,3), (3,1), (2,7), (3,7), (2,4), (3,5), (4,6), (5,6), (6,7)]
+    edges = []
+    for edge in virtual_game_graph.G_initial.edges:
+        out_node = virtual_game_graph.reverse_Sdict[edge[0]]
+        in_node = virtual_game_graph.reverse_Sdict[edge[1]]
+        edges.append((inv_node_dict[out_node],inv_node_dict[in_node]))
+
+    # setup system graph
+    S_nodes = []
+    S_node_dict = {}
+    S_inv_node_dict = {}
+    for i, node in enumerate(virtual_sys.G_initial.nodes):
+        S_nodes.append(i)
+        S_node_dict.update({i: virtual_sys.reverse_Sdict[node]})
+        S_inv_node_dict.update({virtual_sys.reverse_Sdict[node]: i})
+    # find initial state
+    S_init = []
+    for initial in virtual_sys.I:
+        S_init.append(S_inv_node_dict[initial])
+    # find accepting states for system
+    S_acc_sys = []
+    for node in S_nodes:
+        if S_node_dict[node] in virtual_sys.sink:
+            S_acc_sys.append(node)
+    # setup edges
+    S_edges = []
+    for edge in virtual_sys.G_initial.edges:
+        out_node = virtual_sys.reverse_Sdict[edge[0]]
+        in_node = virtual_sys.reverse_Sdict[edge[1]]
+        S_edges.append((S_inv_node_dict[out_node],S_inv_node_dict[in_node]))
 
     GD = GraphData(nodes, edges, node_dict, inv_node_dict, acc_sys, acc_test, init)
-    return GD
+    S = GraphData(S_nodes, S_edges, S_node_dict, S_inv_node_dict, S_acc_sys, [], S_init)
+    return GD, S
 
-def graph2():
-    # setup nodes and map
-    # Node labels:: 1: S, 3,5,6: I, 7: T
-    # Edges: (1,2), (2,3), (3,3), (1,4), (4,5), (4,7), (5,6), (6,7)
-    n = 7
-    nodes = [i for i in range(1,n+1)]
-    node_dict = {}
-    inv_node_dict = {}
-    for i in range(1,n+1):
-        node_dict[i]=i
-        inv_node_dict[i] = i
-    # find initial state
-    init = [1]
-    
-    # find accepting states for system and tester
-    acc_sys = [7]
-    acc_test = [3,5,6]
-    
-    # setup edges
-    edges = [(1,2), (2,3), (3,3), (1,4), (4,5), (4,7), (5,6), (6,7)]
+def call_pyomo(GD, S):
 
-    GD = GraphData(nodes, edges, node_dict, inv_node_dict, acc_sys, acc_test, init)
-    return GD
-
-def call_pyomo_three_flows(G):
-    ftest1, ftest2, fsys, d, F = solve_bilevel_three_flows(G)
+    ftest, fsys, d, F = solve_bilevel(GD, S)
     cuts = [x for x in d.keys() if d[x] >= 0.9]
-    pdb.set_trace()
+    # pdb.set_trace()
     flow = F
-    bypass_flow = sum([ftest[j] for j in ftest.keys() if j[1] in G.sink])
+    bypass_flow = sum([fsys[j] for j in fsys.keys() if j[1] in GD.sink])
     print('Cut {} edges in the virtual game graph.'.format(len(cuts)))
     print('The max flow through I is {}'.format(F))
     print('The bypass flow is {}'.format(bypass_flow))
 
     for cut in cuts:
-        print('Cutting {0} to {1}'.format(G.node_dict[cut[0]], G.node_dict[cut[1]]))
+        print('Cutting {0} to {1}'.format(GD.node_dict[cut[0]], GD.node_dict[cut[1]]))
     # st()
     return cuts, flow, bypass_flow
 
-def call_pyomo_two_flows(G):
-    ftest, fsys, d, F = solve_bilevel_two_flows(G)
-    cuts = [x for x in d.keys() if d[x] >= 0.9]
-    pdb.set_trace()
-    flow = F
-    bypass_flow = sum([fsys[j] for j in fsys.keys() if j[1] in G.sink])
-    print('Cut {} edges in the virtual game graph.'.format(len(cuts)))
-    print('The max flow through I is {}'.format(F))
-    print('The bypass flow is {}'.format(bypass_flow))
-
-    for cut in cuts:
-        print('Cutting {0} to {1}'.format(G.node_dict[cut[0]], G.node_dict[cut[1]]))
-    # st()
-    return cuts, flow, bypass_flow
-
-def call_pyomo_two_flows_nonneg_vars(G):
-    ftest, fsys, d, F = solve_bilevel_two_flows_nonneg_vars(G)
-    cuts = [x for x in d.keys() if d[x] >= 0.9]
-    pdb.set_trace()
-    flow = F
-    bypass_flow = sum([fsys[j] for j in fsys.keys() if j[1] in G.sink])
-    print('Cut {} edges in the virtual game graph.'.format(len(cuts)))
-    print('The max flow through I is {}'.format(F))
-    print('The bypass flow is {}'.format(bypass_flow))
-
-    for cut in cuts:
-        print('Cutting {0} to {1}'.format(G.node_dict[cut[0]], G.node_dict[cut[1]]))
-    # st()
-    return cuts, flow, bypass_flow
 
 def get_graph(nodes, edges):
     G = nx.DiGraph()
@@ -109,20 +94,26 @@ def get_graph(nodes, edges):
     return G
 
 
-def find_cuts_three_flows():
-    G = graph2()
-    cuts = []
-    cuts, flow, bypass = call_pyomo_three_flows(G)
-    st()
-    return G,cuts
+def find_cuts():
 
-def find_cuts_two_flows():
-    G = graph2()
+    virtual, system, b_pi, virtual_sys = quad_test_sync()
+
+    # network = RunnerBlockerNetwork([1,2,3])
+    # ts, prod_ba, virtual, sys_virtual, state_map = construct_automata(network)
+
+    GD, S = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
     #
     cuts = []
-    cuts, flow, bypass = call_pyomo_two_flows(G)
+    cuts, flow, bypass = call_pyomo(GD, S)
     st()
-    return G,cuts
+
+    # G = get_graph(nodes, edges) # virtual graph in networkx graph form
+    # prune the dead ends
+    # G, new_cuts = postprocess_cuts(GD, cuts)
+    st()
+    return GD,cuts
+
+
 
 if __name__ == '__main__':
-    find_cuts_two_flows()
+    find_cuts()

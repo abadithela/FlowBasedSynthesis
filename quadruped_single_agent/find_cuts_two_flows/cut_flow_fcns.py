@@ -68,6 +68,7 @@ def solve_bilevel(GD, SD):
     model.L.edges = model.edges
     model.L.nodes = model.nodes
     model.L.fs = pyo.Var(model.L.edges, within=pyo.NonNegativeReals) # Flow 3 (from s to t not through i)
+    model.L.ts = pyo.Var(within=pyo.NonNegativeReals)
 
     # Add constraints that system will always have a path
     # model = add_static_obstacle_constraints_on_S(model, GD, SD)
@@ -142,8 +143,13 @@ def solve_bilevel(GD, SD):
     # SUBMODEL
     # Objective - Maximize the flow into the sink
     def flow_sink(model):
-        return sum(model.fs[i,j] for (i, j) in model.edges if j in sink)
+        return model.ts + sum(model.fs[i,j] for (i, j) in model.edges if j in sink)
     model.L.o = pyo.Objective(rule=flow_sink, sense=pyo.maximize)
+
+    # set t equals
+    model.L.equal_t = pyo.ConstraintList()
+    t_equals = model.L.ts == model.t
+    model.L.equal_t.add(expr = t_equals)
 
     # Capacity constraints
     def capacity_sys(mdl, i, j):
