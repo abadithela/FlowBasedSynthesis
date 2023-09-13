@@ -3,7 +3,7 @@ Script to construct and test products
 """
 import sys
 import os
-import pdb
+from ipdb import set_trace as st
 
 import product_automata_small_example as product_automata
 
@@ -31,7 +31,7 @@ def sync_prod(system, aut):
     sys_prod.construct_transitions()
     return sys_prod
 
-def construct_sync_automaton_quad_ex(AP_set = None):
+def construct_sync_automaton(AP_set = None):
     Q, qinit, AP, tau, Acc = product_automata.sync_product(state_str="q")
     for ap in AP:
         assert ap in AP_set
@@ -41,7 +41,7 @@ def construct_sync_automaton_quad_ex(AP_set = None):
 def sys_test_sync(ints, goals):
     system = construct_system(ints, goals)
 
-    b_pi = construct_sync_automaton_quad_ex(AP_set = system.AP)
+    b_pi = construct_sync_automaton(AP_set = system.AP)
     virtual = sync_prod(system, b_pi)
     if not os.path.exists("imgs"):
         os.makedirs("imgs")

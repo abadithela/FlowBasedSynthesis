@@ -8,6 +8,7 @@ import spot
 import buddy
 from matplotlib import pyplot as plt
 import pdb
+from ipdb import set_trace as st
 from collections import OrderedDict as od
 try:
     from transition_system import ProductTransys, Transys
@@ -148,6 +149,66 @@ class Product(ProductTransys):
                     if n == node_st:
                         n.attr['color'] = color
                         n.attr['fillcolor'] = color
+        G_agr.draw(fn+".pdf",prog='dot')
+
+    def plot_with_highlighted_edges(self, cuts, fn):
+        # st()
+        self.identify_SIT()
+        self.to_graph()
+        # prune unreachable nodes
+        self.G_initial = nx.DiGraph()
+        s_init = [self.Sdict[i] for i in self.I]
+        init_dfs_tree = [nx.dfs_tree(self.G, source=src) for src in s_init]
+        init_dfs_tree_nodes = []
+        for tree in init_dfs_tree:
+            for n in tree.nodes():
+                if n not in init_dfs_tree_nodes:
+                    init_dfs_tree_nodes.append(n)
+        edges = []
+        for state_act, in_node in self.E.items():
+            out_node = state_act[0]
+            act = state_act[1]
+            s_out = self.Sdict[out_node]
+            s_in = self.Sdict[in_node]
+            edge = (s_out, s_in)
+            if s_out in init_dfs_tree_nodes:
+                edges.append(edge)
+        self.G_initial.add_edges_from(edges)
+        G_agr = self.base_dot_graph(graph=self.G_initial)
+        # highlight initial nodes
+        state_color_dict = {'orange': self.I}
+        for color, state_list in state_color_dict.items():
+            if not isinstance(state_list, list):
+                state_list = [state_list]
+
+            for node in state_list:
+                if not isinstance(node, str):
+                    node_st = self.Sdict[node]
+                else:
+                    node_st = node
+
+                for i in G_agr.nodes():
+                    n = G_agr.get_node(i)
+                    if n == node_st:
+                        n.attr['color'] = color
+                        n.attr['fillcolor'] = color
+                        # n.attr['edgecolor'] = black
+        # highlight cut edges
+        graph_cut_edges = []
+        for cut_edge in cuts:
+            # st()
+            for state_act, in_node in self.E.items():
+                out_node = state_act[0]
+                # pdb.set_trace()
+                if out_node == cut_edge[0] and in_node == cut_edge[1]:
+                    graph_cut_edges.append((self.Sdict[out_node], self.Sdict[in_node]))
+        for e in G_agr.edges():
+            edge = G_agr.get_edge(*e)
+            if e in graph_cut_edges:
+                e.attr['color'] = 'red'
+                e.attr['style'] = 'dashed'
+                e.attr['penwidth'] = 2.0
+        # st()
         G_agr.draw(fn+".pdf",prog='dot')
 
 

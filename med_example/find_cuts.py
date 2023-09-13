@@ -24,6 +24,14 @@ def call_pyomo(GD, S):
     # st()
     return cuts, flow, bypass_flow, f_on_s
 
+def highlight_cuts(cuts, GD, SD, virtual, virtual_sys):
+    annot_cuts = [(GD.node_dict[cut[0]], GD.node_dict[cut[1]]) for cut in cuts]
+    sys_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
+    sys_cuts_annot = [((cut[0], q1), (cut[1], q2)) for cut in sys_cuts for q1 in virtual_sys.AP for q2 in virtual_sys.AP]
+
+    virtual.plot_with_highlighted_edges(annot_cuts, "imgs/virtual_with_cuts")
+    virtual_sys.plot_with_highlighted_edges(sys_cuts_annot, "imgs/virtual_sys_with_cuts")
+
 
 def find_cuts():
 
@@ -33,12 +41,18 @@ def find_cuts():
     virtual, system, b_pi, virtual_sys = sys_test_sync(ints, goals)
 
 
-    GD, S = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
+    GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
 
-    cuts = []
-    cuts, flow, bypass, f_on_s = call_pyomo(GD, S)
+    cuts, flow, bypass, f_on_s = call_pyomo(GD, SD)
+
+    annot_cuts = [(GD.node_dict[cut[0]], GD.node_dict[cut[1]]) for cut in cuts]
+    sys_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
+    sys_cuts_annot = [((cut[0], q1), (cut[1], q2)) for cut in sys_cuts for q1 in virtual_sys.AP for q2 in virtual_sys.AP]
+
+    highlight_cuts(cuts, GD, SD, virtual, virtual_sys)
 
     st()
+
     return GD,cuts
 
 

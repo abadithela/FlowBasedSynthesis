@@ -50,7 +50,7 @@ def sync_product(state_str="q"): # simplified
     """
     Asynchronous product automaton for the system and test specifications
     """
-    nstates=16
+    nstates=4
     goal = spot.formula.ap("goal")
     int = spot.formula.ap("int")
 
