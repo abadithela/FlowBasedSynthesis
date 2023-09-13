@@ -93,7 +93,7 @@ def solve_bilevel(GD, SD):
     def mcf_flow(model):
         bypass_flow = sum(model.L.fby[i,j] for (i, j) in model.L.edges if i in src)
         # sum_de = sum(model.y['d', i, j] for (i,j) in model.edges)
-        return  GAMMA*bypass_flow# + sum_de
+        return  model.t + GAMMA*bypass_flow# + sum_de
         # return bypass_flow
     model.o = pyo.Objective(rule=mcf_flow, sense=pyo.minimize)
 
