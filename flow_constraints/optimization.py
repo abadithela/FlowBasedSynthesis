@@ -25,6 +25,7 @@ from pyomo.util.infeasible import log_infeasible_constraints
 debug = True
 init = False
 feasibility = True
+preserve_flow_on_S = False
 
 GAMMA = 1000
 
@@ -84,7 +85,7 @@ def solve_bilevel(GD, SD):
             model.y['d', i, j] = 0
             model.y['ft', i, j] = f_init[(i,j)]
             model.L.fby[i, j] = fby_init[(i,j)]
-        if feasibility:
+        if preserve_flow_on_S:
             for (i,j) in model.s_edges:
                 model.f_on_S[i, j] = f_on_s_init[(i,j)]
         model.t = t_lower
@@ -231,7 +232,7 @@ def solve_bilevel(GD, SD):
         d.update({(i,j): model.y['d', i,j].value*F})
     for (i,j) in model.L.edges:
         fby.update({(i,j): model.L.fby[i,j].value*F})
-    if feasibility:
+    if preserve_flow_on_S:
         for (i,j) in model.s_edges:
             f_on_s.update({(i,j): model.f_on_S[i,j].value*F})
 
@@ -240,7 +241,7 @@ def solve_bilevel(GD, SD):
         for key in d.keys():
             print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],d[key]))
 
-        if feasibility:
+        if preserve_flow_on_S:
             print('------- f_on_s -------')
             for key in f_on_s.keys():
                 print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],f_on_s[key]))
@@ -248,7 +249,7 @@ def solve_bilevel(GD, SD):
         for key in fby.keys():
             print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],fby[key]))
 
-    if feasibility:
+    if preserve_flow_on_S:
         print('Flow on S:')
         print(sum(f_on_s[i,j] for (i, j) in model.s_edges if i in SD.init))
     st()

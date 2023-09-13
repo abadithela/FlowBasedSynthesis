@@ -2,10 +2,11 @@ import pyomo.environ as pyo
 from ipdb import set_trace as st
 
 def add_static_obstacle_constraints_on_S(model, GD, SD, initialize):
-    map_G_to_S = find_map_G_S(GD,SD)
+    # map_G_to_S = find_map_G_S(GD,SD)
 
-    model = preserve_flow_on_S(model, SD, map_G_to_S, initialize)
+    # model = preserve_flow_on_S(model, SD, map_G_to_S, initialize)
     model = map_static_obstacles_to_G(model, GD)
+    model = add_bidirectional_edge_cuts_on_G(model, GD)
 
     return model
 
@@ -19,6 +20,18 @@ def map_static_obstacles_to_G(model, GD):
             if out_state == GD.node_dict[imap][0] and in_state == GD.node_dict[jmap][0]:
                 expression = model.y['d', i, j] == model.y['d', imap, jmap]
                 model.map_static_obstacles_to_G.add(expr = expression)
+    return model
+
+def add_bidirectional_edge_cuts_on_G(model, GD):
+    model.cut_edges_bidirectionally = pyo.ConstraintList()
+    edge_list = list(model.edges)
+    for count, (i,j) in enumerate(edge_list):
+        out_state = GD.node_dict[i][0]
+        in_state = GD.node_dict[j][0]
+        for (imap,jmap) in edge_list[count+1:]:
+            if in_state == GD.node_dict[imap][0] and out_state == GD.node_dict[jmap][0]:
+                expression = model.y['d', i, j] == model.y['d', imap, jmap]
+                model.cut_edges_bidirectionally.add(expr = expression)
     return model
 
 def find_map_G_S(GD,SD):
