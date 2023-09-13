@@ -23,9 +23,10 @@ import logging
 from pyomo.util.infeasible import log_infeasible_constraints
 
 debug = True
-init = True
+init = False
+feasibility = True
 
-GAMMA = 1000
+GAMMA = 1
 
 def solve_bilevel(GD, SD):
     cleaned_intermed = [x for x in GD.acc_test if x not in GD.acc_sys]
@@ -70,10 +71,11 @@ def solve_bilevel(GD, SD):
     model.L.edges = model.edges
     model.L.nodes = model.nodes
     model.L.fby = pyo.Var(model.L.edges, within=pyo.NonNegativeReals) # Flow 3 (from s to t not through i)
-    model.L.ts = pyo.Var(within=pyo.NonNegativeReals)
+    # model.L.ts = pyo.Var(within=pyo.NonNegativeReals)
 
     # Add constraints that system will always have a path
-    model = add_static_obstacle_constraints_on_S(model, GD, SD, init)
+    if feasibility:
+        model = add_static_obstacle_constraints_on_S(model, GD, SD, init)
 
     # compute max flow for lower bound on t
     f_init, fby_init, t_lower, f_on_s_init = initialize_max_flow(G, src, inter, sink, S, S_src, S_sink)
@@ -82,15 +84,16 @@ def solve_bilevel(GD, SD):
             model.y['d', i, j] = 0
             model.y['ft', i, j] = f_init[(i,j)]
             model.L.fby[i, j] = fby_init[(i,j)]
-        for (i,j) in model.s_edges:
-            model.f_on_S[i, j] = f_on_s_init[(i,j)]
+        if feasibility:
+            for (i,j) in model.s_edges:
+                model.f_on_S[i, j] = f_on_s_init[(i,j)]
         model.t = t_lower
 
     # Objective - minimize 1/F + lambda*f_sys/F
     def mcf_flow(model):
         bypass_flow = sum(model.L.fby[i,j] for (i, j) in model.L.edges if i in src)
         # sum_de = sum(model.y['d', i, j] for (i,j) in model.edges)
-        return model.t + GAMMA*bypass_flow# + sum_de
+        return  GAMMA*bypass_flow# + sum_de
         # return bypass_flow
     model.o = pyo.Objective(rule=mcf_flow, sense=pyo.minimize)
 
@@ -145,13 +148,13 @@ def solve_bilevel(GD, SD):
     # SUBMODEL
     # Objective - Maximize the flow into the sink
     def flow_sink(model):
-        return model.ts + GAMMA*sum(model.fby[i,j] for (i, j) in model.edges if j in sink)
+        return GAMMA*sum(model.fby[i,j] for (i, j) in model.edges if j in sink)
     model.L.o = pyo.Objective(rule=flow_sink, sense=pyo.maximize)
 
     # set t equals
-    model.L.equal_t = pyo.ConstraintList()
-    t_equals = model.L.ts == model.t
-    model.L.equal_t.add(expr = t_equals)
+    # model.L.equal_t = pyo.ConstraintList()
+    # t_equals = model.L.ts == model.t
+    # model.L.equal_t.add(expr = t_equals)
 
     # Capacity constraints
     def capacity_sys(mdl, i, j):
@@ -228,24 +231,25 @@ def solve_bilevel(GD, SD):
         d.update({(i,j): model.y['d', i,j].value*F})
     for (i,j) in model.L.edges:
         fby.update({(i,j): model.L.fby[i,j].value*F})
-
-    if debug:
-        print('------- d_e -------')
+    if feasibility:
         for (i,j) in model.s_edges:
             f_on_s.update({(i,j): model.f_on_S[i,j].value*F})
 
+    if debug:
+        print('------- d_e -------')
         for key in d.keys():
             print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],d[key]))
 
-        print('------- f_on_s -------')
-        for key in f_on_s.keys():
-            print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],f_on_s[key]))
+        if feasibility:
+            print('------- f_on_s -------')
+            for key in f_on_s.keys():
+                print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],f_on_s[key]))
         print('------- f_by -------')
         for key in fby.keys():
             print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],fby[key]))
 
-
-    print('Flow on S:')
-    print(sum(f_on_s[i,j] for (i, j) in model.s_edges if i in SD.init))
+    if feasibility:
+        print('Flow on S:')
+        print(sum(f_on_s[i,j] for (i, j) in model.s_edges if i in SD.init))
     st()
     return ftest, fby, d, F, f_on_s
