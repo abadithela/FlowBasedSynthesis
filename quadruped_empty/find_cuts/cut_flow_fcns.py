@@ -13,7 +13,7 @@ import networkx as nx
 from pao.pyomo import *
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
-from feasibility_constraints import add_feasibility_constraints
+from feasibility_constraints import add_feasibility_constraints, add_static_obstacle_constraints
 from initialize_max_flow import initialize_max_flow
 # from setup_graphs import setup_graphs_for_optimization
 from copy import deepcopy
@@ -60,6 +60,7 @@ def solve_bilevel(GD, SD):
     model.L.f3 = pyo.Var(model.L.edges, within=pyo.NonNegativeReals) # Flow 3 (from s to t not through i)
 
     # Add constraints that system will always have a path
+    # model = add_static_obstacle_constraints(model, GD, SD)
     model = add_feasibility_constraints(model, GD, SD)
 
     if init: # initialize the flows with valid max flow
