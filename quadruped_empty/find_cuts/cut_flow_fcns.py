@@ -217,7 +217,7 @@ def solve_bilevel(GD, SD):
         model.pprint()
     # st()
 
-    with Solver('pao.pyomo.REG') as solver:
+    with Solver('pao.pyomo.PCCG') as solver:
         results = solver.solve(model, tee=True, max_iter=5000)
 
     # model.pprint()
