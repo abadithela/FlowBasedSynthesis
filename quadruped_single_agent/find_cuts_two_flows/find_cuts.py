@@ -8,9 +8,12 @@ from construct_automata.main import quad_test_sync
 try:
     from cut_flow_fcns import solve_bilevel
     from setup_graphs import GraphData
+    from constraint_specs import get_history_vars, history_var_dynamics, occupy_cuts, do_not_excessively_constrain
 except:
     from find_cuts_two_flows.cut_flow_fcns import solve_bilevel
     from find_cuts_two_flows.setup_graphs import GraphData
+    from find_cuts_two_flows.constraint_specs import get_history_vars, history_var_dynamics, occupy_cuts, do_not_excessively_constrain
+
 
 def setup_automata(network):
     ts, prod_ba, virtual, sys_virtual, snr_to_nr, snr_to_label, label_to_snr = create_ts_automata_and_virtual_game_graph(network)
@@ -103,10 +106,17 @@ def find_cuts():
     # network = RunnerBlockerNetwork([1,2,3])
     # ts, prod_ba, virtual, sys_virtual, state_map = construct_automata(network)
 
-    GD, S = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
+    GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
     #
     cuts = []
-    cuts, flow, bypass = call_pyomo(GD, S)
+    cuts, flow, bypass = call_pyomo(GD, SD)
+
+    # get_specs_from_cuts(GD,SD, cuts)
+    var_dict = get_history_vars(GD)
+    hist_var_dyn = history_var_dynamics(GD)
+    cut_specs = occupy_cuts(GD, cuts)
+    do_not_overconstrain = do_not_excessively_constrain(GD, cuts)
+    st()
 
     G = get_graph(nodes, edges) # virtual graph in networkx graph form
     # prune the dead ends
