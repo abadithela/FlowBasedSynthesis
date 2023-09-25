@@ -6,18 +6,61 @@ from ipdb import set_trace as st
 import sys
 sys.path.append('..')
 from maze_network import MazeNetwork
+from tester_spec import get_tester_spec
 # from quadruped_interface import quadruped_move
 
 class Tester:
-    def __init__(self, name, pos):
+    def __init__(self, name, pos, maze):
         self.name = name
         self.q = pos
         self.z = pos[0]
         self.x = pos[1]
+        self.maze = maze
+        self.turn = 0
+        self.controller = self.find_controller()
 
-    def move(self,cell):
+    def manual_move(self,cell):
         (self.z, self.x) = cell
         self.q = (self.z, self.x)
+
+    def tester_move(self, system_pos):
+        output = self.controller.move(system_pos[0],system_pos[1])
+        self.x = output['env_x']
+        self.z = output['env_z']
+        self.turn = output['turn']
+        self.s = (self.z,self.x)
+        print(output)
+
+    def find_controller(self):
+        logging.basicConfig(level=logging.WARNING)
+        logging.getLogger('tulip.spec.lexyacc').setLevel(logging.WARNING)
+        logging.getLogger('tulip.synth').setLevel(logging.WARNING)
+        logging.getLogger('tulip.interfaces.omega').setLevel(logging.WARNING)
+
+        specs = get_tester_spec(self.q, self.maze)
+
+        spc = spec.GRSpec(specs.env_vars, specs.vars, specs.env_init, specs.init,
+                        specs.env_safety, specs.safety, specs.env_progress, specs.progress)
+
+        print(spc.pretty())
+
+        spc.moore = False # mealy machine
+        spc.qinit = r'\A \E'
+        # spc.plus_one = False
+
+        if not synth.is_realizable(spc, solver='omega'):
+            print("Not realizable.")
+            st()
+        else:
+            ctrl = synth.synthesize(spc, solver='omega')
+        # dunp the controller
+        controller_namestr = "tester_controller.py"
+        dumpsmach.write_python_case(controller_namestr, ctrl, classname="TesterCtrl")
+
+        exe_globals = dict()
+        exec(dumpsmach.python_case(ctrl, classname='TesterCtrl'), exe_globals)
+        M = exe_globals['TesterCtrl']()  # previous line creates the class `AgentCtrl`
+        return M
 
 class Quadruped:
     def __init__(self, name, pos, goal, maze, tester):
@@ -107,6 +150,6 @@ class Quadruped:
 if __name__ == "__main__":
     mazefile = 'maze.txt'
     maze = MazeNetwork(mazefile)
-    tester = Tester("tester", (4,2))
-    sys_quad = Quadruped("sys_quad", (4,0), (0,0), maze, tester)
+    tester = Tester("tester", (3,2), maze)
+    # sys_quad = Quadruped("sys_quad", (4,0), (0,0), maze, tester)
     st()
