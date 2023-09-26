@@ -8,15 +8,19 @@ sys.path.append('..')
 from maze_network import MazeNetwork
 from tester_spec import get_tester_spec
 # from quadruped_interface import quadruped_move
+from find_cuts_two_flows.find_cuts import setup_nodes_and_edges
+from construct_automata.main import quad_test_sync
 
 class Tester:
-    def __init__(self, name, pos, maze):
+    def __init__(self, name, pos, maze, GD, cuts):
         self.name = name
         self.q = pos
         self.z = pos[0]
         self.x = pos[1]
         self.maze = maze
         self.turn = 0
+        self.GD = GD
+        self.cuts = cuts
         self.controller = self.find_controller()
 
     def manual_move(self,cell):
@@ -37,7 +41,7 @@ class Tester:
         logging.getLogger('tulip.synth').setLevel(logging.WARNING)
         logging.getLogger('tulip.interfaces.omega').setLevel(logging.WARNING)
 
-        specs = get_tester_spec(self.q, self.maze)
+        specs = get_tester_spec(self.q, self.maze, self.GD, self.cuts)
 
         spc = spec.GRSpec(specs.env_vars, specs.vars, specs.env_init, specs.init,
                         specs.env_safety, specs.safety, specs.env_progress, specs.progress)
@@ -46,7 +50,7 @@ class Tester:
 
         spc.moore = False # mealy machine
         spc.qinit = r'\A \E'
-        # spc.plus_one = False
+        spc.plus_one = False
 
         if not synth.is_realizable(spc, solver='omega'):
             print("Not realizable.")
@@ -150,6 +154,11 @@ class Quadruped:
 if __name__ == "__main__":
     mazefile = 'maze.txt'
     maze = MazeNetwork(mazefile)
-    tester = Tester("tester", (3,2), maze)
+    virtual, system, b_pi, virtual_sys = quad_test_sync()
+    GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
+
+    cuts = [(((4, 2), 'q0'), ((3, 2), 'q0')), (((2, 2), 'q3'), ((1, 2), 'q3'))]
+
+    tester = Tester("tester", (4,2), maze, GD, cuts)
     # sys_quad = Quadruped("sys_quad", (4,0), (0,0), maze, tester)
     st()
