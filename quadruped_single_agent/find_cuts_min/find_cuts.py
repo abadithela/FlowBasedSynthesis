@@ -5,6 +5,7 @@ from ipdb import set_trace as st
 import networkx as nx
 import pdb
 from cut_flow_fcns import solve_min
+from min_min_bilevel import solve_min_min_bilevel
 from inner_min import solve_inner_min
 # from construct_automata import get_gamegraph, construct_automata
 # from runnerblocker_network import RunnerBlockerNetwork
@@ -73,7 +74,8 @@ def setup_nodes_and_edges(virtual_game_graph, virtual_sys, b_pi):
 
 def call_pyomo(GD, S):
 
-    ftest, fsys, d, F = solve_min(GD, S)
+    # ftest, fsys, d, F = solve_min(GD, S)
+    ftest, fsys, d, F = solve_min_min_bilevel(GD, S)
     cuts = [x for x in d.keys() if d[x] >= 0.9]
     # pdb.set_trace()
     flow = F
