@@ -65,7 +65,7 @@ class Quadruped_Tester:
         # self.specs.vars["I"] = (0,1)
         self.specs.init |= {'I1 = 0 && I2 = 0'}
         self.specs.safety |= self.add_intermediate_dynamics()
-        # self.specs.safety |= self.not_stay_in_bad_states_forever()
+        self.specs.safety |= self.not_stay_in_bad_states_forever()
         # self.specs.progress |= {'I1=1 && I2 = 1'}
 
     
@@ -131,7 +131,7 @@ class Quadruped_Tester:
         print(spc.pretty())
         spc.moore = False
         spc.qinit = r'\A \E'
-        spc.plus_one = False
+        spc.plus_one = True
 
         if not synth.is_realizable(spc, solver='omega'):
             print("Not realizable.")

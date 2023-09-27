@@ -81,7 +81,7 @@ def solve_bilevel(GD, SD):
 
     # Objective - minimize 1/F + lambda*f_sys/F
     def mcf_flow(model):
-        lam = 1e5
+        lam = len(model.edges)
         bypass_flow = sum(model.L.fs[i,j] for (i, j) in model.L.edges if i in src)
         return model.t + lam*bypass_flow
         # return bypass_flow
@@ -195,7 +195,9 @@ def solve_bilevel(GD, SD):
     if debug:
         model.pprint()
 
-    # with Solver('pao.pyomo.REG') as solver:
+    with Solver('pao.pyomo.PCCG') as solver:
+        results = solver.solve(model, tee=True)
+    # with Solver('pao.pyomo.PCCG') as solver:
     #     results = solver.solve(model, tee=True)
 
     with Solver('pao.pyomo.PCCG') as solver:

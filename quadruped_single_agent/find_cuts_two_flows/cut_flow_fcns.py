@@ -87,8 +87,8 @@ def solve_bilevel(GD, SD):
     def mcf_flow(model):
         lam = len(model.edges)
         bypass_flow = sum(model.L.fs[i,j] for (i, j) in model.L.edges if i in src)
-        return model.t + lam*bypass_flow
-        # return bypass_flow
+        # return model.t + lam*bypass_flow
+        return bypass_flow
     model.o = pyo.Objective(rule=mcf_flow, sense=pyo.minimize)
 
     # Constraints
@@ -202,8 +202,11 @@ def solve_bilevel(GD, SD):
     # with Solver('pao.pyomo.REG') as solver:
     #     results = solver.solve(model, tee=True)
 
-    with Solver('pao.pyomo.REG') as solver:
-        results = solver.solve(model, tee=True, max_iter=5000)
+    # with Solver('pao.pyomo.REG') as solver:
+    #     results = solver.solve(model, tee=True, max_iter=5000)
+    
+    with Solver('pao.pyomo.PCCG') as solver:
+        results = solver.solve(model, tee=True)
 
     # model.pprint()
     ftest = dict()

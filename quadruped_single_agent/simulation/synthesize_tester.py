@@ -29,7 +29,7 @@ class Quadruped_Tester:
     def default_setup(self):
         mazefile = 'maze.txt'
         self.maze = MazeNetwork(mazefile)
-        self.tester_init = (0,2)
+        self.tester_init = (2,2)
 
     def set_intermediate_states(self, I1=(3,4), I2=(1,0)):
         self.I1 = I1
@@ -39,31 +39,39 @@ class Quadruped_Tester:
         intermediate_dynamics = set()
         intermediate_dynamics |= {'I1 = 1 -> X(I1 = 1)'}
         intermediate_dynamics |= {'I2 = 1 -> X(I2 = 1)'}
-        intermediate_dynamics |= {'I = 1 -> X(I = 1)'}
-        intermediate_dynamics |= {'(I1 = 1 && I2 = 1) -> (I = 1)'}
+        intermediate_dynamics |= {'(I1 = 0 && ' + '!('+ self.sys_zstr + '=' + str(self.I1[0]) + ' & ' + self.sys_xstr + '=' + str(self.I1[1]) +')) -> X(I1 = 0)'}
+        intermediate_dynamics |= {'(I2 = 0 && ' + '!('+ self.sys_zstr + '=' + str(self.I2[0]) + ' & ' + self.sys_xstr + '=' + str(self.I2[1]) +')) -> X(I2 = 0)'}
         visited_I1 = {'('+ self.sys_zstr + '=' + str(self.I1[0]) + ' & ' + self.sys_xstr + '=' + str(self.I1[1]) +') -> (I1=1)'}
         visited_I2 = {'('+ self.sys_zstr + '=' + str(self.I2[0]) + ' & ' + self.sys_xstr + '=' + str(self.I2[1]) +') -> (I2=1)'}
         intermediate_dynamics |= visited_I1
         intermediate_dynamics |= visited_I2
         return intermediate_dynamics
 
+    def not_stay_in_bad_states_forever(self):
+        safety_specs = set()
+        safety_str1 = {'!((z=4 && x=1) && (env_z=4 && env_x=2 && I1=0))'}
+        safety_str2 = {'!((z=2 && x=3) && (env_z=2 && env_x=2 && I2=0))'}
+        safety_specs |= safety_str1
+        safety_specs |= safety_str2
+        return safety_specs
+    
     def add_intermediate_progress(self):
-        intermediate_progress = {'I=1'}
+        intermediate_progress = {'I1=1 && I2=1'}
         return intermediate_progress
     
-    def not_stay_in_bad_states_forever(self):
-        bad_states = [(0,2), (2,2), (4,2)]
-        safety_specs = set()
-        for (zbad, xbad) in bad_states:
-            safety_str = '!('+ self.zstr + '=' + str(zbad) + ' & ' + self.xstr + '=' + str(xbad) +')'
-            safety_specs |= {safety_str}
-        return safety_specs
+    # def not_stay_in_bad_states_forever(self):
+    #     bad_states = [(0,2), (2,2), (4,2)]
+    #     safety_specs = set()
+    #     for (zbad, xbad) in bad_states:
+    #         safety_str = '!('+ self.zstr + '=' + str(zbad) + ' & ' + self.xstr + '=' + str(xbad) +')'
+    #         safety_specs |= {safety_str}
+    #     return safety_specs
 
     def add_visit_intermed_specs(self):
         self.specs.vars["I1"] = (0,1)
         self.specs.vars["I2"] = (0,1)
-        self.specs.vars["I"] = (0,1)
-        self.specs.init |= {'I1 = 0 && I2 = 0 && I = 0'}
+        # self.specs.vars["I"] = (0,1)
+        self.specs.init |= {'I1 = 0 && I2 = 0'}
         self.specs.safety |= self.add_intermediate_dynamics()
         self.specs.progress |= self.not_stay_in_bad_states_forever()
         self.specs.progress |= self.add_intermediate_progress()
@@ -95,7 +103,7 @@ class Quadruped_Tester:
         print(spc.pretty())
         spc.moore = False
         spc.qinit = r'\A \E'
-        spc.plus_one = False
+        # spc.plus_one = False
 
         if not synth.is_realizable(spc, solver='omega'):
             print("Not realizable.")
