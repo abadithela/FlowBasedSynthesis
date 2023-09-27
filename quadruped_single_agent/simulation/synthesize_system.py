@@ -7,7 +7,7 @@ import sys
 sys.path.append('..')
 from maze_network import MazeNetwork
 from pdb import set_trace as st
-from system_specs import sys_specs, env_specs
+from system_specs import sys_specs, env_specs, system_assumption_specs
 
 class Quadruped:
     def __init__(self, name, maze=None, env_init=None):
@@ -31,7 +31,7 @@ class Quadruped:
     def default_setup(self):
         mazefile = 'maze.txt'
         self.maze = MazeNetwork(mazefile)
-        self.env_init = (4,2)
+        self.env_init = (3,2)
 
     def construct_sys_specs(self):
         self.specs = sys_specs(self.maze, self.env_zstr, self.env_xstr)
@@ -53,7 +53,7 @@ class Quadruped:
         print(spc.pretty())
         spc.moore = False
         spc.qinit = r'\A \E'
-        spc.plus_one = False
+        spc.plus_one = True
 
         if not synth.is_realizable(spc, solver='omega'):
             print("Not realizable.")
@@ -80,7 +80,10 @@ class Quadruped:
         self.x = output['x']
         self.z = output['z']
         self.s = (self.z,self.x)
+        print(output)
         # quadruped_move((self.y,self.x))
 
 if __name__ == "__main__":
     quadruped = Quadruped(name="sys_quad")
+    quadruped.agent_move((4,2))
+    st()

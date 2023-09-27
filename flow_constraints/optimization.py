@@ -56,7 +56,6 @@ def solve_bilevel(GD, SD):
     src = GD.init
     sink = GD.sink
     inter = cleaned_intermed
-
     # 'ft': tester flow, and d: cut values
     vars = ['ft', 'd']
     model.y = pyo.Var(vars, model.edges, within=pyo.NonNegativeReals)
@@ -214,8 +213,8 @@ def solve_bilevel(GD, SD):
     # with Solver('pao.pyomo.REG') as solver:
     #     results = solver.solve(model, tee=True)
 
-    with Solver('pao.pyomo.PCCG') as solver:
-        results = solver.solve(model, tee=True, max_iter=5000, warmstart=True, quiet=False)
+    with Solver('pao.pyomo.REG') as solver:
+        results = solver.solve(model, tee=True, max_iter=5000, warmstart=True)
 
     log_infeasible_constraints(model, log_expression=True, log_variables=True)
     logging.basicConfig(filename='optimization.log', encoding='utf-8', level=logging.INFO)

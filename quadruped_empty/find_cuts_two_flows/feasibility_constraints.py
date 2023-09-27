@@ -93,7 +93,6 @@ def feasibility_vars_and_constraints(model, S, map_G_to_S):
         else:
             return pyo.Constraint.Skip
     model.s_no_out_sink = pyo.Constraint(model.s_edges, rule=s_no_out_sink)
-
     return model
 
 
