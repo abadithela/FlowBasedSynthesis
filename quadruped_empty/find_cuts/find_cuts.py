@@ -1,13 +1,19 @@
 import sys
+sys.path.append('../..')
 sys.path.append('..')
 import numpy as np
 from ipdb import set_trace as st
 import networkx as nx
-from cut_flow_fcns import solve_bilevel
+# from cut_flow_fcns import solve_bilevel
 # from construct_automata import get_gamegraph, construct_automata
 # from runnerblocker_network import RunnerBlockerNetwork
 from construct_automata.main import quad_test_sync
 from setup_graphs import GraphData
+
+from flow_constraints.optimization import solve_bilevel
+# from flow_constraints.construct_graphs import sys_test_sync
+from flow_constraints.setup_graphs import GraphData, setup_nodes_and_edges
+# from flow_constraints.plotting import plot_maze, plot_flow_on_maze
 
 def setup_automata(network):
     ts, prod_ba, virtual, sys_virtual, snr_to_nr, snr_to_label, label_to_snr = create_ts_automata_and_virtual_game_graph(network)

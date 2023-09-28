@@ -1,31 +1,8 @@
+'''
+most up to date version
+'''
 import pyomo.environ as pyo
 from ipdb import set_trace as st
-
-def add_static_obstacle_constraints_on_S(model, G, S):
-    map_G_to_S = find_map_G_S(G,S)
-    model = map_static_obstacles_to_S(model, S, map_G_to_S)
-    return model
-
-def add_static_obstacle_constraints_on_G(model, GD): # only works for single tester flow
-    G_truncated = {}
-    for node in GD.node_dict:
-        G_truncated.update({node: (str(GD.node_dict[node][0]))})
-
-    flip_dict = {}
-    for key in G_truncated.keys():
-        if G_truncated[key] in flip_dict.keys():
-            new_mapping = flip_dict[G_truncated[key]] + key
-            flip_dict.update({G_truncated[key]: new_mapping})
-
-    model.static_cut_cons = pyo.ConstraintList()
-    edge_list = list(GD.graph.edges)
-
-    for count,(i,j) in enumerate(edge_list):
-        for (imap, jmap) in edge_list[count+1:]:
-            if G_truncated[i] == G_truncated[imap] and G_truncated[j] == G_truncated[jmap]:
-                expression = model.y['d', i, j] == model.y['d', imap, jmap]
-                model.static_cut_cons.add(expr = expression)
-    return model
 
 def find_map_G_S(GD,SD):
     G_truncated = {}
@@ -39,13 +16,15 @@ def find_map_G_S(GD,SD):
         for sys_node in S_annot:
             if G_truncated[node]  == S_annot[sys_node]:
                 map_G_to_S.update({node: sys_node})
-    # st()
+
     return map_G_to_S
 
-def map_static_obstacles_to_S(model, S, map_G_to_S):
+def add_static_obstacle_constraints_on_S(model, G,S):
     '''
     For static cuts.
     '''
+    map_G_to_S = find_map_G_S(G,S)
+
     vars = ['fS']
 
     model.s_edges = S.edges
