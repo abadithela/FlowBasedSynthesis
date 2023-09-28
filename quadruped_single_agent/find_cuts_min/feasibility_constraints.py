@@ -3,7 +3,7 @@ from ipdb import set_trace as st
 
 def add_static_obstacle_constraints_on_S(model, G, S):
     map_G_to_S = find_map_G_S(G,S)
-    model = feasibility_vars_and_constraints(model, S, map_G_to_S)
+    model = map_static_obstacles_to_S(model, S, map_G_to_S)
     return model
 
 def add_static_obstacle_constraints_on_G(model, GD): # only works for single tester flow
@@ -42,7 +42,7 @@ def find_map_G_S(GD,SD):
     # st()
     return map_G_to_S
 
-def feasibility_vars_and_constraints(model, S, map_G_to_S):
+def map_static_obstacles_to_S(model, S, map_G_to_S):
     vars = ['fS']
 
     model.s_edges = S.edges
@@ -157,4 +157,3 @@ def add_feasibility_constraints(model, GD, SD):
                 model.feasibility.add(expr = expression)
 
     return model
-

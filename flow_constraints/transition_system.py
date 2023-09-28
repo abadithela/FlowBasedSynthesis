@@ -5,7 +5,10 @@ Apurva Badithela
 """
 import sys
 sys.path.append("..")
-from maze_network import MazeNetwork
+try:
+    from simulation.maze_network import MazeNetwork
+except:
+    from maze_network import MazeNetwork
 import spot
 import pdb
 from ast import literal_eval as make_tuple

@@ -1,3 +1,7 @@
+'''
+This file uses the products from flow_constraints and saves the graph
+with the highlighted cuts.
+'''
 import sys
 sys.path.append('..')
 import numpy as np
@@ -5,6 +9,8 @@ from ipdb import set_trace as st
 import networkx as nx
 import pdb
 from construct_automata.main import quad_test_sync
+from flow_constraints.plotting import highlight_cuts
+
 try:
     from cut_flow_fcns import solve_bilevel
     from setup_graphs import GraphData
@@ -75,6 +81,14 @@ def setup_nodes_and_edges(virtual_game_graph, virtual_sys, b_pi):
     S = GraphData(S_nodes, S_edges, S_node_dict, S_inv_node_dict, S_acc_sys, [], S_init)
     return GD, S
 
+# def highlight_cuts(cuts, GD, SD, virtual, virtual_sys):
+#     annot_cuts = [(GD.node_dict[cut[0]], GD.node_dict[cut[1]]) for cut in cuts]
+#     sys_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
+#     sys_cuts_annot = [((cut[0], q1), (cut[1], q2)) for cut in sys_cuts for q1 in virtual_sys.AP for q2 in virtual_sys.AP]
+#
+#     virtual.plot_with_highlighted_edges(annot_cuts, "imgs/virtual_with_cuts")
+#     virtual_sys.plot_with_highlighted_edges(sys_cuts_annot, "imgs/virtual_sys_with_cuts")
+
 def call_pyomo(GD, S):
 
     ftest, fsys, d, F = solve_bilevel(GD, S)
@@ -111,16 +125,9 @@ def find_cuts():
     cuts = []
     cuts, flow, bypass = call_pyomo(GD, SD)
 
-    # get_specs_from_cuts(GD,SD, cuts)
-    var_dict = get_history_vars(GD)
-    hist_var_dyn = history_var_dynamics(GD)
-    cut_specs = occupy_cuts(GD, cuts)
-    do_not_overconstrain = do_not_excessively_constrain(GD, cuts)
+    highlight_cuts(cuts, GD, SD, virtual, virtual_sys)
     st()
 
-    G = get_graph(nodes, edges) # virtual graph in networkx graph form
-    # prune the dead ends
-    # G, new_cuts = postprocess_cuts(GD, cuts)
     return GD,cuts
 
 

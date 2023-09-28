@@ -7,6 +7,18 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 import networkx as nx
 
+def highlight_cuts(cuts, GD, SD, virtual, virtual_sys):
+    '''
+    Save an image of the graphs with the cuts highlighted.
+    Make sure that the product graphs are called from flow_constraints/products.
+    '''
+    annot_cuts = [(GD.node_dict[cut[0]], GD.node_dict[cut[1]]) for cut in cuts]
+    sys_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
+    sys_cuts_annot = [((cut[0], q1), (cut[1], q2)) for cut in sys_cuts for q1 in virtual_sys.AP for q2 in virtual_sys.AP]
+
+    virtual.plot_with_highlighted_edges(annot_cuts, "imgs/virtual_with_cuts")
+    virtual_sys.plot_with_highlighted_edges(sys_cuts_annot, "imgs/virtual_sys_with_cuts")
+
 def plot_flow_on_maze(maze, cuts):
     # get the max flow for the cuts
     # remove redundant cuts
