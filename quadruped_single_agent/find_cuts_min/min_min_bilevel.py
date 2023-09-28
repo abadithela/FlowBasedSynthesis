@@ -65,9 +65,9 @@ def solve_min_min_bilevel(GD, SD):
     model.L.edges = model.edges
     model.L.nodes = model.nodes
     # model variables for the dual
-    model.L.a = pyo.Var(within=pyo.NonNegativeReals)
+    model.L.a = pyo.Var(model.edges, within=pyo.NonNegativeReals)
     model.L.l = pyo.Var(model.edges, within=pyo.Binary)
-    model.L.m = pyo.Var(model.nodes, within=pyo.NonNegativeReals)
+    model.L.m = pyo.Var(model.nodes, within=pyo.Binary)
     model.L.id = pyo.Var(model.edges, within=pyo.NonNegativeReals)
     model.L.it = pyo.Var(within=pyo.NonNegativeReals)
 
@@ -88,7 +88,7 @@ def solve_min_min_bilevel(GD, SD):
     def obj(model):
         gam = 0.999
         # second_term = sum(model.L.l[i,j]*(model.t-model.y['d',i,j]) for (i, j) in model.edges)
-        return (1-gam)*model.t + gam*model.L.a
+        return (1-gam)*model.t + gam*model.L.a[0,4]
     model.o = pyo.Objective(rule=obj, sense=pyo.minimize)
 
 
@@ -144,12 +144,12 @@ def solve_min_min_bilevel(GD, SD):
     def flow_sink(model):
         gam = 0.999
         # second_term = sum(model.l[i,j]*(model.it-model.id[i,j]) for (i, j) in model.edges)
-        return gam*model.a
+        return gam*model.a[0,4]
     model.L.o = pyo.Objective(rule=flow_sink, sense=pyo.minimize)
 
-    def aux_const(model):
-        return model.L.a == sum(model.L.l[i,j]*(model.t-model.y['d',i,j]) for (i, j) in model.edges)
-    model.aux_const = pyo.Constraint(rule=aux_const)
+    def aux_const(model, i, j):
+        return model.L.a[i,j] >= model.L.l[i,j]*(model.t-model.y['d',i,j])
+    model.aux_const = pyo.Constraint(model.edges, rule=aux_const)
 
     # set it equals t
     model.L.equal_t = pyo.ConstraintList()

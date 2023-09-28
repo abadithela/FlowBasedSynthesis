@@ -3,28 +3,7 @@ from ipdb import set_trace as st
 
 def add_static_obstacle_constraints_on_S(model, G, S):
     map_G_to_S = find_map_G_S(G,S)
-    model = feasibility_vars_and_constraints(model, S, map_G_to_S)
-    return model
-
-def add_static_obstacle_constraints_on_G(model, GD): # only works for single tester flow
-    G_truncated = {}
-    for node in GD.node_dict:
-        G_truncated.update({node: (str(GD.node_dict[node][0]))})
-
-    flip_dict = {}
-    for key in G_truncated.keys():
-        if G_truncated[key] in flip_dict.keys():
-            new_mapping = flip_dict[G_truncated[key]] + key
-            flip_dict.update({G_truncated[key]: new_mapping})
-
-    model.static_cut_cons = pyo.ConstraintList()
-    edge_list = list(GD.graph.edges)
-
-    for count,(i,j) in enumerate(edge_list):
-        for (imap, jmap) in edge_list[count+1:]:
-            if G_truncated[i] == G_truncated[imap] and G_truncated[j] == G_truncated[jmap]:
-                expression = model.y['d', i, j] == model.y['d', imap, jmap]
-                model.static_cut_cons.add(expr = expression)
+    model = map_static_obstacles_to_S(model, S, map_G_to_S)
     return model
 
 def find_map_G_S(GD,SD):
@@ -42,7 +21,10 @@ def find_map_G_S(GD,SD):
     # st()
     return map_G_to_S
 
-def feasibility_vars_and_constraints(model, S, map_G_to_S):
+def map_static_obstacles_to_S(model, S, map_G_to_S):
+    '''
+    Check that there is a flow on S for all cut edges.
+    '''
     vars = ['fS']
 
     model.s_edges = S.edges
@@ -93,5 +75,71 @@ def feasibility_vars_and_constraints(model, S, map_G_to_S):
         else:
             return pyo.Constraint.Skip
     model.s_no_out_sink = pyo.Constraint(model.s_edges, rule=s_no_out_sink)
+    return model
+
+
+def add_feasibility_constraints(model, GD, SD):
+    '''
+    Group the cuts by q on B_pi and then check for each group that
+    there is a flow on S.
+    '''
+    map_G_to_S = find_map_G_S(GD,SD)
+
+    node_list = []
+    for node in GD.nodes:
+        node_list.append(GD.node_dict[node])
+
+    qs = list(set([node[-1] for node in node_list]))
+    vars = ['fS_'+ str(q) for q in qs]
+
+    src = SD.init
+    sink = SD.acc_sys
+
+    model.s_edges = SD.edges
+    model.s_nodes = SD.nodes
+    model.s_var = pyo.Var(vars, model.s_edges, within=pyo.NonNegativeReals)
+
+    # feasibility constraint list
+    model.feasibility = pyo.ConstraintList()
+
+    for q in qs:
+
+        # Match the edge cuts from G to S
+        for (i,j) in model.edges:
+            if GD.node_dict[i][-1] == q:
+                imap = map_G_to_S[i]
+                jmap = map_G_to_S[j]
+                expression =  model.s_var['fS_'+ str(q), imap, jmap] + model.y['d', i, j] <= model.t
+                model.feasibility.add(expr = expression)
+
+        # Normal flow constraints
+        # Preserve flow of 1 in S
+        expression =  1 <= sum(model.s_var['fS_'+ str(q), i,j] for (i, j) in model.s_edges if i in src)
+        model.feasibility.add(expr = expression)
+
+        # Capacity constraint on flow
+        for (i,j) in model.s_edges:
+            expression =  model.s_var['fS_'+ str(q),  i, j] <= model.t
+            model.feasibility.add(expr = expression)
+
+        # Conservation constraints:
+        for k in model.s_nodes:
+            if k not in src and k not in sink:
+                incoming  = sum(model.s_var['fS_'+ str(q),i,j] for (i,j) in model.s_edges if (j == k))
+                outgoing = sum(model.s_var['fS_'+ str(q), i,j] for (i,j) in model.s_edges if (i == k))
+                expression = incoming == outgoing
+                model.feasibility.add(expr = expression)
+
+        # no flow into sources and out of sinks
+        for (i,j) in model.s_edges:
+            if j in src:
+                expression = model.s_var['fS_'+ str(q),i,j] == 0
+                model.feasibility.add(expr = expression)
+
+        # nothing leaves sink
+        for (i,j) in model.s_edges:
+            if i in sink:
+                expression = model.s_var['fS_'+ str(q),i,k] == 0
+                model.feasibility.add(expr = expression)
 
     return model

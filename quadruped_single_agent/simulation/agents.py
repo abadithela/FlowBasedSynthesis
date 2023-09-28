@@ -50,7 +50,7 @@ class Tester:
 
         spc.moore = False # mealy machine
         spc.qinit = r'\A \E'
-        spc.plus_one = False
+        spc.plus_one = True
 
         if not synth.is_realizable(spc, solver='omega'):
             print("Not realizable.")
@@ -150,6 +150,11 @@ class Quadruped:
         self.z = output['z']
         self.s = (self.z,self.x)
         # quadruped_move((self.y,self.x))
+
+def next_move(tester, maze):
+    maze.print_maze()
+    
+    pass
 
 if __name__ == "__main__":
     mazefile = 'maze.txt'

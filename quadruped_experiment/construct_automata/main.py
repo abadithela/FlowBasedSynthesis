@@ -2,23 +2,19 @@
 Script to construct and test products
 """
 import sys
-sys.path.append('..')
-sys.path.append('../..')
 import os
 # sys.path.append("/Users/apurvabadithela/software/VisualizeAutomata/patrolling_car")
 import pdb
-
 try:
     from transition_system import ProductTransys, Transys
     import product_automata_quadruped as product_automata
     from automaton import Automaton
-    from flow.constraints.products import Product
+    from products import Product
 except:
     from construct_automata.transition_system import ProductTransys, Transys
     import construct_automata.product_automata_quadruped as product_automata
     from construct_automata.automaton import Automaton
-    # from construct_automata.products import Product
-    from flow_constraints.products import Product
+    from construct_automata.products import Product
 
 def construct_automata_async(AP_set=None):
     Q, qinit, AP, tau, Acc = example_automata.async_product(state_str="q")
