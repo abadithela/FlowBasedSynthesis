@@ -60,7 +60,7 @@ def turn_based_asm(z, x, turn, maze):
 
 def get_system_safety(maze, z, x, z_str, x_str, turn):
     safety = set()
-    safety |= no_collision(maze, z_str, x_str, z, x)
+    safety |= no_collision_asm(maze, z_str, x_str, z, x)
     safety |= maze.transition_specs(z, x)
     safety |= turn_based_asm(z, x, turn, maze)
     return safety
@@ -91,11 +91,23 @@ def set_init(init_pos, z_str, x_str, turn, q_str):
 
 # SAFETY
 # no collision
-def no_collision(maze, z_str, x_str, z, x):
+def no_collision_asm(maze, z_str, x_str, z, x):
     no_collision_spec = set()
     for x_p in range(0,maze.len_x):
         for z_p in range(0,maze.len_z):
             # no collision in same timestep
+            no_collision_str = '!((' + z_str + ' = '+str(z_p)+' && '+ x_str + ' = '+str(x_p) +') && (' + z + ' = '+str(z_p)+' && '+ x + ' = '+str(x_p) +'))'
+            # no_collision_str = '!((turn=0 && ' + z_str + ' = '+str(z_p)+' && '+ x_str + ' = '+str(x_p) +') && (' + z + ' = '+str(z_p)+' && '+ x + ' = '+str(x_p) +'))'
+            no_collision_spec |= {no_collision_str}
+    # st()
+    return no_collision_spec
+
+def no_collision_grt(maze, z_str, x_str, z, x):
+    no_collision_spec = set()
+    for x_p in range(0,maze.len_x):
+        for z_p in range(0,maze.len_z):
+            # no collision in same timestep
+            # no_collision_str = '!((' + z_str + ' = '+str(z_p)+' && '+ x_str + ' = '+str(x_p) +') && X(' + z + ' = '+str(z_p)+' && '+ x + ' = '+str(x_p) +'))'
             no_collision_str = '!((' + z_str + ' = '+str(z_p)+' && '+ x_str + ' = '+str(x_p) +') && (' + z + ' = '+str(z_p)+' && '+ x + ' = '+str(x_p) +'))'
             no_collision_spec |= {no_collision_str}
     # st()
@@ -194,7 +206,7 @@ def do_not_excessively_constrain(GD, cuts, sys_z, sys_x, test_z, test_x, q_str, 
 # full safety spec
 def get_tester_safety(maze, z_str, x_str, z, x, turn, GD, cuts, q):
     safety = set()
-    safety |= no_collision(maze, z_str, x_str, z, x)
+    safety |= no_collision_grt(maze, z_str, x_str, z, x)
     safety |= restrictive_dynamics(z_str, x_str)
     safety |= turn_based_grt(z_str, x_str, turn, maze)
     safety |= history_var_dynamics(GD, z, x, q)

@@ -103,5 +103,4 @@ def solve_inner_min(GD):
     for k in model.nodes:
         mu.update({(k): model.m[k].value})
 
-    st()
     return lam, mu

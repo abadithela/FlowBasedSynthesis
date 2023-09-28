@@ -13,7 +13,7 @@ M.c1 = pe.Constraint(expr= M.x + M.y == 10)
 M.c2 = pe.Constraint(expr= M.w[1] + M.w[2] >= 1)
 
 M.L = pao.pyomo.SubModel(fixed=[M.x,M.y,M.w])
-M.L.o = pe.Objective(expr=M.z, sense=pe.maximize)
+M.L.o = pe.Objective(expr=M.z, sense=pe.minimize)
 M.L.c1 = pe.Constraint(expr= M.x + M.w[1]*M.z <= 8)
 M.L.c2 = pe.Constraint(expr= M.x + 4*M.z >= 8)
 M.L.c3 = pe.Constraint(expr= M.x + 2*M.w[2]*M.z <= 13)

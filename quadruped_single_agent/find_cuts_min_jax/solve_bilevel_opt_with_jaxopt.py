@@ -67,7 +67,7 @@ def init_optimiser(lr, params, name="adam", **kwargs):
 
 
 def minimize_on_polyhedron(
-    f, A, b, G, h, x0, y0, num_iters=1000, lr=1e-2, name="sgd", verbose=True
+    f, A, b, G, h, x0, num_iters=1000, lr=1e-2, name="sgd", verbose=True
 ):
     """
     Minimizes a function using an optimizer.
@@ -135,7 +135,7 @@ def minimize_on_polyhedron(
     for i in range(num_iters):
         if verbose:
             if i % 100 == 0:
-                print(f"Iteration {i}, loss {f(x):.5f}")
+                print(f"Iteration {i}, loss {f(x)}")
         x, opt_state = update(x, opt_state)
 
     return x
@@ -202,20 +202,18 @@ def f(x):
     x: (ft, d, t, lambda, mu) \in R^(3|E| + |V| + 1)
     '''
     ft = x[0:ne]
-    d = x[ne+1:2*ne]
+    d = x[ne:2*ne]
     t = x[2*ne]
-    # lamd = x[2*ne+1, 3*ne]
-    # mu = x[3*ne:]
-    second_term = 0
-    for k in range(ne):
-        second_term += (t - d[k])
-    obj = (1-gamma)*t + gamma*jnp.dot(lamd, tvec - d)
+    lamd = x[2*ne+1:3*ne+1]
+    mu = x[3*ne+1:]
+    tvec = t*np.ones((ne,1))
+    # c'x + x'Qx
+    obj = (1-gamma)*t + gamma*jnp.dot(lamd.T, tvec - d)
     return obj
 
 if __name__ == "__main__":
     x, y, G, GD, nodes_keys, edges_keys = initialize()
     src, int, sink = process_nodes(GD.init, GD.int, GD.sink)
-    pdb.set_trace()
     Ax_eq, bx_eq, eq_cons_names, Ax_ineq, bx_ineq, ineq_cons_names = outer_player_constraints(edges_keys, nodes_keys, src, int, sink)
     A_lag_ineq, b_lag_ineq, A_lag_eq, b_lag_eq = lagrange_dual_constraints(edges_keys, nodes_keys, src, int, sink)
 
@@ -241,9 +239,21 @@ if __name__ == "__main__":
     ft_init, fs_init, t_lower = initialize_max_flow(G, src, int, sink)
     d_init = np.zeros((ne,1))
     lam, mu = solve_inner_min(GD) 
-    x0 = jnp.vstack((ft_init, d_init, t_lower, lam, mu))
+    ft_arr = np.zeros((ne,1))
+    lam_arr = np.zeros((ne,1))
+    mu_arr = np.zeros((nv,1))
+
+    for k, edge in edges_keys.items():
+        lam_arr[k,0] = lam[edge]
+        ft_arr[k,0] = ft_init[edge]
+
+    for node, mu_node in mu.items():
+        mu_arr[node,0] = mu_node
+
+    x0 = jnp.vstack((ft_arr, d_init, t_lower, lam_arr, mu_arr))
+
     # Minimize:
     minimize_on_polyhedron(
-        f, Amat, bmat, Gmat, hmat, x0, y0, num_iters=1000, lr=1e-2, name="adam", verbose=True
+        f, Amat, bmat, Gmat, hmat, x0, num_iters=1000, lr=1e-2, name="adam", verbose=True
     )
     pdb.set_trace()

@@ -42,15 +42,15 @@ def solve_min_gurobi(GD, SD):
     d = model.addVars(model_edges, name="d")
     t = model.addVar(name="t")
     # inner player
-    l = model.addVars(model_edges, name="l")
+    l = model.addVars(model_edges, vtype=GRB.BINARY, name="l") # Binary variable
     m = model.addVars(model_nodes, name="m")
 
     # define Objective
     # Build objective function
-    gam = 1
+    gam = 0.999
     # st()
     second_term = sum(l[i,j]*(t-d[i,j]) for (i, j) in model_edges)
-    model.setObjective(gam*second_term, GRB.MINIMIZE)
+    model.setObjective((1-gam)*t + gam*second_term, GRB.MINIMIZE)
 
     # Nonnegativity
     model.addConstrs((l[i, j] >= 0 for (i,j) in model_edges), name='lam_nonneg')
