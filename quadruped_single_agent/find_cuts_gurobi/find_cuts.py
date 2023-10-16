@@ -11,6 +11,8 @@ from inner_min import solve_inner_min
 from construct_automata.main import quad_test_sync
 from gurobi_cuts import solve_min_gurobi
 from setup_graphs import GraphData
+from find_bypass_flow import find_fby
+from flow_constraints.plotting import highlight_cuts
 
 def setup_automata(network):
     ts, prod_ba, virtual, sys_virtual, snr_to_nr, snr_to_label, label_to_snr = create_ts_automata_and_virtual_game_graph(network)
@@ -90,18 +92,20 @@ def call_pyomo(GD, S):
 
 def call_gurobi(GD, S):
 
-    ftest, fsys, d, F = solve_min_gurobi(GD, S)
+    d, ftest, F = solve_min_gurobi(GD, S)
     cuts = [x for x in d.keys() if d[x] >= 0.9]
-    # pdb.set_trace()
+    fby = find_fby(GD, d)
+    st()
+
     flow = F
-    bypass_flow = sum([fsys[j] for j in fsys.keys() if j[1] in GD.sink])
+    bypass_flow = sum([fby[j] for j in fby.keys() if j[1] in GD.sink])
     print('Cut {} edges in the virtual game graph.'.format(len(cuts)))
     print('The max flow through I is {}'.format(F))
     print('The bypass flow is {}'.format(bypass_flow))
 
     for cut in cuts:
         print('Cutting {0} to {1}'.format(GD.node_dict[cut[0]], GD.node_dict[cut[1]]))
-    # st()
+    st()
     return cuts, flow, bypass_flow
 
 
@@ -130,11 +134,13 @@ def find_cuts():
 def find_cuts_gurobi():
 
     virtual, system, b_pi, virtual_sys = quad_test_sync()
-    GD, S = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
+    GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
     #
     cuts = []
-    cuts, flow, bypass = call_gurobi(GD, S)
+    cuts, flow, bypass = call_gurobi(GD, SD)
     st()
+    highlight_cuts(cuts, GD, SD, virtual, virtual_sys)
+
 
     # G = get_graph(nodes, edges) # virtual graph in networkx graph form
     # prune the dead ends

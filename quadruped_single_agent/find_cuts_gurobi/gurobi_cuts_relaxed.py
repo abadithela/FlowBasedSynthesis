@@ -41,6 +41,8 @@ def solve_min_gurobi(GD, SD):
     f = model.addVars(model_edges, name="flow")
     d = model.addVars(model_edges, name="d")
     t = model.addVar(name="t")
+    a = model.addVar(name="a")
+    z = model.addVars(model_edges, name="z")
     # inner player
     l = model.addVars(model_edges, vtype=GRB.BINARY, name="l") # Binary variable
     m = model.addVars(model_nodes, name="m")
@@ -49,8 +51,8 @@ def solve_min_gurobi(GD, SD):
     # Build objective function
     gam = 0.999
     # st()
-    second_term = sum(l[i,j]*(t-d[i,j]) for (i, j) in model_edges)
-    model.setObjective((1-gam)*t + gam*second_term, GRB.MINIMIZE)
+    # second_term = sum(l[i,j]*(t-d[i,j]) for (i, j) in model_edges)
+    model.setObjective((1-gam)*t + gam*a, GRB.MINIMIZE)
 
     # Nonnegativity
     model.addConstrs((l[i, j] >= 0 for (i,j) in model_edges), name='lam_nonneg')
@@ -63,7 +65,16 @@ def solve_min_gurobi(GD, SD):
     model.addConstrs((l[i, j] <= 1 for (i,j) in model_edges), name='lam_upper_b')
     model.addConstrs((m[i] <= 1 for i in model_nodes), name='mu_upper_b')
 
-    # outer player
+    # epigraph
+    model.addConstr((sum(z[i,j] for (i, j) in model_edges) <= a), name='epigraph')
+
+    # bigM
+    model.addConstrs((0 <= z[i,j] for (i,j) in model_edges), name='bigM_1a')
+    model.addConstrs((z[i,j] <= l[i,j] for (i,j) in model_edges), name='bigM_1b')
+    model.addConstrs((l[i,j]-1 <= z[i,j]-(t-d[i,j]) for (i,j) in model_edges), name='bigM_2')
+
+    # outer player constraints
+    # preserve F >= 1 (normalized)
     model.addConstr((1 == sum(f[i,j] for (i, j) in model_edges if i in src)), name='conserve_F')
 
     # bounded t
@@ -98,8 +109,6 @@ def solve_min_gurobi(GD, SD):
     model.params.NonConvex=2
     model.optimize()
 
-    st()
-
     # st()
     d_vals = dict()
     f_vals = dict()
@@ -112,5 +121,6 @@ def solve_min_gurobi(GD, SD):
     for key in d_vals.keys():
         print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],d_vals[key]))
 
+    st()
 
     return d_vals, f_vals, F
