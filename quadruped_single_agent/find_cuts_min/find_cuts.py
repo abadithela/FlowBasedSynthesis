@@ -74,8 +74,8 @@ def setup_nodes_and_edges(virtual_game_graph, virtual_sys, b_pi):
 
 def call_pyomo(GD, S):
 
-    # ftest, fsys, d, F = solve_min(GD, S)
-    ftest, fsys, d, F = solve_min_min_bilevel(GD, S)
+    ftest, fsys, d, F = solve_min(GD, S)
+    # ftest, fsys, d, F = solve_min_min_bilevel(GD, S)
     cuts = [x for x in d.keys() if d[x] >= 0.9]
     # pdb.set_trace()
     flow = F
