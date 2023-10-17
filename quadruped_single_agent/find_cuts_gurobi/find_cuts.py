@@ -89,6 +89,7 @@ def call_pyomo(GD, S):
     for cut in cuts:
         print('Cutting {0} to {1}'.format(GD.node_dict[cut[0]], GD.node_dict[cut[1]]))
     # st()
+
     return cuts, flow, bypass_flow
 
 def call_gurobi(GD, S):
@@ -158,9 +159,10 @@ def debug_inner_min():
 
     GD, S = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
 
-    lam, mu = solve_inner_min(GD,S)
+    lam, mu = solve_inner_min(GD)
 
     st()
 
 if __name__ == '__main__':
     find_cuts()
+    # debug_inner_min()

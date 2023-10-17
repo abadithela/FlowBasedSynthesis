@@ -33,9 +33,19 @@ def solve_inner_min(GD):
             to_remove.append((i,j))
     G.remove_edges_from(to_remove)
 
+    # remove intermediate nodes
+    G_minus_I = deepcopy(G)
+    to_remove = []
+    for edge in G.edges:
+        if edge[0] in cleaned_intermed or edge[1] in cleaned_intermed:
+            to_remove.append(edge)
+    G_minus_I.remove_edges_from(to_remove)
+
     model = pyo.ConcreteModel()
     model.nodes = G.nodes
     model.edges = G.edges
+    model.edges_without_I = G_minus_I.edges
+    model.nodes_without_I = G_minus_I.nodes
 
     src = GD.init
     sink = GD.sink
@@ -45,42 +55,39 @@ def solve_inner_min(GD):
     d = 0
     t = 1
     # model variables for the dual
-    model.l = pyo.Var(model.edges, within=pyo.NonNegativeReals)
-    model.m = pyo.Var(model.nodes, within=pyo.NonNegativeReals)
+    model.l = pyo.Var(model.edges_without_I, within=pyo.NonNegativeReals)
+    model.m = pyo.Var(model.nodes_without_I, within=pyo.NonNegativeReals)
 
     # Objective - minimize gamma*sum(lam*(t-de))
     def obj(model):
         gam = 1
-        second_term = sum(model.l[i,j]*(t-d) for (i, j) in model.edges)
+        second_term = sum(model.l[i,j]*(t-d) for (i, j) in model.edges_without_I)
         return gam*second_term
     model.o = pyo.Objective(rule=obj, sense=pyo.minimize)
 
     # Constraints
     # partition constraint for max flow dual
     model.max_flow_partitions = pyo.ConstraintList()
-    node_list = list(G.nodes)
+    node_list = list(G_minus_I.nodes)
     for count,i in enumerate(node_list):
         for j in node_list:
             if i in src and j in sink:
                 expression = model.m[i] - model.m[j] >= 1
-                model.max_flow_partitions.add(expr = expression)
-            elif i in sink and j in src:
-                expression = model.m[j] - model.m[i] >= 1
                 model.max_flow_partitions.add(expr = expression)
 
     # max flow cut constraint
     def max_flow_cut(model, i,j):
         expr = model.l[i,j] - model.m[i] + model.m[j] >= 0
         return expr
-    model.max_flow_cut = pyo.Constraint(model.edges, rule=max_flow_cut)
+    model.max_flow_cut = pyo.Constraint(model.edges_without_I, rule=max_flow_cut)
 
     # no cuts on edges for intermediate nodes to get max flow
-    def no_cuts_inter(model, i,j):
-        if i in inter or j in inter:
-            return model.l[i,j] == 0
-        else:
-            return pyo.Constraint.Skip
-    model.no_cuts_inter = pyo.Constraint(model.edges, rule=no_cuts_inter)
+    # def no_cuts_inter(model, i,j):
+    #     if i in inter or j in inter:
+    #         return model.l[i,j] == 0
+    #     else:
+    #         return pyo.Constraint.Skip
+    # model.no_cuts_inter = pyo.Constraint(model.edges, rule=no_cuts_inter)
 
     print(" ==== Successfully added objective and constraints! ==== ")
     if debug:
@@ -98,9 +105,11 @@ def solve_inner_min(GD):
     mu = dict()
     F = 0
 
-    for (i,j) in model.edges:
+    for (i,j) in model.edges_without_I:
         lam.update({(i,j): model.l[i,j].value})
-    for k in model.nodes:
+    for k in model.nodes_without_I:
         mu.update({(k): model.m[k].value})
+
+    st()
 
     return lam, mu
