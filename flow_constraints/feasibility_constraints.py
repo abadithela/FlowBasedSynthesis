@@ -49,6 +49,9 @@ def find_map_G_S(GD,SD):
     return map_G_to_S
 
 def preserve_flow_on_S(model, SD, map_G_to_S, initialize):
+    '''
+    preserve flow on S for static obstacles (history variable q does not matter)
+    '''
 
     # create S and remove self-loops
     S = SD.graph
@@ -79,9 +82,6 @@ def preserve_flow_on_S(model, SD, map_G_to_S, initialize):
     def match_cut_constraints_to_s(model, i, j):
         imap = map_G_to_S[i]
         jmap = map_G_to_S[j]
-        # if (imap,jmap) not in model.s_edges:
-        #     return pyo.Constraint.Skip
-        # else:
         return model.f_on_S[imap, jmap] + model.y['d', i, j] <= model.t
     model.se_de_cut = pyo.Constraint(model.edges, rule=match_cut_constraints_to_s)
 
@@ -113,11 +113,13 @@ def preserve_flow_on_S(model, SD, map_G_to_S, initialize):
     if initialize:
         pass
 
-    # st()
     return model
 
 
 def add_feasibility_constraints(model, GD, SD):
+    '''
+    Remember the history variable and check all cuts for that q.
+    '''
     map_G_to_S = find_map_G_S(GD,SD)
 
     node_list = []

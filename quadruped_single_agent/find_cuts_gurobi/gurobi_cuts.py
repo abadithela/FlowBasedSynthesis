@@ -8,6 +8,8 @@ import networkx as nx
 from setup_graphs import setup_graphs_for_optimization
 # from initialize_max_flow import initialize_max_flow
 from gurobipy import *
+from copy import deepcopy
+
 
 
 def solve_min_gurobi(GD, SD):
@@ -20,6 +22,14 @@ def solve_min_gurobi(GD, SD):
             to_remove.append((i,j))
     G.remove_edges_from(to_remove)
 
+    # remove intermediate nodes
+    G_minus_I = deepcopy(G)
+    to_remove = []
+    for edge in G.edges:
+        if edge[0] in cleaned_intermed or edge[1] in cleaned_intermed:
+            to_remove.append(edge)
+    G_minus_I.remove_edges_from(to_remove)
+
     # create S and remove self-loops
     S = SD.graph
     to_remove = []
@@ -30,6 +40,8 @@ def solve_min_gurobi(GD, SD):
 
     model_edges = list(G.edges)
     model_nodes = list(G.nodes)
+    model_edges_without_I = list(G_minus_I.edges)
+    model_nodes_without_I = list(G_minus_I.nodes)
 
     src = GD.init
     sink = GD.sink
@@ -42,27 +54,27 @@ def solve_min_gurobi(GD, SD):
     d = model.addVars(model_edges, name="d")
     t = model.addVar(name="t")
     # inner player
-    l = model.addVars(model_edges, vtype=GRB.BINARY, name="l") # Binary variable
-    m = model.addVars(model_nodes, name="m")
+    l = model.addVars(model_edges_without_I, vtype=GRB.BINARY, name="l") # Binary variable
+    m = model.addVars(model_nodes_without_I, name="m")
 
     # define Objective
     # Build objective function
     gam = 0.999
     # st()
-    second_term = sum(l[i,j]*(t-d[i,j]) for (i, j) in model_edges)
+    second_term = sum(l[i,j]*(t-d[i,j]) for (i, j) in model_edges_without_I)
     model.setObjective((1-gam)*t + gam*second_term, GRB.MINIMIZE)
     # model.setObjective(t + gam*second_term, GRB.MINIMIZE)
 
     # Nonnegativity
-    model.addConstrs((l[i, j] >= 0 for (i,j) in model_edges), name='lam_nonneg')
-    model.addConstrs((m[i] >= 0 for i in model_nodes), name='mu_nonneg')
+    model.addConstrs((l[i, j] >= 0 for (i,j) in model_edges_without_I), name='lam_nonneg')
+    model.addConstrs((m[i] >= 0 for i in model_nodes_without_I), name='mu_nonneg')
     model.addConstrs((d[i, j] >= 0 for (i,j) in model_edges), name='d_nonneg')
     model.addConstrs((f[i, j] >= 0 for (i,j) in model_edges), name='f_nonneg')
     model.addConstr((t >= 0), name='t_nonneg')
 
     # upper bound
-    model.addConstrs((l[i, j] <= 1 for (i,j) in model_edges), name='lam_upper_b')
-    model.addConstrs((m[i] <= 1 for i in model_nodes), name='mu_upper_b')
+    model.addConstrs((l[i, j] <= 1 for (i,j) in model_edges_without_I), name='lam_upper_b')
+    model.addConstrs((m[i] <= 1 for i in model_nodes_without_I), name='mu_upper_b')
 
     # outer player
     model.addConstr((1 == sum(f[i,j] for (i, j) in model_edges if i in src)), name='conserve_F')
@@ -84,16 +96,13 @@ def solve_min_gurobi(GD, SD):
 
     # inner player constraints
     # source sink partitions
-    for i in model_nodes:
-        for j in model_nodes:
+    for i in model_nodes_without_I:
+        for j in model_nodes_without_I:
             if i in src and j in sink:
                 model.addConstr(m[i] - m[j] >= 1)
 
     # max flow cut constraint
-    model.addConstrs((l[i,j] - m[i] + m[j] >= 0 for (i,j) in model_edges))
-
-    # no cuts on edges for intermediate nodes to get max flow
-    # model.addConstrs((l[i,j] == 0 for (i,j) in model_edges if i in inter or j in inter), name="no_inter")
+    model.addConstrs((l[i,j] - m[i] + m[j] >= 0 for (i,j) in model_edges_without_I))
 
     # set parameters
     model.params.NonConvex=2
