@@ -194,5 +194,4 @@ def solve_min(GD, SD):
     for key in d.keys():
         print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],d[key]))
 
-    st()
     return ftest, d, F

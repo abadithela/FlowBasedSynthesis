@@ -13,6 +13,7 @@ from gurobi_cuts import solve_min_gurobi
 from setup_graphs import GraphData
 from find_bypass_flow import find_fby
 from flow_constraints.plotting import highlight_cuts
+import time
 
 def setup_automata(network):
     ts, prod_ba, virtual, sys_virtual, snr_to_nr, snr_to_label, label_to_snr = create_ts_automata_and_virtual_game_graph(network)
@@ -124,7 +125,10 @@ def find_cuts():
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
     #
     cuts = []
+    ti = time.time()
     cuts, flow, bypass = call_pyomo(GD, SD)
+    tf = time.time()
+    print("Total time to solve opt: ", str(tf-ti))
     st()
     highlight_cuts(cuts, GD, SD, virtual, virtual_sys)
 

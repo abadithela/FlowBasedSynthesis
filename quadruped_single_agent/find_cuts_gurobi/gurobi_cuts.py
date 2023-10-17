@@ -93,7 +93,7 @@ def solve_min_gurobi(GD, SD):
     model.addConstrs((l[i,j] - m[i] + m[j] >= 0 for (i,j) in model_edges))
 
     # no cuts on edges for intermediate nodes to get max flow
-    model.addConstrs((l[i,j] == 0 for (i,j) in model_edges if i in inter or j in inter), name="no_inter")
+    # model.addConstrs((l[i,j] == 0 for (i,j) in model_edges if i in inter or j in inter), name="no_inter")
 
     # set parameters
     model.params.NonConvex=2
