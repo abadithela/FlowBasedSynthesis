@@ -76,11 +76,12 @@ def setup_nodes_and_edges(virtual_game_graph, virtual_sys, b_pi):
 
 def call_pyomo(GD, S):
 
-    ftest, fsys, d, F = solve_min(GD, S)
+    ftest, d, F = solve_min(GD, S)
     cuts = [x for x in d.keys() if d[x] >= 0.9]
+    fby = find_fby(GD, d)
     # pdb.set_trace()
     flow = F
-    bypass_flow = sum([fsys[j] for j in fsys.keys() if j[1] in GD.sink])
+    bypass_flow = sum([fby[j] for j in fby.keys() if j[1] in GD.sink])
     print('Cut {} edges in the virtual game graph.'.format(len(cuts)))
     print('The max flow through I is {}'.format(F))
     print('The bypass flow is {}'.format(bypass_flow))
@@ -119,13 +120,14 @@ def get_graph(nodes, edges):
 def find_cuts():
 
     virtual, system, b_pi, virtual_sys = quad_test_sync()
-    GD, S = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
+    GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
     #
     cuts = []
-    cuts, flow, bypass = call_pyomo(GD, S)
+    cuts, flow, bypass = call_pyomo(GD, SD)
     st()
+    highlight_cuts(cuts, GD, SD, virtual, virtual_sys)
 
-    G = get_graph(nodes, edges) # virtual graph in networkx graph form
+    # G = get_graph(nodes, edges) # virtual graph in networkx graph form
     # prune the dead ends
     # G, new_cuts = postprocess_cuts(GD, cuts)
     st()
@@ -161,4 +163,4 @@ def debug_inner_min():
     st()
 
 if __name__ == '__main__':
-    find_cuts_gurobi()
+    find_cuts()

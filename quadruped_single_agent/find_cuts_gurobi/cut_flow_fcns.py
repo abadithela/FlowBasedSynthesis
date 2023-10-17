@@ -57,7 +57,7 @@ def solve_min(GD, SD):
     model.t = pyo.Var(within=pyo.NonNegativeReals)
 
     # model variables for the dual
-    model.l = pyo.Var(model.edges, within=pyo.NonNegativeReals)
+    model.l = pyo.Var(model.edges, within=pyo.Binary)
     model.m = pyo.Var(model.nodes, within=pyo.NonNegativeReals)
 
     # Add constraints that system will always have a path
@@ -74,9 +74,10 @@ def solve_min(GD, SD):
 
     # Objective - minimize (1-gamma)*t + gamma*sum(lam*(t-de))
     def obj(model):
-        gam = 0.999
+        gam = 1
         second_term = sum(model.l[i,j]*(model.t-model.y['d',i,j]) for (i, j) in model.edges)
-        return (1-gam)*model.t + gam*second_term
+        third_term = sum(model.y['d',i,j] for (i, j) in model.edges)
+        return (1-gam)*model.t + 1000*second_term + third_term
     model.o = pyo.Objective(rule=obj, sense=pyo.minimize)
 
     # Constraints

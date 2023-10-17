@@ -51,6 +51,7 @@ def solve_min_gurobi(GD, SD):
     # st()
     second_term = sum(l[i,j]*(t-d[i,j]) for (i, j) in model_edges)
     model.setObjective((1-gam)*t + gam*second_term, GRB.MINIMIZE)
+    # model.setObjective(t + gam*second_term, GRB.MINIMIZE)
 
     # Nonnegativity
     model.addConstrs((l[i, j] >= 0 for (i,j) in model_edges), name='lam_nonneg')
