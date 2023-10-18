@@ -25,7 +25,7 @@ init = False
 
 chosen_solver = 'gurobi'
 
-def solve_min(GD, SD):
+def solve_min(GD, SD, return_lam=False):
     cleaned_intermed = [x for x in GD.acc_test if x not in GD.acc_sys]
     # create G and remove self-loops
     G = GD.graph
@@ -209,4 +209,6 @@ def solve_min(GD, SD):
         print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],d[key]))
 
     # st()
+    if return_lam:
+        return ftest, d, F, lam, mu
     return ftest, d, F

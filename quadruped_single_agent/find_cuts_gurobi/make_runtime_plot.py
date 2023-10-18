@@ -16,13 +16,21 @@ import matplotlib.pyplot as plt
 
 times = {0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: []}
 
+# mazefiles = {5: ["runtime_mazes/maze5.txt", "runtime_mazes/maze5b.txt", "runtime_mazes/maze5c.txt", "runtime_mazes/maze5d.txt"],
+#             1: ["runtime_mazes/maze1.txt", "runtime_mazes/maze1b.txt", "runtime_mazes/maze1c.txt", "runtime_mazes/maze1d.txt"],
+#             2: ["runtime_mazes/maze2.txt", "runtime_mazes/maze2b.txt", "runtime_mazes/maze2c.txt", "runtime_mazes/maze2d.txt"],
+#             3: ["runtime_mazes/maze3.txt", "runtime_mazes/maze3b.txt", "runtime_mazes/maze3c.txt", "runtime_mazes/maze3d.txt"],
+#             4: ["runtime_mazes/maze4.txt", "runtime_mazes/maze4b.txt", "runtime_mazes/maze4c.txt", "runtime_mazes/maze4d.txt"],
+#             0: ["runtime_mazes/maze0.txt"],
+#             6: ["runtime_mazes/maze6.txt", "runtime_mazes/maze6b.txt", "runtime_mazes/maze6c.txt", "runtime_mazes/maze6d.txt"]}
+
 mazefiles = {5: ["runtime_mazes/maze5.txt", "runtime_mazes/maze5b.txt", "runtime_mazes/maze5c.txt", "runtime_mazes/maze5d.txt"],
-            1: ["runtime_mazes/maze1.txt", "runtime_mazes/maze1b.txt", "runtime_mazes/maze1c.txt", "runtime_mazes/maze1d.txt"],
+            0: ["runtime_mazes/maze0.txt"],
             2: ["runtime_mazes/maze2.txt", "runtime_mazes/maze2b.txt", "runtime_mazes/maze2c.txt", "runtime_mazes/maze2d.txt"],
             3: ["runtime_mazes/maze3.txt", "runtime_mazes/maze3b.txt", "runtime_mazes/maze3c.txt", "runtime_mazes/maze3d.txt"],
             4: ["runtime_mazes/maze4.txt", "runtime_mazes/maze4b.txt", "runtime_mazes/maze4c.txt", "runtime_mazes/maze4d.txt"],
-            0: ["runtime_mazes/maze0.txt"],
-            6: ["runtime_mazes/maze6.txt", "runtime_mazes/maze6b.txt", "runtime_mazes/maze6c.txt", "runtime_mazes/maze6d.txt"]}
+            6: ["runtime_mazes/maze6.txt", "runtime_mazes/maze6b.txt", "runtime_mazes/maze6c.txt", "runtime_mazes/maze6d.txt"],
+            1: ["runtime_mazes/maze1.txt", "runtime_mazes/maze1b.txt", "runtime_mazes/maze1c.txt", "runtime_mazes/maze1d.txt"]}
 
 def make_runtime_plot():
     for num in mazefiles.keys():
@@ -41,7 +49,8 @@ def make_runtime_plot():
             print("{0} obstacles was solved in {1} seconds".format(num, del_t))
 
             times[num].append(del_t)
-        # st()
+            if num == 1:
+                st()
 
     keys = list(mazefiles.keys())
     keys.sort()
