@@ -48,6 +48,30 @@ def construct_sync_automaton_quad_ex(AP_set = None):
     aut = Automaton(Q, qinit, AP_set, tau, Acc)
     return aut
 
+def get_virtual_product_graphs(mazefile):
+    system = ProductTransys()
+    system.construct_sys(mazefile)
+    b_pi = construct_sync_automaton_quad_ex(AP_set = system.AP)
+    virtual = sync_prod(system, b_pi)
+    if not os.path.exists("imgs"):
+        os.makedirs("imgs")
+    system.save_plot("imgs/transys")
+    virtual.save_plot("imgs/virtual")
+    initial = {'red': virtual.I}
+    virtual.highlight_states(initial, "imgs/virtual_initial")
+    virtual.prune_unreachable_nodes("imgs/reachable")
+
+    # load just system automaton and take sync product
+    Q, qinit, AP, tau, Acc = product_automata.get_b_sys(state_str="q")
+    b_sys = Automaton(Q, qinit, system.AP, tau, Acc)
+    virtual_sys = sync_prod(system, b_sys)
+    virtual_sys.save_plot("imgs/virtual_sys")
+    virtual_sys.prune_unreachable_nodes("imgs/reachable_sys")
+    initial_sys = {'red': virtual_sys.I}
+    virtual_sys.highlight_states(initial_sys, "imgs/virtual_initial")
+
+    return virtual, system, b_pi, virtual_sys
+
 def construct_system_quadruped():
     """
     Construct system from maze.txt

@@ -20,7 +20,7 @@ from setup_graphs import setup_graphs_for_optimization
 from initialize_max_flow import initialize_max_flow
 from copy import deepcopy
 
-debug = True
+debug = False
 init = False
 
 chosen_solver = 'gurobi'
@@ -181,14 +181,15 @@ def solve_min(GD, SD):
 
     if chosen_solver == 'gurobi':
         opt = SolverFactory("gurobi", solver_io="python")
-        opt.options['NonConvex'] = 2
+        # opt.options['NonConvex'] = 2
     elif chosen_solver == 'cplex':
         opt = SolverFactory("cplex", executable="/Applications/CPLEX_Studio2211/cplex/bin/x86-64_osx/cplex")
         opt.options['optimalitytarget']=3
 
     opt.solve(model, tee= True)
 
-    model.display()
+    if debug:
+        model.display()
 
     ftest = dict()
     d = dict()
@@ -207,5 +208,5 @@ def solve_min(GD, SD):
     for key in d.keys():
         print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],d[key]))
 
-    st()
+    # st()
     return ftest, d, F
