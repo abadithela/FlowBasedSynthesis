@@ -197,6 +197,7 @@ def solve_min(GD, SD, return_lam=False):
     return ftest, d, F
 
 def solve_max(GD, SD, return_lam=False):
+    "Todo: Edit this function to solve the max problem"
     cleaned_intermed = [x for x in GD.acc_test if x not in GD.acc_sys]
     # create G and remove self-loops
     G = GD.graph
