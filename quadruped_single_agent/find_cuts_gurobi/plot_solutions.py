@@ -1,6 +1,6 @@
 import networkx as nx
 from pdb import set_trace as st
-from cut_flow_fcns_bigm import solve_min
+from cut_flow_single_var import solve_min
 from inner_min import solve_inner_min
 from construct_automata.main import get_virtual_product_graphs
 from setup_graphs import GraphData
@@ -17,7 +17,7 @@ mazefiles = {5: ["runtime_mazes/maze5.txt"],
             }
 
 mazefiles = {
-            2: ["runtime_mazes/maze2.txt"],
+            0: ["runtime_mazes/maze4.txt"],
             }
 
 def make_solution_plot():
