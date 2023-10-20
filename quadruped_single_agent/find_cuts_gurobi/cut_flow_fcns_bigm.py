@@ -20,7 +20,7 @@ from setup_graphs import setup_graphs_for_optimization
 from initialize_max_flow import initialize_max_flow
 from copy import deepcopy
 
-debug = False
+debug = True
 init = False
 
 chosen_solver = 'gurobi'
@@ -86,7 +86,7 @@ def solve_min(GD, SD, return_lam=False):
 
     # Objective - minimize (1-gamma)*t + gamma*sum(lam*(t-de))
     def obj(model):
-        gam = 0.9
+        gam = 0.55
         # second_term = sum(model.l[i,j]*(model.t-model.y['d',i,j]) for (i, j) in model.edges_without_I)
         third_term = sum(model.y['d',i,j] for (i, j) in model.edges)
         return (1-gam)*model.t + gam*model.a + 10e-3*third_term
@@ -175,9 +175,10 @@ def solve_min(GD, SD, return_lam=False):
         return model.l[i,j] - model.m[i] + model.m[j] >= 0
     model.max_flow_cut = pyo.Constraint(model.edges_without_I, rule=max_flow_cut)
 
-    print(" ==== Successfully added objective and constraints! ==== ")
     if debug:
+        print(" ==== Successfully added objective and constraints! ==== ")
         model.pprint()
+        st()
 
     if chosen_solver == 'gurobi':
         opt = SolverFactory("gurobi", solver_io="python")
@@ -205,8 +206,9 @@ def solve_min(GD, SD, return_lam=False):
     for k in model.nodes_without_I:
         mu.update({(k): model.m[k].value})
 
-    for key in d.keys():
-        print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],d[key]))
+    if debug:
+        for key in d.keys():
+            print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],d[key]))
 
     # st()
     if return_lam:
