@@ -103,6 +103,14 @@ def add_feasibility_constraints(model, GD, SD):
     '''
     map_G_to_S = find_map_G_S(GD,SD)
 
+    # create G and remove self-loops
+    S = SD.graph
+    to_remove = []
+    for i, j in S.edges:
+        if i == j:
+            to_remove.append((i,j))
+    S.remove_edges_from(to_remove)
+
     node_list = []
     for node in GD.nodes:
         node_list.append(GD.node_dict[node])
@@ -113,8 +121,8 @@ def add_feasibility_constraints(model, GD, SD):
     src = SD.init
     sink = SD.acc_sys
 
-    model.s_edges = SD.edges
-    model.s_nodes = SD.nodes
+    model.s_edges = S.edges
+    model.s_nodes = S.nodes
     model.s_var = pyo.Var(vars, model.s_edges, within=pyo.NonNegativeReals)
 
     # feasibility constraint list
@@ -123,21 +131,21 @@ def add_feasibility_constraints(model, GD, SD):
     for q in qs:
 
         # Match the edge cuts from G to S
-        for (i,j) in model.edges:
+        for (i,j) in model.edges_without_I:
             if GD.node_dict[i][-1] == q:
                 imap = map_G_to_S[i]
                 jmap = map_G_to_S[j]
-                expression =  model.s_var['fS_'+ str(q), imap, jmap] + model.y['d', i, j] <= model.t
+                expression =  model.s_var['fS_'+ str(q), imap, jmap] + model.d[i, j] <= 1
                 model.feasibility.add(expr = expression)
 
         # Normal flow constraints
-        # Preserve flow of 1 in S
+        # Preserve flow of 1 in S for each individual q
         expression =  1 <= sum(model.s_var['fS_'+ str(q), i,j] for (i, j) in model.s_edges if i in src)
         model.feasibility.add(expr = expression)
 
         # Capacity constraint on flow
         for (i,j) in model.s_edges:
-            expression =  model.s_var['fS_'+ str(q),  i, j] <= model.t
+            expression =  model.s_var['fS_'+ str(q),  i, j] <= 1
             model.feasibility.add(expr = expression)
 
         # Conservation constraints:

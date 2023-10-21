@@ -20,7 +20,6 @@ bigm_times = {0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: []}
 min_times = {0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: []}
 bilevel_times = {0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: []}
 
-<<<<<<< HEAD
 mazefiles = {5: ["runtime_mazes/maze5.txt"],# "runtime_mazes/maze5b.txt", "runtime_mazes/maze5c.txt", "runtime_mazes/maze5d.txt"],
             # 1: ["runtime_mazes/maze1.txt", "runtime_mazes/maze1b.txt", "runtime_mazes/maze1c.txt", "runtime_mazes/maze1d.txt"],
              2: ["runtime_mazes/maze2.txt"],# "runtime_mazes/maze2b.txt", "runtime_mazes/maze2c.txt", "runtime_mazes/maze2d.txt"],
@@ -28,23 +27,6 @@ mazefiles = {5: ["runtime_mazes/maze5.txt"],# "runtime_mazes/maze5b.txt", "runti
             4: ["runtime_mazes/maze4.txt"],# "runtime_mazes/maze4b.txt", "runtime_mazes/maze4c.txt", "runtime_mazes/maze4d.txt"],
             # 0: ["runtime_mazes/maze0.txt"],
             6: ["runtime_mazes/maze6.txt"]}# "runtime_mazes/maze6b.txt", "runtime_mazes/maze6c.txt", "runtime_mazes/maze6d.txt"]}
-=======
-# mazefiles = {5: ["runtime_mazes/maze5.txt", "runtime_mazes/maze5b.txt", "runtime_mazes/maze5c.txt", "runtime_mazes/maze5d.txt"],
-#             1: ["runtime_mazes/maze1.txt", "runtime_mazes/maze1b.txt", "runtime_mazes/maze1c.txt", "runtime_mazes/maze1d.txt"],
-#             2: ["runtime_mazes/maze2.txt", "runtime_mazes/maze2b.txt", "runtime_mazes/maze2c.txt", "runtime_mazes/maze2d.txt"],
-#             3: ["runtime_mazes/maze3.txt", "runtime_mazes/maze3b.txt", "runtime_mazes/maze3c.txt", "runtime_mazes/maze3d.txt"],
-#             4: ["runtime_mazes/maze4.txt", "runtime_mazes/maze4b.txt", "runtime_mazes/maze4c.txt", "runtime_mazes/maze4d.txt"],
-#             0: ["runtime_mazes/maze0.txt"],
-#             6: ["runtime_mazes/maze6.txt", "runtime_mazes/maze6b.txt", "runtime_mazes/maze6c.txt", "runtime_mazes/maze6d.txt"]}
-
-mazefiles = {5: ["runtime_mazes/maze5.txt", "runtime_mazes/maze5b.txt", "runtime_mazes/maze5c.txt", "runtime_mazes/maze5d.txt"],
-            0: ["runtime_mazes/maze0.txt"],
-            2: ["runtime_mazes/maze2.txt", "runtime_mazes/maze2b.txt", "runtime_mazes/maze2c.txt", "runtime_mazes/maze2d.txt"],
-            3: ["runtime_mazes/maze3.txt", "runtime_mazes/maze3b.txt", "runtime_mazes/maze3c.txt", "runtime_mazes/maze3d.txt"],
-            4: ["runtime_mazes/maze4.txt", "runtime_mazes/maze4b.txt", "runtime_mazes/maze4c.txt", "runtime_mazes/maze4d.txt"],
-            6: ["runtime_mazes/maze6.txt", "runtime_mazes/maze6b.txt", "runtime_mazes/maze6c.txt", "runtime_mazes/maze6d.txt"],
-            1: ["runtime_mazes/maze1.txt", "runtime_mazes/maze1b.txt", "runtime_mazes/maze1c.txt", "runtime_mazes/maze1d.txt"]}
->>>>>>> dd7f0d353cfa54f778c820b559c8080cbe613976
 
 def make_runtime_plot():
     for num in mazefiles.keys():
@@ -65,7 +47,6 @@ def make_runtime_plot():
             print("{0} obstacles was solved in {1} seconds using bigM - bypass flow {2}".format(num, del_t, bypass_flow))
             bigm_times[num].append(del_t)
 
-<<<<<<< HEAD
             # solve using min
             # print('--------- Solving using Min ---------')
             # ti = time.time()
@@ -88,11 +69,6 @@ def make_runtime_plot():
                 del_t = tf - ti
                 print("{0} obstacles was solved in {1} seconds using bilevel - bypass flow {2}".format(num, del_t, bypass_flow))
                 bilevel_times[num].append(del_t)
-=======
-            times[num].append(del_t)
-            if num == 1:
-                st()
->>>>>>> dd7f0d353cfa54f778c820b559c8080cbe613976
 
     keys = list(mazefiles.keys())
     keys.sort()
