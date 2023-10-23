@@ -12,7 +12,7 @@ from construct_automata.main import quad_test_sync
 from gurobi_cuts import solve_min_gurobi
 from setup_graphs import GraphData
 from find_bypass_flow import find_fby
-from flow_constraints.plotting import highlight_cuts
+from flow_constraints.plotting import highlight_cuts, make_history_plots
 import time
 
 def setup_automata(network):
@@ -129,9 +129,9 @@ def find_cuts():
     cuts, flow, bypass = call_pyomo(GD, SD)
     tf = time.time()
     print("Total time to solve opt: ", str(tf-ti))
-    st()
+    # st()
     highlight_cuts(cuts, GD, SD, virtual, virtual_sys)
-
+    make_history_plots(cuts, GD, system.maze)
     # G = get_graph(nodes, edges) # virtual graph in networkx graph form
     # prune the dead ends
     # G, new_cuts = postprocess_cuts(GD, cuts)

@@ -181,7 +181,7 @@ class ProductTransys(Transys):
 
     def save_plot(self, fn):
         self.to_graph()
-        self.plot_product(fn)
+        # self.plot_product(fn)
         self.plot_product_dot(fn)
 
 def powerset(s):

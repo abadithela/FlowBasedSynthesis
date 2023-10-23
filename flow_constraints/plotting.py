@@ -271,3 +271,74 @@ def plot_maze(maze):
     ax.invert_yaxis()
     ax.axis('equal')
     plt.show()
+
+def make_history_plots(cuts, GD, maze):
+
+    cuts_info = [(GD.node_dict[i], GD.node_dict[j]) for (i,j) in cuts]
+
+    qs = list(set([item[0][-1] for item in cuts_info]))
+
+    num_panels = len(qs)
+
+    fig, axs = plt.subplots(1,num_panels)
+    fig.suptitle('Reactive Constraints')
+
+    tilesize = 1
+    xs = np.linspace(0, maze.len_x*tilesize, maze.len_x+1)
+    ys = np.linspace(0, maze.len_y*tilesize, maze.len_y+1)
+    w, h = xs[1] - xs[0], ys[1] - ys[0]
+
+    for k,q in enumerate(qs):
+        axs[k].xaxis.set_visible(False)
+        axs[k].yaxis.set_visible(False)
+        axs[k].set_xlim(xs[0], xs[-1])
+        axs[k].set_ylim(ys[0], ys[-1])
+
+        # draw the grid
+        for i, x in enumerate(xs[:-1]):
+            for j, y in enumerate(ys[:-1]):
+
+                if maze.map[j,i]=='*':
+                    axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.5))
+                elif (j,i) == maze.int_1:
+                    axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='blue', alpha=.3))
+                    axs[k].text(x+tilesize/2, y+tilesize/2, 'I1')
+                elif (j,i) == maze.int_2:
+                    axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='blue', alpha=.3))
+                    axs[k].text(x+tilesize/2, y+tilesize/2, 'I2')
+                elif (j,i) == maze.goal:
+                    axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='yellow', alpha=.3))
+                    axs[k].text(x+tilesize/2, y+tilesize/2, 'T')
+                elif i % 2 == j % 2:
+                    axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.1))
+                    if (j,i) == maze.init:
+                        axs[k].text(x+tilesize/2, y+tilesize/2, 'S')
+                elif maze.map[j,i]=='':
+                    axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.2))
+                    if (j,i) == maze.init:
+                        axs[k].text(x+tilesize/2, y+tilesize/2, 'S')
+        # grid lines
+        for x in xs:
+            axs[k].plot([x, x], [ys[0], ys[-1]], color='black', alpha=.33, linestyle=':')
+        for y in ys:
+            axs[k].plot([xs[0], xs[-1]], [y, y], color='black', alpha=.33, linestyle=':')
+
+        # plot the cuts
+        for cut in cuts_info:
+            cut_out = cut[0]
+            cut_in = cut[1]
+            if cut_out[-1] == q:
+                startxy = cut_out[0]
+                endxy = cut_in[0]
+                x_val = (startxy[0]+endxy[0])/2
+                y_val = (startxy[1]+endxy[1])/2
+                intensity = 1.0/2
+                axs[k].plot([y_val+ tilesize/2, y_val+ tilesize/2], [x_val+ tilesize/2, x_val+ tilesize/2], color='black', alpha=intensity, marker='o')
+
+        axs[k].invert_yaxis()
+        axs[k].axis('equal')
+        axs[k].set_title("'{0}'".format(q))
+
+
+    plt.show()
+    fig.savefig("imgs/reactive_cuts.pdf")
