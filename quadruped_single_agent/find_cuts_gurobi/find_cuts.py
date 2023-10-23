@@ -4,7 +4,7 @@ import numpy as np
 from ipdb import set_trace as st
 import networkx as nx
 import pdb
-from cut_flow_fcns_lp import solve_min
+from cut_flow_fcns_milp import solve_min
 from inner_min import solve_inner_min
 # from construct_automata import get_gamegraph, construct_automata
 # from runnerblocker_network import RunnerBlockerNetwork

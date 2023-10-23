@@ -1,4 +1,4 @@
-# Solve the bilevel optimization as LFP (Linear Fractional Program) to
+# Solve the bilevel optimization as MILP (Mixed Integer Linear Program) to
 # route the flow through the vertices satisfying the test specification
 # J. Graebener, A. Badithela
 
@@ -35,7 +35,7 @@ def solve_min(GD, SD):
             to_remove.append((i,j))
     G.remove_edges_from(to_remove)
 
-    # remove intermediate nodes
+    # remove intermediate nodes from G
     G_minus_I = deepcopy(G)
     to_remove = []
     for edge in G.edges:
@@ -43,7 +43,7 @@ def solve_min(GD, SD):
             to_remove.append(edge)
     G_minus_I.remove_edges_from(to_remove)
 
-    # create S and remove self-loops
+    # create S and remove self-loops (for feasibility)
     S = SD.graph
     to_remove = []
     for i, j in S.edges:
@@ -61,19 +61,16 @@ def solve_min(GD, SD):
     sink = GD.sink
     inter = cleaned_intermed
 
-    # 'ft': tester flow, and d: cut values
+    # f: total flow, and d: cut values
     model.f = pyo.Var(model.edges, within=pyo.NonNegativeReals)
-    # model.t = pyo.Var(within=pyo.NonNegativeReals)
-
-    # model variables for the dual
+    # model variables for the dual (d = lambda)
     model.d = pyo.Var(model.edges_without_I, within=pyo.Binary)
     model.m = pyo.Var(model.nodes_without_I, within=pyo.NonNegativeReals)
 
     # Add constraints that system will always have a path
     model = add_feasibility_constraints(model, GD, SD)
 
-
-    # Objective - minimize (1-gamma)*t + gamma*sum(lam*(t-de))
+    # Objective - maximize the total flow (with minimum number of obstacles)
     def obj(model):
         flow = sum(model.f[i,j] for (i,j) in model.edges if i in src)
         ncuts = sum(model.d[i,j] for (i,j) in model.edges if (i,j) in G_minus_I.edges)
@@ -81,9 +78,9 @@ def solve_min(GD, SD):
     model.o = pyo.Objective(rule=obj, sense=pyo.maximize)
 
     # Constraints
-    # Maximize the flow into the sink
+    # Preserve a flow into the sink of at least 1
     def flow_src_test(model):
-        return 1 == sum(model.f[i,j] for (i, j) in model.edges if i in src)
+        return 1 <= sum(model.f[i,j] for (i, j) in model.edges if i in src)
     model.min_constr = pyo.Constraint(rule=flow_src_test)
 
     def capacity_test(model, i, j):
