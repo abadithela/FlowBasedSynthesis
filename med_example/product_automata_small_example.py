@@ -1,9 +1,9 @@
 """
 Apurva Badithela, Josefine Graebener, 8/9/2023
-Spot synchronous and asynchronous product automata for quadruped track example:
+Spot synchronous product automata for medium size grid example:
 
 varphi_sys = <>(goal)
-varphi_test = <>(int_1) & <>(int_2)
+varphi_test = <>(int)
 
 The function async_product constructs the asynchronous product of BAs of varphi_sys and varphi_test
 and the function sync_product constructs the synchronous product of BAs of varphi_sys and varphi_test

@@ -4,26 +4,32 @@ import numpy as np
 from ipdb import set_trace as st
 import networkx as nx
 import pdb
-from flow_constraints.optimization import solve_bilevel
+# from flow_constraints.optimization import solve_bilevel
+from cut_flow_fcns_milp import solve_min
 from flow_constraints.construct_graphs import sys_test_sync
 from flow_constraints.setup_graphs import GraphData, setup_nodes_and_edges
 from flow_constraints.plotting import plot_maze, plot_flow_on_maze
+from find_bypass_flow import find_fby
+import time
+
 
 def call_pyomo(GD, S):
 
-    f, fby, d, F, f_on_s = solve_bilevel(GD, S)
+    ftest, d, F = solve_min(GD, S)
     cuts = [x for x in d.keys() if d[x] >= 0.9]
+    fby = find_fby(GD, d)
     # pdb.set_trace()
-    flow_val = F
-    bypass_flow_val = sum([fby[j] for j in fby.keys() if j[1] in GD.sink])
+    flow = F
+    bypass_flow = sum([fby[j] for j in fby.keys() if j[1] in GD.sink])
     print('Cut {} edges in the virtual game graph.'.format(len(cuts)))
     print('The max flow through I is {}'.format(F))
-    print('The bypass flow is {}'.format(bypass_flow_val))
+    print('The bypass flow is {}'.format(bypass_flow))
 
     for cut in cuts:
         print('Cutting {0} to {1}'.format(GD.node_dict[cut[0]], GD.node_dict[cut[1]]))
     # st()
-    return cuts, flow_val, bypass_flow_val, f_on_s, f
+
+    return cuts, flow, bypass_flow
 
 def highlight_cuts(cuts, GD, SD, virtual, virtual_sys):
     annot_cuts = [(GD.node_dict[cut[0]], GD.node_dict[cut[1]]) for cut in cuts]
@@ -43,7 +49,10 @@ def find_cuts():
 
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
 
-    cuts, flow_val, bypass, f_on_s, flow = call_pyomo(GD, SD)
+    ti = time.time()
+    cuts, flow, bypass_flow = call_pyomo(GD, SD)
+    tf = time.time()
+    print("Total time to solve opt: ", str(tf-ti))
 
     annot_cuts = [(GD.node_dict[cut[0]], GD.node_dict[cut[1]]) for cut in cuts]
     sys_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
@@ -51,10 +60,9 @@ def find_cuts():
 
     highlight_cuts(cuts, GD, SD, virtual, virtual_sys)
 
-    plot_maze(system.maze)
+    # plot_maze(system.maze)
 
     plot_flow_on_maze(system.maze, sys_cuts)
-    st()
 
     return GD,cuts
 

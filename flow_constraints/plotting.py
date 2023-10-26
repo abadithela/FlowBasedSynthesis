@@ -4,7 +4,7 @@ import numpy as np
 from ipdb import set_trace as st
 import os
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
+from matplotlib.patches import Rectangle, Wedge
 import networkx as nx
 
 def highlight_cuts(cuts, GD, SD, virtual, virtual_sys):
@@ -41,7 +41,7 @@ def plot_flow_on_maze(maze, cuts, num_int=1):
     xs = np.linspace(0, maze.len_x*tilesize, maze.len_x+1)
     ys = np.linspace(0, maze.len_y*tilesize, maze.len_y+1)
 
-    ax = plt.gca()
+    fig, ax = plt.subplots()
     colorstr = 'red'
 
     ax.xaxis.set_visible(False)
@@ -115,6 +115,7 @@ def plot_flow_on_maze(maze, cuts, num_int=1):
     ax.invert_yaxis()
     ax.axis('equal')
     plt.show()
+    fig.savefig("imgs/maze_implementation.pdf")
 
 def plot_flow_w_colored_cuts_on_maze(maze, cuts):
     # get the max flow for the cuts
@@ -323,17 +324,30 @@ def make_history_plots(cuts, GD, maze):
         for y in ys:
             axs[k].plot([xs[0], xs[-1]], [y, y], color='black', alpha=.33, linestyle=':')
 
+        angles = {'n': (180, 0), 's': (0,180), 'e': (270, 90), 'w': (90,270)}
+
         # plot the cuts
+        # st()
         for cut in cuts_info:
             cut_out = cut[0]
             cut_in = cut[1]
             if cut_out[-1] == q:
                 startxy = cut_out[0]
                 endxy = cut_in[0]
-                x_val = (startxy[0]+endxy[0])/2
-                y_val = (startxy[1]+endxy[1])/2
+                x_val = (startxy[1]+endxy[1])/2
+                z_val = (startxy[0]+endxy[0])/2
                 intensity = 1.0/2
-                axs[k].plot([y_val+ tilesize/2, y_val+ tilesize/2], [x_val+ tilesize/2, x_val+ tilesize/2], color='black', alpha=intensity, marker='o')
+                radius = 0.1
+                if endxy[1] - startxy[1] == 1:
+                    cut_dir = 'e'
+                elif startxy[1] - endxy[1] == 1:
+                    cut_dir = 'w'
+                elif endxy[0] - startxy[0] == 1:
+                    cut_dir = 's'
+                else:
+                    cut_dir = 'n'
+                # axs[k].plot([y_val+ tilesize/2, y_val+ tilesize/2], [x_val+ tilesize/2, x_val+ tilesize/2], color='black', alpha=intensity, marker='o')
+                axs[k].add_patch(Wedge((x_val+ tilesize/2, z_val+ tilesize/2), radius, angles[cut_dir][0], angles[cut_dir][1], fill=True, color='black', alpha=intensity, ec="none"))
 
         axs[k].invert_yaxis()
         axs[k].axis('equal')
