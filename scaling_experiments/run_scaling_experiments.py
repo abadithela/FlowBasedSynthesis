@@ -58,7 +58,7 @@ def plot_runtimes(runtimes):
     gridsizes = list(runtimes.keys())
     gridsizes.sort()
 
-    mediantimes = [np.mean(runtimes[num], axis=0) for num in gridsizes]
+    meantimes = [np.mean(runtimes[num], axis=0) for num in gridsizes]
 
     xs = []
     ys = []
@@ -68,7 +68,7 @@ def plot_runtimes(runtimes):
             ys.append(t)
 
     fig, ax = plt.subplots()
-    ax.plot(gridsizes, mediantimes, color = 'blue', label = 'MILP')
+    ax.plot(gridsizes, meantimes, color = 'blue', label = 'MILP')
     ax.scatter(xs, ys, alpha = 0.5, color = 'blue')
 
     ax.ticklabel_format(useOffset=False)
@@ -86,12 +86,12 @@ def plot_runtimes(runtimes):
 
 if __name__ == '__main__':
 
-    number_of_runs = 2
+    number_of_runs = 10
     mazefile = 'mazes/3x3.txt'
 
     mazefiles = {3: 'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt',
-                 6: 'mazes/6x6.txt', 7:'mazes/7x7.txt'}#,
-                # 8: 'mazes/8x8.txt', 9: 'mazes/9x9.txt', 10:'mazes/10x10.txt',}
+                 6: 'mazes/6x6.txt', 7:'mazes/7x7.txt',
+                8: 'mazes/8x8.txt', 9: 'mazes/9x9.txt', 10:'mazes/10x10.txt',}
 
     runtimes = {}
 

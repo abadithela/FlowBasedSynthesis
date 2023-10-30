@@ -23,6 +23,7 @@ from optimization.feasibility_constraints import add_feasibility_constraints_for
 # from setup_graphs import setup_graphs_for_optimization
 # from initialize_max_flow import initialize_max_flow
 from copy import deepcopy
+from optimization.max_flow import max_flow_value
 
 debug = False
 init = False
@@ -151,11 +152,19 @@ def solve_min(GD, SD):
         model.pprint()
 
     if chosen_solver == 'gurobi':
+        max_flow_init = max_flow_value(G, src, sink, [])
         opt = SolverFactory("gurobi", solver_io="python")
-        opt.options['NonConvex'] = 2
+        # opt.options['NonConvex'] = 2
+        opt.options['BestObjStop'] = max_flow_init - 10e-3
+        opt.options['MIPFocus'] = 2
+        opt.options['Cuts'] = 2
+        opt.options['MIPGap'] = 0.05
+        opt.options['Timelimit'] = 300
+        print('------------ Optimum bounded by {} ------------'.format(max_flow_init))
     elif chosen_solver == 'cplex':
         opt = SolverFactory("cplex", executable="/Applications/CPLEX_Studio2211/cplex/bin/x86-64_osx/cplex")
         opt.options['optimalitytarget']=3
+
 
     opt.solve(model, tee= True)
 
