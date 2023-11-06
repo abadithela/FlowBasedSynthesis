@@ -229,9 +229,6 @@ class Product(ProductTransys):
         for i in G_agr.nodes():
             n = G_agr.get_node(i)
             node = self.reverse_Sdict[n]
-            # if node[0][2] == 's':
-            #     n.attr['shape'] = 'diamond'
-            # else:
             n.attr['shape'] = 'circle'
             if n in self.plt_sink_only:
                 n.attr['fillcolor'] = 'yellow'

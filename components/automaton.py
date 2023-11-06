@@ -55,3 +55,37 @@ class Automaton:
                 except:
                     pdb.set_trace()
         return None
+
+    def plot_graph(self, fn):
+        G_agr = nx.nx_agraph.to_agraph(self.G)
+        # st()
+        G_agr.node_attr['style'] = 'filled'
+        G_agr.node_attr['gradientangle'] = 90
+
+        for i in G_agr.nodes():
+            n = G_agr.get_node(i)
+            n.attr['shape'] = 'circle'
+            if n in list(self.Acc["sys"]) and n not in list(self.Acc["test"]):
+                n.attr['fillcolor'] = 'yellow'
+            elif n in list(self.Acc["test"]) and n not in list(self.Acc["sys"]):
+                n.attr['fillcolor'] = 'blue'
+            elif n in list(self.Acc["sys"]) and n in list(self.Acc["test"]):
+                n.attr['fillcolor'] = 'magenta'
+            else:
+                n.attr['fillcolor'] = 'gray'
+        G_agr.draw(fn+"_highlight_dot.pdf",prog='dot')
+
+    def to_graph(self):
+        self.G = nx.DiGraph()
+        self.G.add_nodes_from(self.Q)
+        edges = []
+        for state_act, in_node in self.delta.items():
+            out_node = state_act[0]
+            act = state_act[1]
+            edge = (out_node, in_node)
+            edges.append(edge)
+        self.G.add_edges_from(edges)
+
+    def save_plot(self, fn):
+        self.to_graph()
+        self.plot_graph(fn)

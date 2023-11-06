@@ -46,6 +46,7 @@ def construct_sync_automaton_quad_ex(AP_set = None):
     for ap in AP:
         assert ap in AP_set
     aut = Automaton(Q, qinit, AP_set, tau, Acc)
+    aut.to_graph()
     return aut
 
 def get_virtual_product_graphs(mazefile):
@@ -85,6 +86,7 @@ def quad_test_sync():
     system = construct_system_quadruped()
 
     b_pi = construct_sync_automaton_quad_ex(AP_set = system.AP)
+    b_pi.save_plot("imgs/prod_aut")
     virtual = sync_prod(system, b_pi)
     if not os.path.exists("imgs"):
         os.makedirs("imgs")
@@ -100,12 +102,14 @@ def quad_test_sync():
     # load just system automaton and take sync product
     Q, qinit, AP, tau, Acc = product_automata.get_b_sys(state_str="q")
     b_sys = Automaton(Q, qinit, system.AP, tau, Acc)
+
+    # Printing automaton:
     virtual_sys = sync_prod(system, b_sys)
     virtual_sys.save_plot("imgs/virtual_sys")
     virtual_sys.prune_unreachable_nodes("imgs/reachable_sys")
     initial_sys = {'red': virtual_sys.I}
     virtual_sys.highlight_states(initial_sys, "imgs/virtual_initial")
-    #
+    
     # pdb.set_trace()
     return virtual, system, b_pi, virtual_sys
 
