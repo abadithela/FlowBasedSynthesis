@@ -17,21 +17,21 @@ from b_product_1_intermed import get_B_product
 
 from optimization.milp_static_obstacles import solve_min
 from optimization.find_bypass_flow import find_fby
-from optimization.milp_static_gurobipy import solve_min_gurobi
+from optimization.milp_static_gurobipy import solve_max_gurobi
 
 from components.transition_system import ProductTransys
 from components.setup_graphs import GraphData, setup_nodes_and_edges
 from components.plotting import plot_maze, plot_flow_on_maze, highlight_cuts
 from components.tools import synchronous_product
 
-plot_results = True
+plot_results = False
 print_solution = False
 
 def solve_instance(virtual, system, b_pi, virtual_sys):#, focus, cuts, presolve):
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
 
     ti = time.time()
-    ftest, d, flow = solve_min_gurobi(GD, SD)#, focus, cuts, presolve)
+    ftest, d, flow = solve_max_gurobi(GD, SD)#, focus, cuts, presolve)
     tf = time.time()
     del_t = tf-ti
 
@@ -87,14 +87,14 @@ def plot_runtimes(runtimes):
 
 if __name__ == '__main__':
 
-    number_of_runs = 1
+    number_of_runs = 25
     # mazefile = 'mazes/3x3.txt'
 
-    # mazefiles = {3: 'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt',
-    #              6: 'mazes/6x6.txt', 7:'mazes/7x7.txt',
-    #             8: 'mazes/8x8.txt', 9: 'mazes/9x9.txt', 10:'mazes/10x10.txt'}
+    mazefiles = {3: 'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt',
+                 6: 'mazes/6x6.txt', 7:'mazes/7x7.txt',
+                8: 'mazes/8x8.txt', 9: 'mazes/9x9.txt', 10:'mazes/10x10.txt'}
 
-    mazefiles = {10:'mazes/10x10.txt'}
+    # mazefiles = {10:'mazes/10x10.txt'}
 
 
     runtimes = {}

@@ -30,7 +30,7 @@ def cb(model, where):
         model.terminate()
 
 # Gurobi implementation
-def solve_min_gurobi(GD, SD):
+def solve_max_gurobi(GD, SD):
     cleaned_intermed = [x for x in GD.acc_test if x not in GD.acc_sys]
     # create G and remove self-loops
     G = GD.graph
@@ -80,7 +80,7 @@ def solve_min_gurobi(GD, SD):
     f = model.addVars(model_edges, name="flow")
     d_aux = model.addVars(model_edges, name="d_aux")
     # inner player
-    d = model.addVars(model_edges_without_I, vtype=GRB.BINARY, name="l") # Binary variable
+    d = model.addVars(model_edges_without_I, vtype=GRB.BINARY, name="d") # Binary variable
     m = model.addVars(model_nodes_without_I, name="m")
 
     # Define Objective
@@ -88,20 +88,21 @@ def solve_min_gurobi(GD, SD):
     ncuts = sum(d_aux[i,j] for (i, j) in model_edges)
     model.setObjective(term - 10e-3*ncuts, GRB.MAXIMIZE)
 
-    # Nonnegativity
+    # Nonnegativity - lower bounds
     model.addConstrs((d[i, j] >= 0 for (i,j) in model_edges_without_I), name='d_nonneg')
     model.addConstrs((m[i] >= 0 for i in model_nodes_without_I), name='mu_nonneg')
     model.addConstrs((f[i, j] >= 0 for (i,j) in model_edges), name='f_nonneg')
+    model.addConstrs((d_aux[i, j] >= 0 for (i,j) in model_edges), name='d_aux_nonneg')
 
-    # upper bound
+    # upper bounds
     model.addConstrs((d[i, j] <= 1 for (i,j) in model_edges_without_I), name='d_upper_b')
     model.addConstrs((m[i] <= 1 for i in model_nodes_without_I), name='mu_upper_b')
-
-    # outer player
-    model.addConstr((1 <= sum(f[i,j] for (i, j) in model_edges if i in src)), name='conserve_F')
-
-    # capacity
+    model.addConstrs((d_aux[i, j] <= 1 for (i,j) in model_edges), name='d_aux_upper_b')
+    # capacity (upper bound for f)
     model.addConstrs((f[i, j] <= 1 for (i,j) in model_edges), name='capacity')
+
+    # preserve flow
+    model.addConstr((1 <= sum(f[i,j] for (i, j) in model_edges if i in src)), name='conserve_F')
 
     # conservation
     model.addConstrs((sum(f[i,j] for (i,j) in model_edges if j == l) == sum(f[i,j] for (i,j) in model_edges if i == l) for l in model_nodes if l not in src and l not in sink), name='conservation')
@@ -128,6 +129,12 @@ def solve_min_gurobi(GD, SD):
     # --------- add feasibility constraints to preserve flow f_s on S
     f_s = model.addVars(model_s_edges, name="flow_on_S")
 
+    # nonnegativitiy for f_s (lower bound)
+    model.addConstrs((f_s[i, j] >= 0 for (i,j) in model_s_edges), name='f_s_nonneg')
+
+    # capacity on S (upper bound on f_s)
+    model.addConstrs((f_s[i, j] <= 1 for (i,j) in model_s_edges), name='capacity_f_S')
+
     # Match the edge cuts from G to S
     for (i,j) in model_edges:
         imap = map_G_to_S[i]
@@ -137,14 +144,11 @@ def solve_min_gurobi(GD, SD):
     # Preserve flow of 1 in S
     model.addConstr((1 <= sum(f_s[i,j] for (i, j) in model_s_edges if i == s_src)), name='conserve_F_on_S')
 
-    # capacity on S
-    model.addConstrs((f_s[i, j] <= 1 for (i,j) in model_s_edges), name='capacity_f_S')
-
     # conservation on S
-    model.addConstrs((sum(f_s[i,j] for (i,j) in model_s_edges if j == l) == sum(f_s[i,j] for (i,j) in model_s_edges if i == l) for l in model_s_nodes if l != src and l not in sink), name='conservation_f_S')
+    model.addConstrs((sum(f_s[i,j] for (i,j) in model_s_edges if j == l) == sum(f_s[i,j] for (i,j) in model_s_edges if i == l) for l in model_s_nodes if l != s_src and l not in s_sink), name='conservation_f_S')
 
     # no flow into sources and out of sinks on S
-    model.addConstrs((f_s[i,j] == 0 for (i,j) in model_s_edges if j == src or i in sink), name="no_out_sink_in_src_on_S")
+    model.addConstrs((f_s[i,j] == 0 for (i,j) in model_s_edges if j == s_src or i in s_sink), name="no_out_sink_in_src_on_S")
 
 
     # --------- map static obstacles to other edges in G
@@ -172,8 +176,17 @@ def solve_min_gurobi(GD, SD):
     model._cur_obj = float('inf')
     model._time = time.time()
 
+    # model.Params.InfUnbdInfo = 1
+
     # optimize
     model.optimize(callback=cb)
+
+    # if model.status == 4:
+    #     st()
+    #     model.Params.DualReductions = 0
+    #     model.optimize(callback=cb)
+    #     st()
+
 
     # --------- parse output
     d_vals = dict()
