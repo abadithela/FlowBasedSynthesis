@@ -27,10 +27,12 @@ from optimization.max_flow import max_flow_value
 
 debug = False
 init = False
+set_options = True
+save_model = False
 
 chosen_solver = 'gurobi'
 
-def solve_min(GD, SD):
+def solve_min(GD, SD, focus=2, cuts=2, presolve = -1):
     cleaned_intermed = [x for x in GD.acc_test if x not in GD.acc_sys]
     # create G and remove self-loops
     G = GD.graph
@@ -155,11 +157,22 @@ def solve_min(GD, SD):
         max_flow_init = max_flow_value(G, src, sink, [])
         opt = SolverFactory("gurobi", solver_io="python")
         # opt.options['NonConvex'] = 2
-        opt.options['BestObjStop'] = max_flow_init - 10e-3
-        opt.options['MIPFocus'] = 2
-        opt.options['Cuts'] = 2
-        opt.options['MIPGap'] = 0.05
-        opt.options['Timelimit'] = 300
+        if set_options:
+            # opt.options['BestObjStop'] = max_flow_init - 10e-3
+            opt.options['MIPFocus'] = 2
+            # opt.options['Cuts'] = 0
+            opt.options['Heuristics'] = 0
+            # opt.options['MIPGap'] = 0.05
+            opt.options['VarBranch'] = 1
+            opt.options['GomoryPasses'] = 0
+
+        opt.options['Timelimit'] = 600
+
+        if save_model:
+            opt.options['GURO_PAR_DUMP']=1
+
+
+
         print('------------ Optimum bounded by {} ------------'.format(max_flow_init))
     elif chosen_solver == 'cplex':
         opt = SolverFactory("cplex", executable="/Applications/CPLEX_Studio2211/cplex/bin/x86-64_osx/cplex")

@@ -17,20 +17,21 @@ from b_product_1_intermed import get_B_product
 
 from optimization.milp_static_obstacles import solve_min
 from optimization.find_bypass_flow import find_fby
+from optimization.milp_static_gurobipy import solve_min_gurobi
 
 from components.transition_system import ProductTransys
 from components.setup_graphs import GraphData, setup_nodes_and_edges
 from components.plotting import plot_maze, plot_flow_on_maze, highlight_cuts
 from components.tools import synchronous_product
 
-plot_results = False
+plot_results = True
 print_solution = False
 
-def solve_instance(virtual, system, b_pi, virtual_sys):
+def solve_instance(virtual, system, b_pi, virtual_sys):#, focus, cuts, presolve):
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
 
     ti = time.time()
-    ftest, d, flow = solve_min(GD, SD)
+    ftest, d, flow = solve_min_gurobi(GD, SD)#, focus, cuts, presolve)
     tf = time.time()
     del_t = tf-ti
 
@@ -46,9 +47,9 @@ def solve_instance(virtual, system, b_pi, virtual_sys):
             print('Cutting {0} to {1}'.format(GD.node_dict[cut[0]], GD.node_dict[cut[1]]))
 
     if plot_results:
+        cuts = [x for x in d.keys() if d[x] >= 0.9]
         highlight_cuts(cuts, GD, SD, virtual, virtual_sys)
         sys_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
-        st()
         plot_flow_on_maze(system.maze, sys_cuts)
 
     return del_t, flow, bypass_flow
@@ -86,14 +87,21 @@ def plot_runtimes(runtimes):
 
 if __name__ == '__main__':
 
-    number_of_runs = 10
-    mazefile = 'mazes/3x3.txt'
+    number_of_runs = 1
+    # mazefile = 'mazes/3x3.txt'
 
-    mazefiles = {3: 'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt',
-                 6: 'mazes/6x6.txt', 7:'mazes/7x7.txt',
-                8: 'mazes/8x8.txt', 9: 'mazes/9x9.txt', 10:'mazes/10x10.txt',}
+    # mazefiles = {3: 'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt',
+    #              6: 'mazes/6x6.txt', 7:'mazes/7x7.txt',
+    #             8: 'mazes/8x8.txt', 9: 'mazes/9x9.txt', 10:'mazes/10x10.txt'}
+
+    mazefiles = {10:'mazes/10x10.txt'}
+
 
     runtimes = {}
+
+    # foci = [0,1,2,3] # default is 0
+    # cuts = [0,1,2,3] # default is -1 (whatever that may mean)
+    # presolves = [-1,0,1,2]
 
     for gridsize in mazefiles.keys():
         del_ts = []
@@ -120,7 +128,7 @@ if __name__ == '__main__':
             # get virtual product
             virtual = synchronous_product(system, b_pi)
 
-            del_t, flow, bypass = solve_instance(virtual, system, b_pi, virtual_sys)
+            del_t, flow, bypass = solve_instance(virtual, system, b_pi, virtual_sys)#, focus, cuts, presolve)
             print("{0}: S = {1}, I = {2}, T = {3}".format(gridsize, init, ints, goals))
             print("Total time to solve opt: {1}, total flow = {2}, bypass = {3}".format(gridsize, del_t, flow, bypass))
 

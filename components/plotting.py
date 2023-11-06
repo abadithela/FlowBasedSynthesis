@@ -20,7 +20,6 @@ def highlight_cuts(cuts, GD, SD, virtual, virtual_sys):
     virtual_sys.plot_with_highlighted_edges(sys_cuts_annot, "imgs/virtual_sys_with_cuts")
 
 def plot_flow_on_maze(maze, cuts, num_int=1):
-    st()
     # get the max flow for the cuts
     # remove redundant cuts
     cuts = list(set(cuts))
@@ -36,7 +35,7 @@ def plot_flow_on_maze(maze, cuts, num_int=1):
     for node in maze.goal:
         G.add_edge(node, 'goal', capacity=5.0) # 5 as placeholder for infty
 
-    flow_value, flow_dict = nx.maximum_flow(G, maze.init, 'goal')
+    flow_value, flow_dict = nx.maximum_flow(G, maze.init[0], 'goal')
 
     tilesize = 1
     xs = np.linspace(0, maze.len_x*tilesize, maze.len_x+1)
@@ -62,11 +61,11 @@ def plot_flow_on_maze(maze, cuts, num_int=1):
                     ax.text(x+tilesize/2, y+tilesize/2, 'T')
                 elif i % 2 == j % 2:
                     ax.add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.1))
-                    if (j,i) == maze.init:
+                    if (j,i) in maze.init:
                         ax.text(x+tilesize/2, y+tilesize/2, 'S')
-                elif maze.map[j,i]=='':
+                elif maze.map[j,i]==' ':
                     ax.add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.2))
-                    if (j,i) == maze.init:
+                    if (j,i) in maze.init:
                         ax.text(x+tilesize/2, y+tilesize/2, 'S')
             elif num_int==2:
                 if maze.map[j,i]=='*':
