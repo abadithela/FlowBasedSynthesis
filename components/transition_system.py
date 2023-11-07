@@ -19,6 +19,7 @@ from itertools import chain, combinations
 from collections import OrderedDict as od
 import networkx as nx
 import os
+from ipdb import set_trace as st
 
 class Transys():
     def __init__(self, S=None, A=None, E=None, I=None, AP=None, L=None):
@@ -38,8 +39,8 @@ class ProductTransys(Transys):
         self.maze = None
         self.f = None # Formula
 
-    def get_maze(self, mazefile, int, goals):
-        self.maze = MazeNetwork(mazefile)
+    def get_maze(self, mazefile, int, goals, obs):
+        self.maze = MazeNetwork(mazefile, obs)
         self.maze.set_int(int)
         self.maze.set_goal(goals)
         self.maze.setup_maze()
@@ -57,8 +58,10 @@ class ProductTransys(Transys):
             self.AP_dict[s] = []
             if s in self.maze.goal:
                 self.AP_dict[s].append(spot.formula.ap("goal"))
-            elif s in self.maze.int:
-                self.AP_dict[s].append(spot.formula.ap("int"))
+            elif s in self.maze.int.keys():
+                name_string = self.maze.int[s]
+                self.AP_dict[s].append(spot.formula.ap(name_string))
+        st()
 
     def print_transitions(self):
         for e_out, e_in in self.E.items():
@@ -97,8 +100,8 @@ class ProductTransys(Transys):
         #     if s == self.maze.init:
         #         self.I.append(s)
 
-    def construct_sys(self, mazefile, init, ints, goals):
-        self.get_maze(mazefile, ints, goals)
+    def construct_sys(self, mazefile, init, ints, goals, obs=[]):
+        self.get_maze(mazefile, ints, goals, obs)
         self.S = list(self.maze.G_single.nodes()) # All system and tester nodes
         self.A = ['sys_n','sys_s','sys_e','sys_w', 'sys_o']
         self.construct_transition_function()
