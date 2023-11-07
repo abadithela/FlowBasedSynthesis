@@ -175,32 +175,37 @@ def solve_max_gurobi(GD, SD):
     # Last updated objective and time (for callback function)
     model._cur_obj = float('inf')
     model._time = time.time()
+    model.Params.Seed = np.random.randint(0,100)
 
     # model.Params.InfUnbdInfo = 1
 
     # optimize
     model.optimize(callback=cb)
 
-    # if model.status == 4:
-    #     st()
-    #     model.Params.DualReductions = 0
-    #     model.optimize(callback=cb)
-    #     st()
+    if model.status == 4:
+        model.Params.DualReductions = 0
+        model.optimize(callback=cb)
 
+        exit_status = 'inf'
 
-    # --------- parse output
-    d_vals = dict()
-    f_vals = dict()
+        return exit_status, [], [], None
 
-    for (i,j) in model_edges:
-        f_vals.update({(i,j): f[i,j].X})
-    for (i,j) in model_edges_without_I:
-        d_vals.update({(i,j): d[i,j].X})
+    else:
+        # --------- parse output
+        d_vals = dict()
+        f_vals = dict()
 
-    flow = sum(f[i,j].X for (i,j) in model_edges if i in src)
+        for (i,j) in model_edges:
+            f_vals.update({(i,j): f[i,j].X})
+        for (i,j) in model_edges_without_I:
+            d_vals.update({(i,j): d[i,j].X})
 
-    for key in d_vals.keys():
-        if d_vals[key] > 0.9:
-            print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],d_vals[key]))
+        flow = sum(f[i,j].X for (i,j) in model_edges if i in src)
 
-    return f_vals, d_vals, flow
+        for key in d_vals.keys():
+            if d_vals[key] > 0.9:
+                print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],d_vals[key]))
+
+        exit_status = 'opt'
+
+        return exit_status, f_vals, d_vals, flow

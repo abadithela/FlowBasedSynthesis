@@ -28,31 +28,35 @@ plot_results = False
 print_solution = False
 
 def solve_instance(virtual, system, b_pi, virtual_sys):#, focus, cuts, presolve):
+    # system.maze.print_maze()
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
 
     ti = time.time()
-    ftest, d, flow = solve_max_gurobi(GD, SD)#, focus, cuts, presolve)
+    exit_status, ftest, d, flow = solve_max_gurobi(GD, SD)#, focus, cuts, presolve)
     tf = time.time()
     del_t = tf-ti
 
-    fby = find_fby(GD, d)
-    bypass_flow = sum([fby[j] for j in fby.keys() if j[1] in GD.sink])
-    cuts = [x for x in d.keys() if d[x] >= 0.9]
+    if exit_status == 'opt':
+        fby = find_fby(GD, d)
+        bypass_flow = sum([fby[j] for j in fby.keys() if j[1] in GD.sink])
+        cuts = [x for x in d.keys() if d[x] >= 0.9]
 
-    if print_solution:
-        print('Cut {} edges in the virtual game graph.'.format(len(cuts)))
-        print('The max flow through I is {}'.format(flow))
-        print('The bypass flow is {}'.format(bypass_flow))
-        for cut in cuts:
-            print('Cutting {0} to {1}'.format(GD.node_dict[cut[0]], GD.node_dict[cut[1]]))
+        if print_solution:
+            print('Cut {} edges in the virtual game graph.'.format(len(cuts)))
+            print('The max flow through I is {}'.format(flow))
+            print('The bypass flow is {}'.format(bypass_flow))
+            for cut in cuts:
+                print('Cutting {0} to {1}'.format(GD.node_dict[cut[0]], GD.node_dict[cut[1]]))
 
-    if plot_results:
-        highlight_cuts(cuts, GD, SD, virtual, virtual_sys)
-        sys_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
-        plot_flow_on_maze(system.maze, sys_cuts)
+        if plot_results:
+            highlight_cuts(cuts, GD, SD, virtual, virtual_sys)
+            sys_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
+            plot_flow_on_maze(system.maze, sys_cuts)
 
-    annot_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
-    return annot_cuts, flow, bypass_flow
+        annot_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
+        return exit_status, annot_cuts, flow, bypass_flow
+    else:
+        return exit_status, [], [], None
 
 def plot_cuts(maze, solutions):
 
@@ -90,25 +94,34 @@ def plot_cuts(maze, solutions):
 
 if __name__ == '__main__':
 
-    number_of_runs = 2
+    number_of_runs = 4
+    obstacle_coverage = 15 # percentage of the grid that shall be covered by obstacles
 
     # mazefiles = {3: 'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt',
     #              6: 'mazes/6x6.txt', 7:'mazes/7x7.txt',
     #             8: 'mazes/8x8.txt', 9: 'mazes/9x9.txt', 10:'mazes/10x10.txt'}
 
-    mazefile = 'mazes/25x25.txt'
-    gridsize = 25
+    mazefile = 'mazes/10x10.txt'
+    gridsize = 10
 
     # get random S, I, T location (same for all runs)
     all_states = list(itertools.product(np.arange(0,gridsize), np.arange(0,gridsize)))
-    idx = np.random.choice(len(all_states),3,replace=False)
+    number_of_states = len(all_states)
+    obsnum = np.ceil(number_of_states * obstacle_coverage/100)
+    choose = int(3+obsnum)
+    idx = np.random.choice(len(all_states),choose,replace=False)
     init = [all_states[idx[0]]]
-    ints = [all_states[idx[1]]]
+    int = all_states[idx[1]]
     goals = [all_states[idx[2]]]
+    # st()
+    obs = [all_states[idx[3+int(n)]] for n in np.arange(0,obsnum)]
+    ints = {int: 'int'}
+
+    print('S: {0}, I: {1}, T: {2}, Obst: {3}'.format(init, ints, goals, obs))
 
     # get system
     system = ProductTransys()
-    system.construct_sys(mazefile, init, ints, goals)
+    system.construct_sys(mazefile, init, ints, goals, obs)
 
     # get Buchi automata
     b_sys = get_B_sys(system.AP)
@@ -121,11 +134,16 @@ if __name__ == '__main__':
 
     # for gridsize in mazefiles.keys():
     sols = []
+    status = 'ok'
     #     mazefile = mazefiles[gridsize]
 
     for run in range(number_of_runs):
-        annot_cuts, flow, bypass = solve_instance(virtual, system, b_pi, virtual_sys)#, focus, cuts, presolve)
-        print("{0}: S = {1}, I = {2}, T = {3}".format(gridsize, init, ints, goals))
-        sols.append((annot_cuts))
+        exit_status, annot_cuts, flow, bypass = solve_instance(virtual, system, b_pi, virtual_sys)#, focus, cuts, presolve)
+        if exit_status == 'opt':
+            sols.append((annot_cuts))
+            print("{0}: S = {1}, I = {2}, T = {3}".format(gridsize, init, ints, goals))
+        else:
+            status = 'not_ok'
 
-    plot_solutions(system.maze, sols)
+    if status == 'ok':
+        plot_solutions(system.maze, sols)

@@ -20,11 +20,14 @@ def create_network_from_file(mazefile):
     return map, len_x, len_z
 
 class MazeNetwork:
-    def __init__(self, mazefile):
+    def __init__(self, mazefile, obs):
         self.init = None
         self.goal = None
         self.int = None
+        self.obs = obs
         self.map, self.len_x, self.len_z = create_network_from_file(mazefile)
+        for obst in self.obs:
+            self.map[(obst)] = '*'
         self.len_y = self.len_z
         self.G_transitions = None
         self.single_states = None
@@ -96,7 +99,6 @@ class MazeNetwork:
 
     def setup_next_states_map(self):
         self.print_maze()
-
         single_states = []
         for z in range(0,self.len_z):
             for x in range(0,self.len_x):

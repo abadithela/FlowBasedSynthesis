@@ -112,8 +112,10 @@ if __name__ == '__main__':
             all_states = list(itertools.product(np.arange(0,gridsize), np.arange(0,gridsize)))
             idx = np.random.choice(len(all_states),3,replace=False)
             init = [all_states[idx[0]]]
-            ints = [all_states[idx[1]]]
+            int = all_states[idx[1]]
             goals = [all_states[idx[2]]]
+
+            ints = {int: 'int'}
 
             # get system
             system = ProductTransys()
