@@ -110,7 +110,6 @@ def no_collision_grt(maze, z_str, x_str, z, x):
             # no_collision_str = '!((' + z_str + ' = '+str(z_p)+' && '+ x_str + ' = '+str(x_p) +') && X(' + z + ' = '+str(z_p)+' && '+ x + ' = '+str(x_p) +'))'
             no_collision_str = '!((' + z_str + ' = '+str(z_p)+' && '+ x_str + ' = '+str(x_p) +') && (' + z + ' = '+str(z_p)+' && '+ x + ' = '+str(x_p) +'))'
             no_collision_spec |= {no_collision_str}
-    # st()
     return no_collision_spec
 
 # dynamics
@@ -126,8 +125,8 @@ def restrictive_dynamics(z_str, x_str):
 def turn_based_grt(z_str, x_str, turn, maze):
     turns = set()
     # turn changes every step
-    turns |= {'('+turn+' = 0 -> X('+turn+' = 1))'}
-    turns |= {'('+turn+' = 1 -> X('+turn+' = 0))'}
+    turns |= {'('+turn+' = 0 -> X('+turn+' = 1))'} # System turn to play
+    turns |= {'('+turn+' = 1 -> X('+turn+' = 0))'} # Tester turn to play
     # testers stays in place at turn = 0
     for x_p in range(0,maze.len_x):
         for z_p in range(0,maze.len_z):
@@ -158,6 +157,32 @@ def history_var_dynamics(GD, sys_z, sys_x, q_str):
             next_state_str = next_state_str[:-4]
             hist_var_dyn |=  {current_state + ' -> X(' + next_state_str + ')'}
         else:
+            hist_var_dyn |=  {current_state + ' -> X(' + current_state + ')'}
+    return hist_var_dyn
+
+# change of q
+def history_var_dynamics_v2(GD, sys_z, sys_x, q_str):
+    '''
+    Determines how the history variable 'q' changes.
+    '''
+    hist_var_dyn = set()
+    for node in list(GD.graph.nodes):
+        out_node = GD.node_dict[node]
+        out_state = out_node[0]
+        out_q = out_node[-1]
+        
+        if out_state != (0,4): # not at goal
+            edge_list = list(GD.graph.edges(node))
+            for edge in edge_list:
+                in_node = GD.node_dict[edge[1]]
+                in_state = in_node[0]
+                in_q = in_node[-1]
+                current_state = '('+sys_z+' = '+str(in_state[0])+' && '+sys_x+' = '+str(in_state[1])+' && '+q_str+' = '+str(out_q[1:])+')'
+                next_state_str = '('+q_str+' = '+str(in_q[1:])+')'
+                hist_var_dyn |=  {current_state + ' -> X(' + next_state_str + ')'}
+        else:
+            current_state = '('+sys_z+' = '+str(out_state[0])+' && '+sys_x+' = '+str(out_state[1])+' && '+q_str+' = '+str(out_q[1:])+')'
+            next_state_str = '('+q_str+' = '+str(out_q[1:])+')'
             hist_var_dyn |=  {current_state + ' -> X(' + current_state + ')'}
     return hist_var_dyn
 
@@ -200,18 +225,17 @@ def do_not_excessively_constrain(GD, cuts, sys_z, sys_x, test_z, test_x, q_str, 
         if state_str != '':
             state_str = state_str[:-4]
             do_not_overconstrain |=  { current_state + ' -> !(' + state_str + ')'}
-    # st()
     return do_not_overconstrain
 
 # full safety spec
 def get_tester_safety(maze, z_str, x_str, z, x, turn, GD, cuts, q):
     safety = set()
-    safety |= no_collision_grt(maze, z_str, x_str, z, x)
+    # safety |= no_collision_grt(maze, z_str, x_str, z, x)
     safety |= restrictive_dynamics(z_str, x_str)
     safety |= turn_based_grt(z_str, x_str, turn, maze)
-    safety |= history_var_dynamics(GD, z, x, q)
-    safety |= occupy_cuts(GD, cuts, z, x, z_str, x_str, q, turn)
-    safety |= do_not_excessively_constrain(GD, cuts, z, x, z_str, x_str, q, turn)
+    safety |= history_var_dynamics_v2(GD, z, x, q)
+    # safety |= occupy_cuts(GD, cuts, z, x, z_str, x_str, q, turn)
+    # safety |= do_not_excessively_constrain(GD, cuts, z, x, z_str, x_str, q, turn)
     return safety
 
 # TESTER PROGRESS
