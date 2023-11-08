@@ -213,108 +213,32 @@ def sync_product_four_int(state_str="q"):
         (0, 2): 30,
         (0, 3): 31}
     qinit = state_str+str(0)
-
-    tau = {
-            ("q0", conjunction([neg(goal), neg(int_1), neg(int_2),neg(int_3), neg(int_4)])): "q0",
-            ("q0", conjunction([goal, int_1, int_2,int_3, int_4])): "q1",
-            ("q0", conjunction([goal, int_1, int_2,int_3, neg(int_4)])): "q2",
-            ("q0", conjunction([goal, int_1, int_2, neg(int_3), neg(int_4)])): "q3",
-            ("q0", conjunction([goal, int_1, neg(int_2), neg(int_3), neg(int_4)])): "q4",
-            ("q0", conjunction([goal, neg(int_1), neg(int_2), neg(int_3), neg(int_4)])): "q5",
-            ("q0", conjunction([goal, neg(int_1), int_2, int_3, int_4])): "q6",
-            ("q0", conjunction([goal, int_1, neg(int_2),int_3, int_4])): "q7",
-            ("q0", conjunction([goal, int_1, int_2, neg(int_3), neg(int_4)])): "q8",
-            ("q0", conjunction([goal, neg(int_1), int_2, neg(int_3), neg(int_4)])): "q9",
-            ("q0", conjunction([goal, int_1, neg(int_2), int_3, neg(int_4)])): "q10",
-            ("q0", conjunction([goal, neg(int_1), neg(int_2), int_3, neg(int_4)])): "q11",
-            ("q0", conjunction([goal, int_1, neg(int_2), neg(int_3), int_4])): "q12",
-            ("q0", conjunction([goal, neg(int_1), neg(int_2), neg(int_3), int_4])): "q13",
-            ("q0", conjunction([goal, neg(int_1), neg(int_2), int_3, int_4])): "q14",
-            ("q0", conjunction([goal, neg(int_1), int_2, neg(int_3), int_4])): "q15",
-            ("q0", conjunction([goal, neg(int_1), int_2, int_3, neg(int_4)])): "q16",
-            ("q0", conjunction([neg(goal), int_1, int_2, int_3, int_4])): "q17",
-            ("q0", conjunction([neg(goal), int_1, int_2, int_3, neg(int_4)])): "q18",
-            ("q0", conjunction([neg(goal), int_1, int_2, neg(int_3), neg(int_4)])): "q19",
-            ("q0", conjunction([neg(goal), int_1, neg(int_2),neg(int_3), neg(int_4)])): "q20",
-            ("q0", conjunction([neg(goal), neg(int_1), int_2, int_3, int_4])): "q21",
-            ("q0", conjunction([neg(goal), int_1, neg(int_2), int_3, int_4])): "q22",
-            ("q0", conjunction([neg(goal), int_1, int_2, neg(int_3), neg(int_4)])): "q23",
-            ("q0", conjunction([neg(goal),neg(int_1), int_2, neg(int_3), neg(int_4)])): "q24",
-            ("q0", conjunction([neg(goal), int_1, neg(int_2), int_3, neg(int_4)])): "q25",
-            ("q0", conjunction([neg(goal), neg(int_1), neg(int_2),int_3, neg(int_4)])): "q26",
-            ("q0", conjunction([neg(goal), int_1, neg(int_2),neg(int_3), int_4])): "q27",
-            ("q0", conjunction([neg(goal), neg(int_1), neg(int_2),neg(int_3), int_4])): "q28",
-            ("q0", conjunction([neg(goal), neg(int_1), neg(int_2),int_3, int_4])): "q29",
-            ("q0", conjunction([neg(goal), neg(int_1), int_2, neg(int_3), int_4])): "q30",
-            ("q0", conjunction([neg(goal), neg(int_1), int_2,int_3, neg(int_4)])): "q31",
-            
-
-            ("q1", conjunction([neg(int_1), neg(int_2)])): "q1",
-            ("q1", conjunction([int_1, int_2])): "q6",
-            ("q1", conjunction([int_1, neg(int_2)])): "q7",
-            ("q1", conjunction([neg(int_1), int_2])): "q5",
-
-            ("q2", neg(goal)): "q2",
-            ("q2", goal): "q6",
-
-            ("q3", conjunction([neg(goal), neg(int_2)])): "q3",
-            ("q3", conjunction([goal, neg(int_2)])): "q7",
-            ("q3", conjunction([goal, int_2])): "q6",
-            ("q3", conjunction([neg(goal), int_2])): "q2",
-
-            ("q4", conjunction([neg(goal), neg(int_1)])): "q4",
-            ("q4", conjunction([goal, neg(int_1)])): "q5",
-            ("q4", conjunction([neg(goal), int_1])): "q2",
-            ("q4", conjunction([goal, int_1])): "q6",
-
-            ("q5", neg(int_1)): "q5",
-            ("q5", int_1): "q6",
-
-            ("q6", True): "q6",
-
-            ("q7", neg(int_2)): "q7",
-            ("q7", int_2): "q6",
-          }
+    fn = "hoa_str_4_int.txt"
+    formula_dict = {"t": True, "0": goal, "1": int_1, "2": int_2, "3":int_3, "4":int_4, "!0": neg(goal), "!1": neg(int_1), "!2": neg(int_2), "!3":neg(int_3), "!4":neg(int_4)}
 
     tau = dict()
-with open(fn) as file:
-    for line in file:
-        if 'State:' in line:
-            out_state=line.split()[-1]
-            qout_st = "q" + out_state
-        else:
-            propositions, in_state = line.split()
-            qin_st = "q" + in_state
-            spot_prop_list = []
-            # find propositions between [ and ]
-            # find propositions between [ and the first &
-            # between & and & 
-            prop_list = re.split(r"[\[&\]]", propositions)
-            prop_list = list(filter(None, prop_list))
-            for prop_str in prop_list:
-                spot_prop_list.append(formula_dict[prop_str])
-            if len(spot_prop_list) > 1:
-                formula = conjunction(spot_prop_list)
+    with open(fn) as file:
+        for line in file:
+            if 'State:' in line:
+                out_state=line.split()[-1]
+                qout_st = "q" + out_state
             else:
-                formula = spot_prop_list[0]
-            tau[(qout_st, formula)] = qin_st
-    sys_acc = ["q1"] + ["q"+str(i) for i in range(17,32)]
-    Acc = {"sys": tuple(sys_acc), "test": ("q2","q18")} # accepting sets of states
+                propositions, in_state = line.split()
+                qin_st = "q" + in_state
+                spot_prop_list = []
+                # find propositions between [ and ]
+                # find propositions between [ and the first &
+                # between & and & 
+                prop_list = re.split(r"[\[&\]]", propositions)
+                prop_list = list(filter(None, prop_list))
+                for prop_str in prop_list:
+                    spot_prop_list.append(formula_dict[prop_str])
+                if len(spot_prop_list) > 1:
+                    formula = conjunction(spot_prop_list)
+                else:
+                    formula = spot_prop_list[0]
+                tau[(qout_st, formula)] = qin_st
+        sys_acc = ["q1"] + ["q"+str(i) for i in range(17,32)]
+        Acc = {"sys": tuple(sys_acc), "test": ("q2","q18")} # accepting sets of states
     return Q, qinit, AP, tau, Acc
 
-# Read file line by line:
-def parse_file(fn):
-    nstates=32
-    goal = spot.formula.ap("goal")
-    int_1 = spot.formula.ap("int_1")
-    int_2 = spot.formula.ap("int_2")
-    int_3 = spot.formula.ap("int_3")
-    int_4 = spot.formula.ap("int_4")
-    AP = [goal, int_1, int_2, int_3, int_4]
-    Q = [state_str+str(k) for k in range(nstates)]
-    qinit = state_str+str(0)
-    tau = dict()
-
-    with open(filename) as file:
-    for line in file:
-        print(line.rstrip())
