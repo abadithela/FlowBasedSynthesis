@@ -17,9 +17,9 @@ class Spec:
 
 # Tester specs
 def get_tester_spec(init_pos, maze, GD, cuts):
-    z_str = 'env_z'
-    x_str = 'env_x'
-    z = 'z'
+    z_str = 'env_z' # Tester env variables
+    x_str = 'env_x' # Tester env variables
+    z = 'z' # System variables
     x = 'x'
     turn = 'turn'
     q = 'q'
@@ -107,8 +107,8 @@ def no_collision_grt(maze, z_str, x_str, z, x):
     for x_p in range(0,maze.len_x):
         for z_p in range(0,maze.len_z):
             # no collision in same timestep
-            # no_collision_str = '!((' + z_str + ' = '+str(z_p)+' && '+ x_str + ' = '+str(x_p) +') && X(' + z + ' = '+str(z_p)+' && '+ x + ' = '+str(x_p) +'))'
-            no_collision_str = '!((' + z_str + ' = '+str(z_p)+' && '+ x_str + ' = '+str(x_p) +') && (' + z + ' = '+str(z_p)+' && '+ x + ' = '+str(x_p) +'))'
+            no_collision_str = '((' + z + ' = '+str(z_p)+' && '+ x + ' = '+str(x_p) +') -> X !(' + z_str + ' = '+str(z_p)+' && '+ x_str + ' = '+str(x_p) +'))'
+            # no_collision_str = '!((' + z_str + ' = '+str(z_p)+' && '+ x_str + ' = '+str(x_p) +') && (' + z + ' = '+str(z_p)+' && '+ x + ' = '+str(x_p) +'))'
             no_collision_spec |= {no_collision_str}
     return no_collision_spec
 
@@ -199,7 +199,7 @@ def occupy_cuts(GD, cuts, sys_z, sys_x, test_z, test_x, q_str, turn):
         in_state = in_node[0]
         system_state = '('+ sys_z + ' = ' + str(out_state[0]) + ' && ' + sys_x + ' = ' + str(out_state[1]) + ' && ' +q_str+' = '+str(out_q[1:])+' && '+turn+' = 0)'
         block_state = '('+ test_z + ' = ' + str(in_state[0]) + ' && ' + test_x + ' = ' + str(in_state[1])+')'
-        cut_specs |= {system_state + ' -> ' + block_state}
+        cut_specs |= {system_state + ' -> X' + block_state}
     # st()
     return cut_specs
 
@@ -225,12 +225,13 @@ def do_not_excessively_constrain(GD, cuts, sys_z, sys_x, test_z, test_x, q_str, 
         if state_str != '':
             state_str = state_str[:-4]
             do_not_overconstrain |=  { current_state + ' -> !(' + state_str + ')'}
+    st()
     return do_not_overconstrain
 
 # full safety spec
 def get_tester_safety(maze, z_str, x_str, z, x, turn, GD, cuts, q):
     safety = set()
-    # safety |= no_collision_grt(maze, z_str, x_str, z, x)
+    safety |= no_collision_grt(maze, z_str, x_str, z, x)
     safety |= restrictive_dynamics(z_str, x_str)
     safety |= turn_based_grt(z_str, x_str, turn, maze)
     safety |= history_var_dynamics_v2(GD, z, x, q)

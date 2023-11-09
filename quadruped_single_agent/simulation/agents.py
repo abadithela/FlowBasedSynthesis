@@ -48,7 +48,7 @@ class Tester:
 
         print(spc.pretty())
 
-        spc.moore = False # moore machine
+        spc.moore = True # moore machine
         spc.qinit = r'\A \E'
         # spc.plus_one = True
 
