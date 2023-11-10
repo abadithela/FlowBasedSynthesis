@@ -48,9 +48,9 @@ class Tester:
 
         print(spc.pretty())
 
-        spc.moore = False # mealy machine
+        spc.moore = True # moore machine
         spc.qinit = r'\A \E'
-        spc.plus_one = True
+        # spc.plus_one = True
 
         if not synth.is_realizable(spc, solver='omega'):
             print("Not realizable.")
@@ -67,7 +67,7 @@ class Tester:
         return M
 
 class Quadruped:
-    def __init__(self, name, pos, goal, maze, tester):
+    def __init__(self, name, pos, goal, maze, tester_init):
         self.name = name
         self.s = pos
         self.z = pos[0]
@@ -75,9 +75,9 @@ class Quadruped:
         self.goal = goal
         self.index = 0
         self.maze = maze
-        self.controller = self.find_controller(maze, tester)
+        self.controller = self.find_controller(maze, tester_init)
 
-    def find_controller(self,maze,tester):
+    def find_controller(self,maze,tester_init):
         logging.basicConfig(level=logging.WARNING)
         logging.getLogger('tulip.spec.lexyacc').setLevel(logging.WARNING)
         logging.getLogger('tulip.synth').setLevel(logging.WARNING)
@@ -105,7 +105,7 @@ class Quadruped:
         env_vars['X_t'] = (0,maze.len_x)
         env_safe = set()
         # env_safe |= {'(X_t = 2 && Z_t = 1)'}
-        env_init = {'Z_t = '+str(tester.z)+' && X_t = '+str(tester.x)}
+        env_init = {'Z_t = '+str(tester_init["z"])+' && X_t = '+str(tester_init["x"])}
         env_prog = set()
         env_prog |= {'(X_t = 2 && Z_t = 1) || (X_t = 2 && Z_t = 3)'} # tester will eventually make space
         # tester can move up and down the middle column
@@ -163,7 +163,7 @@ if __name__ == "__main__":
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
 
     cuts = [(((4, 2), 'q0'), ((3, 2), 'q0')), (((2, 2), 'q3'), ((1, 2), 'q3'))]
-
-    tester = Tester("tester", (4,2), maze, GD, cuts)
-    # sys_quad = Quadruped("sys_quad", (4,0), (0,0), maze, tester)
+    tester_init = {"z": 1, "x": 2}
+    tester = Tester("tester", (1,2), maze, GD, cuts)
+    sys_quad = Quadruped("sys_quad", (4,0), (0,0), maze, tester_init)
     st()
