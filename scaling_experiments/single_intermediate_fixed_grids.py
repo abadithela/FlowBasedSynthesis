@@ -25,7 +25,7 @@ from components.plotting import plot_maze, plot_solutions, highlight_cuts, plot_
 from components.tools import synchronous_product
 
 plot_results = False
-print_solution = False
+print_solution = True
 
 def solve_instance(virtual, system, b_pi, virtual_sys):#, focus, cuts, presolve):
     # system.maze.print_maze()
@@ -94,15 +94,15 @@ def plot_cuts(maze, solutions):
 
 if __name__ == '__main__':
 
-    number_of_runs = 4
+    number_of_runs = 1
     obstacle_coverage = 15 # percentage of the grid that shall be covered by obstacles
 
     # mazefiles = {3: 'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt',
     #              6: 'mazes/6x6.txt', 7:'mazes/7x7.txt',
     #             8: 'mazes/8x8.txt', 9: 'mazes/9x9.txt', 10:'mazes/10x10.txt'}
 
-    mazefile = 'mazes/10x10.txt'
-    gridsize = 10
+    mazefile = 'mazes/50x50.txt'
+    gridsize = 50
 
     # get random S, I, T location (same for all runs)
     all_states = list(itertools.product(np.arange(0,gridsize), np.arange(0,gridsize)))
@@ -111,13 +111,13 @@ if __name__ == '__main__':
     choose = int(3+obsnum)
     idx = np.random.choice(len(all_states),choose,replace=False)
     init = [all_states[idx[0]]]
-    int = all_states[idx[1]]
+    inter = all_states[idx[1]]
     goals = [all_states[idx[2]]]
-    # st()
-    obs = [all_states[idx[3+int(n)]] for n in np.arange(0,obsnum)]
-    ints = {int: 'int'}
 
-    print('S: {0}, I: {1}, T: {2}, Obst: {3}'.format(init, ints, goals, obs))
+    obs = [all_states[idx[3+int(n)]] for n in np.arange(0,obsnum)]
+    ints = {inter: 'int'}
+
+    print('S: {0}, I: {1}, T: {2}, Obs: {3}'.format(init, ints, goals, obs))
 
     # get system
     system = ProductTransys()
@@ -141,7 +141,7 @@ if __name__ == '__main__':
         exit_status, annot_cuts, flow, bypass = solve_instance(virtual, system, b_pi, virtual_sys)#, focus, cuts, presolve)
         if exit_status == 'opt':
             sols.append((annot_cuts))
-            print("{0}: S = {1}, I = {2}, T = {3}".format(gridsize, init, ints, goals))
+            print("{0}: S = {1}, I = {2}, T = {3}".format(gridsize, init, inter, goals))
         else:
             status = 'not_ok'
 

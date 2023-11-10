@@ -55,7 +55,7 @@ def plot_flow_on_maze(maze, cuts, num_int=1):
                     ax.add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.5))
                 elif (j,i) in maze.int:
                     ax.add_patch(Rectangle((x, y), w, h, fill=True, color='blue', alpha=.3))
-                    ax.text(x+tilesize/2, y+tilesize/2, 'I')
+                    ax.text(x+tilesize/2, y+tilesize/2, maze.int[(j,i)])
                 elif (j,i) in maze.goal:
                     ax.add_patch(Rectangle((x, y), w, h, fill=True, color='yellow', alpha=.3))
                     ax.text(x+tilesize/2, y+tilesize/2, 'T')
@@ -153,7 +153,7 @@ def plot_flow_w_colored_cuts_on_maze(maze, cuts):
                     ax.add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.5))
                 elif (j,i) in maze.int:
                     ax.add_patch(Rectangle((x, y), w, h, fill=True, color='blue', alpha=.3))
-                    ax.text(x+tilesize/2, y+tilesize/2, 'I')
+                    ax.text(x+tilesize/2, y+tilesize/2, maze.int[(j,i)])
                 elif (j,i) in maze.goal:
                     ax.add_patch(Rectangle((x, y), w, h, fill=True, color='yellow', alpha=.3))
                     ax.text(x+tilesize/2, y+tilesize/2, 'T')
@@ -368,6 +368,7 @@ def plot_solutions(maze, sols):
     colorstr = 'red'
 
     if npanels == 1:
+        # st()
         cuts = list(set(sols[0]))
         # find the max flow for these cuts
         G = nx.DiGraph()

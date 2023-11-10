@@ -26,8 +26,11 @@ def cb(model, where):
             model._time = time.time()
 
     # Terminate if objective has not improved in 30s
-    if time.time() - model._time > 30:
+    if time.time() - model._time > 30:# and model.SolCount >= 1:
         model.terminate()
+
+    # if time.time() - model._time > 3600 and model.SolCount == 0:
+    #     model.terminate()
 
 # Gurobi implementation
 def solve_max_gurobi(GD, SD):
@@ -189,8 +192,20 @@ def solve_max_gurobi(GD, SD):
         exit_status = 'inf'
 
         return exit_status, [], [], None
+    # elif model.status == 11:
+    #     if model.SolCount <= 1:
+    #
+    #         model.optimize(callback=cb_max)
+    #         if model.SolCount <= 1:
+    #             exit_status = 'not solved'
+    #             return exit_status, [], [], None
 
-    else:
+    elif model.status == 2 or model.status == 11:
+        if model.status == 11 and model.SolCount < 1:
+            # model.optimize(callback=cb)
+            # if model.SolCount <= 1:
+            exit_status = 'not solved'
+            return exit_status, [], [], None
         # --------- parse output
         d_vals = dict()
         f_vals = dict()
@@ -208,4 +223,7 @@ def solve_max_gurobi(GD, SD):
 
         exit_status = 'opt'
 
-        return exit_status, f_vals, d_vals, flow
+    else:
+        st()
+
+    return exit_status, f_vals, d_vals, flow

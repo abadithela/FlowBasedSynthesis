@@ -13,9 +13,9 @@ import itertools
 import matplotlib.pyplot as plt
 
 from b_sys import get_B_sys
-from b_product_1_intermed import get_B_product
+from b_product_2_intermed import get_B_product
 
-from optimization.milp_static_obstacles import solve_min
+# from optimization.milp_static_obstacles import solve_min
 from optimization.find_bypass_flow import find_fby
 from optimization.milp_static_gurobipy import solve_max_gurobi
 
@@ -24,35 +24,41 @@ from components.setup_graphs import GraphData, setup_nodes_and_edges
 from components.plotting import plot_maze, plot_flow_on_maze, highlight_cuts
 from components.tools import synchronous_product
 
-plot_results = False
-print_solution = False
+plot_results = True
+print_solution = True
 
 def solve_instance(virtual, system, b_pi, virtual_sys):#, focus, cuts, presolve):
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
 
+    # st()
     ti = time.time()
     exit_status, ftest, d, flow = solve_max_gurobi(GD, SD)#, focus, cuts, presolve)
     tf = time.time()
     del_t = tf-ti
 
-    fby = find_fby(GD, d)
-    bypass_flow = sum([fby[j] for j in fby.keys() if j[1] in GD.sink])
+    if exit_status == 'opt':
 
-    if print_solution:
-        cuts = [x for x in d.keys() if d[x] >= 0.9]
-        print('Cut {} edges in the virtual game graph.'.format(len(cuts)))
-        print('The max flow through I is {}'.format(flow))
-        print('The bypass flow is {}'.format(bypass_flow))
-        for cut in cuts:
-            print('Cutting {0} to {1}'.format(GD.node_dict[cut[0]], GD.node_dict[cut[1]]))
+        fby = find_fby(GD, d)
+        bypass_flow = sum([fby[j] for j in fby.keys() if j[1] in GD.sink])
 
-    if plot_results:
-        cuts = [x for x in d.keys() if d[x] >= 0.9]
-        highlight_cuts(cuts, GD, SD, virtual, virtual_sys)
-        sys_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
-        plot_flow_on_maze(system.maze, sys_cuts)
+        if print_solution:
+            cuts = [x for x in d.keys() if d[x] >= 0.9]
+            print('Cut {} edges in the virtual game graph.'.format(len(cuts)))
+            print('The max flow through I is {}'.format(flow))
+            print('The bypass flow is {}'.format(bypass_flow))
+            for cut in cuts:
+                print('Cutting {0} to {1}'.format(GD.node_dict[cut[0]], GD.node_dict[cut[1]]))
 
-    return del_t, flow, bypass_flow
+        if plot_results:
+            cuts = [x for x in d.keys() if d[x] >= 0.9]
+            highlight_cuts(cuts, GD, SD, virtual, virtual_sys)
+            sys_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
+            plot_flow_on_maze(system.maze, sys_cuts)
+
+        annot_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
+        return exit_status, del_t, annot_cuts, flow, bypass_flow
+    else:
+        return exit_status, 0, [], [], None
 
 def plot_runtimes(runtimes):
 
@@ -75,35 +81,28 @@ def plot_runtimes(runtimes):
     ax.ticklabel_format(useOffset=False)
 
     ax.set(xlabel='Grid Size N', ylabel='Runtime (s)',
-           title='Runtime vs. NxN Grid')
+           title='Runtime vs. NxN Grid for 2 Intermediates')
     ax.grid()
     ax.legend(loc="upper left")
     ax.set_facecolor('whitesmoke')
     plt.grid(True,linestyle='--')
-    fig.savefig("imgs/runtimes_1_int.pdf")
+    fig.savefig("imgs/runtimes_2_int.pdf")
     plt.show()
 
 
 
 if __name__ == '__main__':
 
-    number_of_runs = 25
-    obstacle_coverage = 15 # percentage of the grid that shall be covered by obstacles
+    number_of_runs = 1
+    obstacle_coverage = 0 # percentage of the grid that shall be covered by obstacles
 
-    # mazefile = 'mazes/3x3.txt'
-
-    mazefiles = {3: 'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt',
-                 6: 'mazes/6x6.txt', 7:'mazes/7x7.txt',
-                8: 'mazes/8x8.txt', 9: 'mazes/9x9.txt', 10:'mazes/10x10.txt'}
-
-    # mazefiles = {10:'mazes/10x10.txt'}
-
+    # mazefiles = {3: 'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt',
+    #              6: 'mazes/6x6.txt', 7:'mazes/7x7.txt',
+    #             8: 'mazes/8x8.txt', 9: 'mazes/9x9.txt', 10:'mazes/10x10.txt'}
 
     runtimes = {}
 
-    # foci = [0,1,2,3] # default is 0
-    # cuts = [0,1,2,3] # default is -1 (whatever that may mean)
-    # presolves = [-1,0,1,2]
+    mazefiles = {10: 'mazes/10x10.txt'}
 
     for gridsize in mazefiles.keys():
         del_ts = []
@@ -114,15 +113,18 @@ if __name__ == '__main__':
             all_states = list(itertools.product(np.arange(0,gridsize), np.arange(0,gridsize)))
             number_of_states = len(all_states)
             obsnum = np.ceil(number_of_states * obstacle_coverage/100)
-            choose = int(3+obsnum)
+            choose = int(4+obsnum)
             idx = np.random.choice(len(all_states),choose,replace=False)
-            # set S,I,T locations
+
             init = [all_states[idx[0]]]
-            int = all_states[idx[1]]
-            goals = [all_states[idx[2]]]
-            # set the obstacles
+            int_1 = all_states[idx[1]]
+            int_2 = all_states[idx[2]]
+            goals = [all_states[idx[3]]]
             obs = [all_states[idx[3+int(n)]] for n in np.arange(0,obsnum)]
-            ints = {int: 'int'}
+
+            ints = {int_1: 'int_1', int_2: 'int_2'}
+            print('--- Now solving the next grid ---')
+            print("{0}: S = {1}, I1 = {2}, I2 = {3}, T = {4}".format(gridsize, init, int_1, int_2, goals))
 
             # get system
             system = ProductTransys()
@@ -137,11 +139,14 @@ if __name__ == '__main__':
             # get virtual product
             virtual = synchronous_product(system, b_pi)
 
-            del_t, flow, bypass = solve_instance(virtual, system, b_pi, virtual_sys)#, focus, cuts, presolve)
-            print("{0}: S = {1}, I = {2}, T = {3}".format(gridsize, init, ints, goals))
-            print("Total time to solve opt: {1}, total flow = {2}, bypass = {3}".format(gridsize, del_t, flow, bypass))
-
-            del_ts.append(del_t)
+            exit_status, del_t, cuts, flow, bypass = solve_instance(virtual, system, b_pi, virtual_sys)#, focus, cuts, presolve)
+            # print("{0}: S = {1}, I1 = {2}, I2={3}, T = {4}".format(gridsize, init, int_1, int_2, goals))
+            if exit_status == 'opt':
+                print("Total time to solve opt: {1}, total flow = {2}, bypass = {3}".format(gridsize, del_t, flow, bypass))
+                del_ts.append(del_t)
+            else:
+                print('Infeasible Grid Layout')
+            print('-------------------------')
 
         runtimes.update({gridsize: del_ts})
 

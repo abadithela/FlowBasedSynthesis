@@ -61,7 +61,6 @@ class ProductTransys(Transys):
             elif s in self.maze.int.keys():
                 name_string = self.maze.int[s]
                 self.AP_dict[s].append(spot.formula.ap(name_string))
-        st()
 
     def print_transitions(self):
         for e_out, e_in in self.E.items():
