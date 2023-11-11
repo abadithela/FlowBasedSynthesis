@@ -25,7 +25,7 @@ tau = dict()
 with open(fn) as file:
     for line in file:
         if 'State:' in line:
-            out_state=line.split()[-1]
+            out_state=line.split()[1]
             qout_st = "q" + out_state
         else:
             propositions, in_state = line.split()
@@ -42,6 +42,7 @@ with open(fn) as file:
                 formula = conjunction(spot_prop_list)
             else:
                 formula = spot_prop_list[0]
+            
             tau[(qout_st, formula)] = qin_st
 
 st()

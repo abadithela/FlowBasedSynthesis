@@ -220,7 +220,7 @@ def sync_product_four_int(state_str="q"):
     with open(fn) as file:
         for line in file:
             if 'State:' in line:
-                out_state=line.split()[-1]
+                out_state=line.split()[1]
                 qout_st = "q" + out_state
             else:
                 propositions, in_state = line.split()
