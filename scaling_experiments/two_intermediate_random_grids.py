@@ -1,5 +1,5 @@
 '''
-Solving empty grids of different sizes with one intermediate node using the MILP for static obstacles.
+Solving empty grids of different sizes with two intermediates using the MILP for static obstacles.
 '''
 
 import sys

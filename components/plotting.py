@@ -274,84 +274,145 @@ def plot_maze(maze):
     plt.show()
 
 def make_history_plots(cuts, GD, maze):
-
     cuts_info = [(GD.node_dict[i], GD.node_dict[j]) for (i,j) in cuts]
 
     qs = list(set([item[0][-1] for item in cuts_info]))
 
     num_panels = len(qs)
 
-    fig, axs = plt.subplots(1,num_panels)
-    fig.suptitle('Reactive Constraints')
-
     tilesize = 1
     xs = np.linspace(0, maze.len_x*tilesize, maze.len_x+1)
     ys = np.linspace(0, maze.len_y*tilesize, maze.len_y+1)
     w, h = xs[1] - xs[0], ys[1] - ys[0]
 
-    for k,q in enumerate(qs):
-        axs[k].xaxis.set_visible(False)
-        axs[k].yaxis.set_visible(False)
-        axs[k].set_xlim(xs[0], xs[-1])
-        axs[k].set_ylim(ys[0], ys[-1])
+    if num_panels > 1:
+        fig, axs = plt.subplots(1,num_panels)
+        fig.suptitle('Reactive Constraints')
 
-        # draw the grid
-        for i, x in enumerate(xs[:-1]):
-            for j, y in enumerate(ys[:-1]):
+        for k,q in enumerate(qs):
+            axs[k].xaxis.set_visible(False)
+            axs[k].yaxis.set_visible(False)
+            axs[k].set_xlim(xs[0], xs[-1])
+            axs[k].set_ylim(ys[0], ys[-1])
 
-                if maze.map[j,i]=='*':
-                    axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.5))
-                elif (j,i) == maze.int_1:
-                    axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='blue', alpha=.3))
-                    axs[k].text(x+tilesize/2, y+tilesize/2, 'I1')
-                elif (j,i) == maze.int_2:
-                    axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='blue', alpha=.3))
-                    axs[k].text(x+tilesize/2, y+tilesize/2, 'I2')
-                elif (j,i) == maze.goal:
-                    axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='yellow', alpha=.3))
-                    axs[k].text(x+tilesize/2, y+tilesize/2, 'T')
-                elif i % 2 == j % 2:
-                    axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.1))
-                    if (j,i) == maze.init:
-                        axs[k].text(x+tilesize/2, y+tilesize/2, 'S')
-                elif maze.map[j,i]=='':
-                    axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.2))
-                    if (j,i) == maze.init:
-                        axs[k].text(x+tilesize/2, y+tilesize/2, 'S')
-        # grid lines
-        for x in xs:
-            axs[k].plot([x, x], [ys[0], ys[-1]], color='black', alpha=.33, linestyle=':')
-        for y in ys:
-            axs[k].plot([xs[0], xs[-1]], [y, y], color='black', alpha=.33, linestyle=':')
+            # draw the grid
+            for i, x in enumerate(xs[:-1]):
+                for j, y in enumerate(ys[:-1]):
 
-        angles = {'n': (180, 0), 's': (0,180), 'e': (270, 90), 'w': (90,270)}
+                    if maze.map[j,i]=='*':
+                        axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.5))
+                    elif (j,i) in maze.int:
+                        axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='blue', alpha=.3))
+                        axs[k].text(x+tilesize/2, y+tilesize/2, maze.int[(j,i)])
+                    elif (j,i) in maze.goal:
+                        axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='yellow', alpha=.3))
+                        axs[k].text(x+tilesize/2, y+tilesize/2, 'T')
+                    elif i % 2 == j % 2:
+                        axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.1))
+                        if (j,i) in maze.init:
+                            axs[k].text(x+tilesize/2, y+tilesize/2, 'S')
+                    elif maze.map[j,i]==' ':
+                        axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.2))
+                        if (j,i) in maze.init:
+                            axs[k].text(x+tilesize/2, y+tilesize/2, 'S')
+            # grid lines
+            for x in xs:
+                axs[k].plot([x, x], [ys[0], ys[-1]], color='black', alpha=.33, linestyle=':')
+            for y in ys:
+                axs[k].plot([xs[0], xs[-1]], [y, y], color='black', alpha=.33, linestyle=':')
 
-        # plot the cuts
-        # st()
-        for cut in cuts_info:
-            cut_out = cut[0]
-            cut_in = cut[1]
-            if cut_out[-1] == q:
-                startxy = cut_out[0]
-                endxy = cut_in[0]
-                x_val = (startxy[1]+endxy[1])/2
-                z_val = (startxy[0]+endxy[0])/2
-                intensity = 1.0/2
-                radius = 0.1
-                if endxy[1] - startxy[1] == 1:
-                    cut_dir = 'e'
-                elif startxy[1] - endxy[1] == 1:
-                    cut_dir = 'w'
-                elif endxy[0] - startxy[0] == 1:
-                    cut_dir = 's'
-                else:
-                    cut_dir = 'n'
-                # axs[k].plot([y_val+ tilesize/2, y_val+ tilesize/2], [x_val+ tilesize/2, x_val+ tilesize/2], color='black', alpha=intensity, marker='o')
-                axs[k].add_patch(Wedge((x_val+ tilesize/2, z_val+ tilesize/2), radius, angles[cut_dir][0], angles[cut_dir][1], fill=True, color='black', alpha=intensity, ec="none"))
+            angles = {'n': (180, 0), 's': (0,180), 'e': (270, 90), 'w': (90,270)}
 
-        axs[k].invert_yaxis()
-        axs[k].axis('equal')
-        axs[k].set_title("'{0}'".format(q))
+            # plot the cuts
+            # st()
+            for cut in cuts_info:
+                cut_out = cut[0]
+                cut_in = cut[1]
+                if cut_out[-1] == q:
+                    startxy = cut_out[0]
+                    endxy = cut_in[0]
+                    x_val = (startxy[1]+endxy[1])/2
+                    z_val = (startxy[0]+endxy[0])/2
+                    intensity = 1.0/2
+                    radius = 0.1
+                    if endxy[1] - startxy[1] == 1:
+                        cut_dir = 'e'
+                    elif startxy[1] - endxy[1] == 1:
+                        cut_dir = 'w'
+                    elif endxy[0] - startxy[0] == 1:
+                        cut_dir = 's'
+                    else:
+                        cut_dir = 'n'
+                    # axs[k].plot([y_val+ tilesize/2, y_val+ tilesize/2], [x_val+ tilesize/2, x_val+ tilesize/2], color='black', alpha=intensity, marker='o')
+                    axs[k].add_patch(Wedge((x_val+ tilesize/2, z_val+ tilesize/2), radius, angles[cut_dir][0], angles[cut_dir][1], fill=True, color='black', alpha=intensity, ec="none"))
+
+            axs[k].invert_yaxis()
+            axs[k].axis('equal')
+            axs[k].set_title("'{0}'".format(q))
+    else:
+        fig, axs = plt.subplots(1)
+        fig.suptitle('Reactive Constraints')
+        axs.set_title("'{0}'".format(qs[0]))
+
+        for k,q in enumerate(qs):
+            axs.xaxis.set_visible(False)
+            axs.yaxis.set_visible(False)
+            axs.set_xlim(xs[0], xs[-1])
+            axs.set_ylim(ys[0], ys[-1])
+
+            # draw the grid
+            for i, x in enumerate(xs[:-1]):
+                for j, y in enumerate(ys[:-1]):
+
+                    if maze.map[j,i]=='*':
+                        axs.add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.5))
+                    elif (j,i) in maze.int:
+                        axs.add_patch(Rectangle((x, y), w, h, fill=True, color='blue', alpha=.3))
+                        axs.text(x+tilesize/2, y+tilesize/2, maze.int[(j,i)])
+                    elif (j,i) in maze.goal:
+                        axs.add_patch(Rectangle((x, y), w, h, fill=True, color='yellow', alpha=.3))
+                        axs.text(x+tilesize/2, y+tilesize/2, 'T')
+                    elif i % 2 == j % 2:
+                        axs.add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.1))
+                        if (j,i) in maze.init:
+                            axs.text(x+tilesize/2, y+tilesize/2, 'S')
+                    elif maze.map[j,i]==' ':
+                        axs.add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.2))
+                        if (j,i) in maze.init:
+                            axs.text(x+tilesize/2, y+tilesize/2, 'S')
+            # grid lines
+            for x in xs:
+                axs.plot([x, x], [ys[0], ys[-1]], color='black', alpha=.33, linestyle=':')
+            for y in ys:
+                axs.plot([xs[0], xs[-1]], [y, y], color='black', alpha=.33, linestyle=':')
+
+            angles = {'n': (180, 0), 's': (0,180), 'e': (270, 90), 'w': (90,270)}
+
+            # plot the cuts
+            # st()
+            for cut in cuts_info:
+                cut_out = cut[0]
+                cut_in = cut[1]
+                if cut_out[-1] == q:
+                    startxy = cut_out[0]
+                    endxy = cut_in[0]
+                    x_val = (startxy[1]+endxy[1])/2
+                    z_val = (startxy[0]+endxy[0])/2
+                    intensity = 1.0/2
+                    radius = 0.1
+                    if endxy[1] - startxy[1] == 1:
+                        cut_dir = 'e'
+                    elif startxy[1] - endxy[1] == 1:
+                        cut_dir = 'w'
+                    elif endxy[0] - startxy[0] == 1:
+                        cut_dir = 's'
+                    else:
+                        cut_dir = 'n'
+                    axs.add_patch(Wedge((x_val+ tilesize/2, z_val+ tilesize/2), radius, angles[cut_dir][0], angles[cut_dir][1], fill=True, color='black', alpha=intensity, ec="none"))
+
+            axs.invert_yaxis()
+            axs.axis('equal')
+            axs.set_title("'{0}'".format(q))
 
 
     plt.show()

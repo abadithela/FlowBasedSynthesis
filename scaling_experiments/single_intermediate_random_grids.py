@@ -118,11 +118,11 @@ if __name__ == '__main__':
             idx = np.random.choice(len(all_states),choose,replace=False)
             # set S,I,T locations
             init = [all_states[idx[0]]]
-            int = all_states[idx[1]]
+            inter = all_states[idx[1]]
             goals = [all_states[idx[2]]]
             # set the obstacles
             obs = [all_states[idx[3+int(n)]] for n in np.arange(0,obsnum)]
-            ints = {int: 'int'}
+            ints = {inter: 'int'}
 
             # get system
             system = ProductTransys()
