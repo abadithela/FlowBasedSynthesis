@@ -67,7 +67,7 @@ class Tester:
         return M
 
 class Quadruped:
-    def __init__(self, name, pos, goal, maze, tester_init):
+    def __init__(self, name, pos, goal, maze, tester_init, cuts):
         self.name = name
         self.s = pos
         self.z = pos[0]
@@ -99,6 +99,7 @@ class Quadruped:
             for z in range(0,maze.len_z):
                 safe_spec |= {'!((z = '+str(z)+' && '+'x = '+str(x) +') && (Z_t = '+str(z)+' && '+'X_t = '+str(x)+'))'}
         sys_safe |= safe_spec
+        # sys_prog |= sys_occupies_cut_states
 
         env_vars = {}
         env_vars['Z_t'] = (0,maze.len_z)
@@ -163,7 +164,8 @@ if __name__ == "__main__":
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
 
     cuts = [(((4, 2), 'q0'), ((3, 2), 'q0')), (((2, 2), 'q3'), ((1, 2), 'q3'))]
-    tester_init = {"z": 1, "x": 2}
-    tester = Tester("tester", (1,2), maze, GD, cuts)
-    sys_quad = Quadruped("sys_quad", (4,0), (0,0), maze, tester_init)
+    cuts = [(((4, 2), 'q0'), ((3, 2), 'q0')), (((2, 2), 'q3'), ((1, 2), 'q3'))]
+    tester_init = {"z": 4, "x": 2}
+    tester = Tester("tester", (4,2), maze, GD, cuts)
+    sys_quad = Quadruped("sys_quad", (4,0), (0,0), maze, tester_init, cuts)
     st()

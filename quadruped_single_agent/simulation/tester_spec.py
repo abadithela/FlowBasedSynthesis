@@ -26,11 +26,12 @@ def get_tester_spec(init_pos, maze, GD, cuts):
     vars = set_variables(maze, GD)
     init = set_init(init_pos, z_str, x_str, turn, q)
     safety = get_tester_safety(maze, z_str, x_str, z, x, turn, GD, cuts, q)
-    progress = get_tester_progress(maze, z_str, x_str, q)
+    progress = get_tester_progress_empty(maze, cuts, z_str, x_str, q)
     env_vars = set_sys_variables(maze)
     env_init = set_sys_init(z, x, maze)
     env_safety = get_system_safety(maze, z, x, z_str, x_str, turn)
     env_progress = get_system_progress(maze, z, x)
+    # env_progress = get_system_progress_v2(maze, cuts, z, x)
 
     tester_spec = Spec(vars, init, safety, progress, env_vars, env_init, env_safety, env_progress)
 
@@ -68,6 +69,19 @@ def get_system_safety(maze, z, x, z_str, x_str, turn):
 def get_system_progress(maze, z, x):
     progress = set()
     progress |= {'('+z+' = '+str(maze.goal[0])+' && '+x+' = '+str(maze.goal[1])+')'}
+    return progress
+
+def get_system_progress_v2(maze, cuts, z, x):
+    progress = set()
+    progress |= {'('+z+' = '+str(maze.goal[0])+' && '+x+' = '+str(maze.goal[1])+')'}
+    for cut in cuts:
+        out_node = cut[0]
+        out_state = out_node[0]
+        out_q = out_node[-1]
+        in_node = cut[1]
+        in_state = in_node[0]
+        system_state = '('+ z + ' = ' + str(out_state[0]) + ' && ' + x + ' = ' + str(out_state[1]) + ")"
+        progress |= {system_state}
     return progress
 
 # Tester guarantees
@@ -224,7 +238,7 @@ def do_not_excessively_constrain(GD, cuts, sys_z, sys_x, test_z, test_x, q_str, 
 
         if state_str != '':
             state_str = state_str[:-4]
-            do_not_overconstrain |=  { current_state + ' -> !(' + state_str + ')'}
+            do_not_overconstrain |=  { current_state + ' -> X !(' + state_str + ')'}
     st()
     return do_not_overconstrain
 
@@ -235,14 +249,24 @@ def get_tester_safety(maze, z_str, x_str, z, x, turn, GD, cuts, q):
     safety |= restrictive_dynamics(z_str, x_str)
     safety |= turn_based_grt(z_str, x_str, turn, maze)
     safety |= history_var_dynamics_v2(GD, z, x, q)
-    # safety |= occupy_cuts(GD, cuts, z, x, z_str, x_str, q, turn)
+    safety |= occupy_cuts(GD, cuts, z, x, z_str, x_str, q, turn)
     # safety |= do_not_excessively_constrain(GD, cuts, z, x, z_str, x_str, q, turn)
     return safety
 
 # TESTER PROGRESS
-def get_tester_progress(maze, z_str, x_str, q_str):
+def get_tester_progress(maze, cuts, test_z, test_x, q_str):
     progress = set()
-    # progress |= {'('+q_str+' = 2 || '+q_str+' = 6)'}
-    # progress |= {'('+z_str+' = 3 && '+x_str+' = 2) || ('+z_str+' = 1 && '+x_str+' = 2)'}
+    for cut in cuts:
+        out_node = cut[0]
+        out_state = out_node[0]
+        out_q = out_node[-1]
+        in_node = cut[1]
+        in_state = in_node[0]
+        block_state = '('+ test_z + ' = ' + str(in_state[0]) + ' && ' + test_x + ' = ' + str(in_state[1])+ ' && '+q_str+' = '+str(out_q[1:]) + ')'
+        progress |= {block_state}
 
+    return progress
+
+def get_tester_progress_empty(maze, cuts, test_z, test_x, q_str):
+    progress = set()
     return progress
