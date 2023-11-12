@@ -73,6 +73,7 @@ def solve_max_gurobi(GD, SD):
 
     s_sink = SD.acc_sys
     s_src = SD.init[0]
+    
 
     model_s_edges = list(S.edges)
     model_s_nodes = list(S.nodes)

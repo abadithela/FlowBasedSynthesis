@@ -20,9 +20,9 @@ def create_network_from_file(mazefile):
     return map, len_x, len_z
 
 class MazeNetwork:
-    def __init__(self, mazefile, obs):
+    def __init__(self, mazefile, obs = []):
         self.init = None
-        self.goal = None
+        self.goal = []
         self.int = None
         self.obs = obs
         self.map, self.len_x, self.len_z = create_network_from_file(mazefile)
@@ -30,9 +30,10 @@ class MazeNetwork:
             self.map[(obst)] = '*'
         self.len_y = self.len_z
         self.G_transitions = None
-        self.single_states = None
         self.next_state_dict = None
+        self.original_next_state_dict = self.next_state_dict
         self.G_single = None
+        self.active_cuts = []
 
     def set_int(self, int):
         self.int = int
@@ -41,7 +42,7 @@ class MazeNetwork:
         self.goal = goal
 
     def setup_maze(self):
-        self.G_transitions, self.single_states, self.next_state_dict = self.setup_next_states_map()
+        self.G_transitions, self.next_state_dict = self.setup_next_states_map()
         self.G_single = self.create_single_agent_graph()
 
     def state_info(self, node):
@@ -106,9 +107,9 @@ class MazeNetwork:
                     single_states.append(((z,x)))
                     if self.map[(z,x)] == 'S':
                         self.init = (z,x)
-                    # if (z,x) == (0,0):
-                    #     self.goal = (z,x)
-        # st()
+                    # if self.map[(z,x)] == 'T':
+                    #     self.goal.append((z,x))
+
         next_state_dict = dict()
         for node in single_states:
             next_states = [(node[0], node[1])]
@@ -126,11 +127,9 @@ class MazeNetwork:
         for key in next_state_dict.keys():
             for item in next_state_dict[key]:
                 G_transitions.add_edge(key,item)
-        return G_transitions, single_states, next_state_dict
-
+        return G_transitions, next_state_dict
 
     def transition_specs(self, z_str, y_str):
-        # st()
         dynamics_spec = set()
         for ii in range(0,self.len_z):
             for jj in range(0,self.len_x):
@@ -141,6 +140,14 @@ class MazeNetwork:
                             next_steps_string = next_steps_string + ' || ('+z_str+' = '+str(item[0])+' && '+y_str+' = '+str(item[1])+')'
                     dynamics_spec |= {'('+z_str+' = '+str(ii)+' && '+y_str+' = '+str(jj)+') -> X(('+ next_steps_string +'))'}
         return dynamics_spec
+
+    def add_cut(self, cut):
+        self.next_state_dict[cut[0]].remove(cut[1])
+        self.active_cuts.append(cut)
+
+    def remove_all_cuts(self):
+        self.next_state_dict = self.original_next_state_dict
+        self.active_cuts = []
 
 
 if __name__ == '__main__':

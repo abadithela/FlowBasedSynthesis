@@ -101,8 +101,8 @@ if __name__ == '__main__':
     #              6: 'mazes/6x6.txt', 7:'mazes/7x7.txt',
     #             8: 'mazes/8x8.txt', 9: 'mazes/9x9.txt', 10:'mazes/10x10.txt'}
 
-    mazefile = 'mazes/50x50.txt'
-    gridsize = 50
+    mazefile = 'mazes/5x5.txt'
+    gridsize = 5
 
     # get random S, I, T location (same for all runs)
     all_states = list(itertools.product(np.arange(0,gridsize), np.arange(0,gridsize)))
@@ -118,7 +118,7 @@ if __name__ == '__main__':
     ints = {inter: 'int'}
 
     print('S: {0}, I: {1}, T: {2}, Obs: {3}'.format(init, ints, goals, obs))
-
+    # st()
     # get system
     system = ProductTransys()
     system.construct_sys(mazefile, init, ints, goals, obs)
