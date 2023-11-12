@@ -324,7 +324,6 @@ def make_history_plots(cuts, GD, maze):
             angles = {'n': (180, 0), 's': (0,180), 'e': (270, 90), 'w': (90,270)}
 
             # plot the cuts
-            # st()
             for cut in cuts_info:
                 cut_out = cut[0]
                 cut_in = cut[1]
@@ -398,7 +397,7 @@ def make_history_plots(cuts, GD, maze):
                     endxy = cut_in[0]
                     x_val = (startxy[1]+endxy[1])/2
                     z_val = (startxy[0]+endxy[0])/2
-                    intensity = 1.0/2
+                    intensity = 1.0
                     radius = 0.1
                     if endxy[1] - startxy[1] == 1:
                         cut_dir = 'e'
