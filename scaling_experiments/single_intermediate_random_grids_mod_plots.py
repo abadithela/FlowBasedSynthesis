@@ -39,24 +39,28 @@ def solve_instance(virtual, system, b_pi, virtual_sys):#, focus, cuts, presolve)
     tf = time.time()
     del_t = tf-ti
 
-    fby = find_fby(GD, d)
-    bypass_flow = sum([fby[j] for j in fby.keys() if j[1] in GD.sink])
+    if exit_status == 'opt':
 
-    if print_solution:
+        fby = find_fby(GD, d)
+        bypass_flow = sum([fby[j] for j in fby.keys() if j[1] in GD.sink])
         cuts = [x for x in d.keys() if d[x] >= 0.9]
-        print('Cut {} edges in the virtual game graph.'.format(len(cuts)))
-        print('The max flow through I is {}'.format(flow))
-        print('The bypass flow is {}'.format(bypass_flow))
-        for cut in cuts:
-            print('Cutting {0} to {1}'.format(GD.node_dict[cut[0]], GD.node_dict[cut[1]]))
 
-    if plot_results:
-        cuts = [x for x in d.keys() if d[x] >= 0.9]
-        highlight_cuts(cuts, GD, SD, virtual, virtual_sys)
-        sys_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
-        plot_flow_on_maze(system.maze, sys_cuts)
+        if print_solution:
+            print('Cut {} edges in the virtual game graph.'.format(len(cuts)))
+            print('The max flow through I is {}'.format(flow))
+            print('The bypass flow is {}'.format(bypass_flow))
+            for cut in cuts:
+                print('Cutting {0} to {1}'.format(GD.node_dict[cut[0]], GD.node_dict[cut[1]]))
 
-    return del_t, flow, bypass_flow
+        if plot_results:
+            highlight_cuts(cuts, GD, SD, virtual, virtual_sys)
+            sys_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
+            plot_flow_on_maze(system.maze, sys_cuts)
+
+        annot_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
+        return exit_status, del_t, annot_cuts, flow, bypass_flow
+    else:
+        return exit_status, 0, [], [], None
 
 def plot_runtimes(runtimes):
 
@@ -121,10 +125,8 @@ def plot_runtimes_mean_var(runtimes):
 
 if __name__ == '__main__':
 
-    number_of_runs = 25
+    number_of_runs = 2
     obstacle_coverage = 15 # percentage of the grid that shall be covered by obstacles
-
-    # mazefile = 'mazes/3x3.txt'
 
     mazefiles = {3: 'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt',
                  6: 'mazes/6x6.txt', 7:'mazes/7x7.txt',
@@ -132,26 +134,20 @@ if __name__ == '__main__':
 
     # mazefiles = {10:'mazes/10x10.txt'}
 
-
     runtimes = {}
 
-    # foci = [0,1,2,3] # default is 0
-    # cuts = [0,1,2,3] # default is -1 (whatever that may mean)
-    # presolves = [-1,0,1,2]
-
     # Folder to save data:
-
     data_dir = "data/static/random"
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
     if save_data:
         exp_dir = os.path.join(data_dir, datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
         os.makedirs(exp_dir)
-        with open(os.path.join(data_dir,"readme.txt"), "w") as f:   # Opens file and casts as f 
+        with open(os.path.join(data_dir,"readme.txt"), "w") as f:   # Opens file and casts as f
             f.write("number of runs: " + str(number_of_runs) + "\n")
             f.write("single intermediate " + "\n")
             f.close()
-        
+
         data = dict()
 
     for gridsize in mazefiles.keys():
@@ -161,6 +157,8 @@ if __name__ == '__main__':
         target_cond = []
         obstacle_cond = []
         mazefile = mazefiles[gridsize]
+        num_infeas = 0
+        not_solved = 0
 
         for run in range(number_of_runs):
             # get random S, I, T location
@@ -180,7 +178,7 @@ if __name__ == '__main__':
             # get system
             system = ProductTransys()
             system.construct_sys(mazefile, init, ints, goals, obs)
-            
+
             # get Buchi automata
             b_sys = get_B_sys(system.AP)
             b_pi = get_B_product()
@@ -190,21 +188,30 @@ if __name__ == '__main__':
             # get virtual product
             virtual = synchronous_product(system, b_pi)
 
-            del_t, flow, bypass = solve_instance(virtual, system, b_pi, virtual_sys)#, focus, cuts, presolve)
-            print("{0}: S = {1}, I = {2}, T = {3}".format(gridsize, init, ints, goals))
-            print("Total time to solve opt: {1}, total flow = {2}, bypass = {3}".format(gridsize, del_t, flow, bypass))
+            exit_status, del_t, annot_cuts, flow, bypass_flow = solve_instance(virtual, system, b_pi, virtual_sys)#, focus, cuts, presolve)
 
+            print("{0}: S = {1}, I = {2}, T = {3}".format(gridsize, init, ints, goals))
+            if exit_status == 'opt':
+                print("Total time to solve opt: {1}, total flow = {2}, bypass = {3}".format(gridsize, del_t, flow, bypass_flow))
+                del_ts.append(del_t)
+            elif exit_status == 'inf':
+                print('Infeasible Grid Layout')
+                num_infeas = num_infeas+1
+            elif exit_status == 'not solved':
+                print('Not solved')
+                not_solved = not_solved+1
+            print('-------------------------')
             initial_cond.append(init)
             intermed_cond.append(ints)
             target_cond.append(goals)
             obstacle_cond.append(obs)
-            del_ts.append(del_t)
+
+        runtimes.update({gridsize: del_ts})
+        print('{0}: Solved {1} out of {2} feasible grids'.format(gridsize, number_of_runs-not_solved, number_of_runs-num_infeas))
+
 
         if save_data:
             data[gridsize] = {"mazefile": mazefile, "initial": initial_cond, "intermed": intermed_cond, "target": target_cond, "obstacles": obstacle_cond, "runtimes": del_ts}
-
-        runtimes.update({gridsize: del_ts})
-
 
     plot_runtimes(runtimes)
 

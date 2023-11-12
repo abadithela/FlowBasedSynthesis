@@ -73,7 +73,7 @@ def solve_max_gurobi(GD, SD):
 
     s_sink = SD.acc_sys
     s_src = SD.init[0]
-    
+
 
     model_s_edges = list(S.edges)
     model_s_nodes = list(S.nodes)
@@ -224,6 +224,10 @@ def solve_max_gurobi(GD, SD):
 
         exit_status = 'opt'
 
+    elif model.status == 3:
+        exit_status = 'inf'
+
+        return exit_status, [], [], None
     else:
         st()
 
