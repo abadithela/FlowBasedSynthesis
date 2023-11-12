@@ -24,7 +24,7 @@ from optimization.milp_static_gurobipy import solve_max_gurobi
 
 from components.transition_system import ProductTransys
 from components.setup_graphs import GraphData, setup_nodes_and_edges
-from components.plotting import plot_maze, plot_flow_on_maze, highlight_cuts
+from components.plotting import plot_maze, plot_flow_on_maze, highlight_cuts, plot_flow_soln_on_maze
 from components.tools import synchronous_product
 
 plot_results = False
@@ -171,12 +171,12 @@ if __name__ == '__main__':
             idx = np.random.choice(len(all_states),choose,replace=False)
             # set S,I,T locations
             init = [all_states[idx[0]]]
-            int = all_states[idx[1]]
+            inter = all_states[idx[1]]
             goals = [all_states[idx[2]]]
             # set the obstacles
             st()
             obs = [all_states[idx[3+int(n)]] for n in np.arange(0,obsnum)]
-            ints = {int: 'int'}
+            ints = {inter: 'int'}
 
             # get system
             system = ProductTransys()
