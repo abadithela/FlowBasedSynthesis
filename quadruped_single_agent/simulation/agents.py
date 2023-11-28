@@ -27,8 +27,8 @@ class Tester:
         (self.z, self.x) = cell
         self.q = (self.z, self.x)
 
-    def tester_move(self, system_pos):
-        output = self.controller.move(system_pos[0],system_pos[1])
+    def tester_move(self, system_pos, q):
+        output = self.controller.move(system_pos[0],system_pos[1], q)
         self.x = output['env_x']
         self.z = output['env_z']
         self.turn = output['turn']
@@ -166,6 +166,6 @@ if __name__ == "__main__":
     cuts = [(((4, 2), 'q0'), ((3, 2), 'q0')), (((2, 2), 'q3'), ((1, 2), 'q3'))]
     cuts = [(((4, 2), 'q0'), ((3, 2), 'q0')), (((2, 2), 'q3'), ((1, 2), 'q3'))]
     tester_init = {"z": 4, "x": 2}
-    tester = Tester("tester", (4,2), maze, GD, cuts)
+    tester = Tester("tester", (1,2), maze, GD, cuts)
     sys_quad = Quadruped("sys_quad", (4,0), (0,0), maze, tester_init, cuts)
     st()

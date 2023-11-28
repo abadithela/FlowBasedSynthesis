@@ -27,9 +27,9 @@ def get_tester_spec(init_pos, maze, GD, cuts):
     init = set_init(init_pos, z_str, x_str, turn, q)
     safety = get_tester_safety(maze, z_str, x_str, z, x, turn, GD, cuts, q)
     progress = get_tester_progress_empty(maze, cuts, z_str, x_str, q)
-    env_vars = set_sys_variables(maze)
-    env_init = set_sys_init(z, x, maze)
-    env_safety = get_system_safety(maze, z, x, z_str, x_str, turn)
+    env_vars = set_sys_variables(maze, GD)
+    env_init = set_sys_init(z, x, q, maze)
+    env_safety = get_system_safety(maze, GD, z, x, q, z_str, x_str, turn)
     env_progress = get_system_progress(maze, z, x)
     # env_progress = get_system_progress_v2(maze, cuts, z, x)
 
@@ -38,15 +38,19 @@ def get_tester_spec(init_pos, maze, GD, cuts):
     return tester_spec
 
 # Assumptions on the system
-def set_sys_variables(maze):
+def set_sys_variables(maze, GD):
     vars = {}
     vars['x'] = (0,maze.len_x)
     vars['z'] = (0,maze.len_z)
+    qs = list(set([GD.node_dict[node][-1] for node in list(GD.nodes)]))
+    vals = [str(q[1:]) for q in qs]
+    vars['q'] = (int(min(vals)), int(max(vals)))
     return vars
 
-def set_sys_init(z, x, maze):
+def set_sys_init(z, x, q, maze):
     (z_p,x_p) = maze.init
-    init = {x +' = '+str(x_p)+' && '+z+' = '+str(z_p)}
+    # init = {x +' = '+str(x_p)+' && '+z+' = '+str(z_p)}
+    init = {x +' = '+str(x_p)+' && '+z+' = '+str(z_p) +' && '+ str(q)+"= 0"}
     return init
 
 # turn based game
@@ -59,10 +63,11 @@ def turn_based_asm(z, x, turn, maze):
             turns |= {'('+turn+' = 1 && '+z+' = '+str(z_p)+' && '+x+' = '+str(x_p)+') -> X('+z+' = '+str(z_p)+' && '+x+' = '+str(x_p)+')'}
     return turns
 
-def get_system_safety(maze, z, x, z_str, x_str, turn):
+def get_system_safety(maze, GD, z, x, q, z_str, x_str, turn):
     safety = set()
     safety |= no_collision_asm(maze, z_str, x_str, z, x)
-    safety |= maze.transition_specs(z, x)
+    # safety |= maze.transition_specs(z,x)
+    safety |= history_var_dynamics(GD, z, x, q)
     safety |= turn_based_asm(z, x, turn, maze)
     return safety
 
@@ -90,17 +95,18 @@ def get_system_progress_v2(maze, cuts, z, x):
 def set_variables(maze, GD):
     vars = {}
     vars['env_x'] = (0,maze.len_x)
-    vars['env_z'] = (0,maze.len_z)
+    vars['env_z'] = (-1,maze.len_z)
     vars['turn'] = (0,1)
-    qs = list(set([GD.node_dict[node][-1] for node in list(GD.nodes)]))
-    vals = [str(q[1:]) for q in qs]
-    vars['q'] = (int(min(vals)), int(max(vals)))
+    # qs = list(set([GD.node_dict[node][-1] for node in list(GD.nodes)]))
+    # vals = [str(q[1:]) for q in qs]
+    # vars['q'] = (int(min(vals)), int(max(vals)))
     return vars
 
 # initial conditions
 def set_init(init_pos, z_str, x_str, turn, q_str):
     (z,x) = init_pos
-    init = {x_str +' = '+str(x)+' && '+z_str+' = '+str(z)+' && '+turn+' = 0 && '+q_str+' = 0'}
+    # init = {x_str +' = '+str(x)+' && '+z_str+' = '+str(z)+' && '+turn+' = 0 && '+q_str+' = 0'}
+    init = {x_str +' = '+str(x)+' && '+z_str+' = '+str(z)+' && '+turn+' = 0 '}
     return init
 
 # SAFETY
@@ -128,11 +134,14 @@ def no_collision_grt(maze, z_str, x_str, z, x):
 
 # dynamics
 def restrictive_dynamics(z_str, x_str):
-    dynamics_spec = {'('+z_str+' = 4) -> X(('+z_str+' = 4) || ('+z_str+' = 3))'}
+    dynamics_spec = {'('+z_str+' = 4) -> X(('+z_str+' = 4) || ('+z_str+' = 3) || ('+z_str+' = -1))'}
     dynamics_spec |= {'('+z_str+' = 3) -> X(('+z_str+' = 4) || ('+z_str+' = 3) ||('+z_str+' = 2))'}
     dynamics_spec |= {'('+z_str+' = 2) -> X(('+z_str+' = 3) || ('+z_str+' = 2) ||('+z_str+' = 1))'}
-    dynamics_spec |= {'('+z_str+' = 1) -> X(('+z_str+' = 2) || ('+z_str+' = 1))'}
+    dynamics_spec |= {'('+z_str+' = 1) -> X(('+z_str+' = 2) || ('+z_str+' = 1) || ('+z_str+' = 0))'}
     dynamics_spec |= {'('+x_str+' = 2) -> X(('+x_str+' = 2))'}
+    # Tester can exit to parking state -1
+    dynamics_spec |= {'('+z_str+' = 0) -> X(('+z_str+' = 0) || ('+z_str+' = 1)|| ('+z_str+' = -1))'}
+    dynamics_spec |= {'('+z_str+' = -1) -> X(('+z_str+' = -1))'}
     return dynamics_spec
 
 # turn based game
@@ -203,6 +212,8 @@ def history_var_dynamics_v2(GD, sys_z, sys_x, q_str):
 def occupy_cuts(GD, cuts, sys_z, sys_x, test_z, test_x, q_str, turn):
     '''
     Tester needs to occupy the cells that correspond to the cuts.
+    Tester needs to be in the cut state when the system is in a q position and it is the system's 
+    turn to act.
     '''
     cut_specs = set()
     for cut in cuts:
@@ -213,11 +224,11 @@ def occupy_cuts(GD, cuts, sys_z, sys_x, test_z, test_x, q_str, turn):
         in_state = in_node[0]
         system_state = '('+ sys_z + ' = ' + str(out_state[0]) + ' && ' + sys_x + ' = ' + str(out_state[1]) + ' && ' +q_str+' = '+str(out_q[1:])+' && '+turn+' = 0)'
         block_state = '('+ test_z + ' = ' + str(in_state[0]) + ' && ' + test_x + ' = ' + str(in_state[1])+')'
-        cut_specs |= {system_state + ' -> X' + block_state}
+        cut_specs |= {system_state + ' -> ' + block_state}
     # st()
     return cut_specs
 
-def do_not_excessively_constrain(GD, cuts, sys_z, sys_x, test_z, test_x, q_str, turn):
+def do_not_overconstrain(GD, cuts, sys_z, sys_x, test_z, test_x, q_str, turn):
     '''
     Do not constrain edges that are not cut.
     '''
@@ -238,7 +249,7 @@ def do_not_excessively_constrain(GD, cuts, sys_z, sys_x, test_z, test_x, q_str, 
 
         if state_str != '':
             state_str = state_str[:-4]
-            do_not_overconstrain |=  { current_state + ' -> X !(' + state_str + ')'}
+            do_not_overconstrain |=  { current_state + ' -> !(' + state_str + ')'}
     st()
     return do_not_overconstrain
 
@@ -247,11 +258,24 @@ def get_tester_safety(maze, z_str, x_str, z, x, turn, GD, cuts, q):
     safety = set()
     safety |= no_collision_grt(maze, z_str, x_str, z, x)
     safety |= restrictive_dynamics(z_str, x_str)
+    safety |= transiently_block(z_str, x_str)
     safety |= turn_based_grt(z_str, x_str, turn, maze)
-    safety |= history_var_dynamics_v2(GD, z, x, q)
+    # safety |= history_var_dynamics(GD, z, x, q)
     safety |= occupy_cuts(GD, cuts, z, x, z_str, x_str, q, turn)
-    # safety |= do_not_excessively_constrain(GD, cuts, z, x, z_str, x_str, q, turn)
+    safety |= do_not_overconstrain(GD, cuts, z, x, z_str, x_str, q, turn)
     return safety
+
+# Tester transiently blocks the system, but not forever
+def transiently_block(z_str, x_str):
+    '''
+    If it is the tester turn, it should not choose to stay in the same 
+    blocking state in the next step
+    '''
+    transient_spec = set()
+    transient_spec |= {'('+z_str+' = 4 && turn = 1) -> X(!('+z_str+' = 4))'}
+    transient_spec |= {'('+z_str+' = 2 && turn = 1) -> X(!('+z_str+' = 2))'}
+    transient_spec |= {'('+z_str+' = 0 && turn = 1) -> X(!('+z_str+' = 0))'}
+    return transient_spec
 
 # TESTER PROGRESS
 def get_tester_progress(maze, cuts, test_z, test_x, q_str):
@@ -262,9 +286,10 @@ def get_tester_progress(maze, cuts, test_z, test_x, q_str):
         out_q = out_node[-1]
         in_node = cut[1]
         in_state = in_node[0]
-        block_state = '('+ test_z + ' = ' + str(in_state[0]) + ' && ' + test_x + ' = ' + str(in_state[1])+ ' && '+q_str+' = '+str(out_q[1:]) + ')'
-        progress |= {block_state}
-
+        # block_state = '('+ test_z + ' = ' + str(in_state[0]) + ' && ' + test_x + ' = ' + str(in_state[1])+ ' && '+q_str+' = '+str(out_q[1:]) + ')'
+        block_state = '('+ test_z + ' = ' + str(in_state[0]) + ' && ' + test_x + ' = ' + str(in_state[1])+ ')'
+        # progress |= {block_state}
+    progress |= {'('+ test_z +' = -1)'}
     return progress
 
 def get_tester_progress_empty(maze, cuts, test_z, test_x, q_str):
