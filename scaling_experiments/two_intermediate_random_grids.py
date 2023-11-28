@@ -89,16 +89,44 @@ def plot_runtimes(runtimes):
     fig.savefig("imgs/runtimes_2_int.pdf")
     plt.show()
 
+def plot_runtimes_mean_var(runtimes):
 
+    gridsizes = list(runtimes.keys())
+    gridsizes.sort()
+
+    meantimes = [np.mean(runtimes[num], axis=0) for num in gridsizes]
+    std_dev = [np.std(runtimes[num], axis=0) for num in gridsizes]
+
+    xs = []
+    ys = []
+    for gridsize in gridsizes:
+        for t in runtimes[gridsize]:
+            xs.append(gridsize)
+            ys.append(t)
+
+    fig, ax = plt.subplots()
+    ax.errorbar(gridsizes, meantimes, yerr=std_dev, fmt='^', color = 'blue', label = 'MILP')
+    # ax.scatter(xs, ys, alpha = 0.5, color = 'blue')
+
+    ax.ticklabel_format(useOffset=False)
+
+    ax.set(xlabel='Grid Size N', ylabel='Runtime (s)',
+           title='Runtime vs. NxN Grid')
+    ax.grid()
+    ax.legend(loc="upper left")
+    ax.set_facecolor('whitesmoke')
+    plt.grid(True,linestyle='--')
+    fig.savefig("imgs/runtimes_2_int_mean_var.pdf")
+    plt.show()
 
 if __name__ == '__main__':
 
-    number_of_runs = 1
+    number_of_runs = 20
     obstacle_coverage = 0 # percentage of the grid that shall be covered by obstacles
 
-    # mazefiles = {3: 'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt',
-    #              6: 'mazes/6x6.txt', 7:'mazes/7x7.txt',
-    #             8: 'mazes/8x8.txt', 9: 'mazes/9x9.txt', 10:'mazes/10x10.txt'}
+    mazefiles = {3: 'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt',
+                 6: 'mazes/6x6.txt', 7:'mazes/7x7.txt',
+                8: 'mazes/8x8.txt', 9: 'mazes/9x9.txt', 10:'mazes/10x10.txt'}
 
     runtimes = {}
 
@@ -151,4 +179,4 @@ if __name__ == '__main__':
         runtimes.update({gridsize: del_ts})
 
 
-    plot_runtimes(runtimes)
+    plot_runtimes_mean_var(runtimes)
