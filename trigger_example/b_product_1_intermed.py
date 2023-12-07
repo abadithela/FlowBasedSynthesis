@@ -18,7 +18,6 @@ from components.tools import neg, conjunction
 from components.parse_specification_product import parse_spec_product
 from components.automaton import Automaton
 from pdb import set_trace as st
-
 import re
 
 def get_B_product():

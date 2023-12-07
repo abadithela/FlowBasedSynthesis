@@ -13,6 +13,7 @@ import sys
 sys.path.append('..')
 from components.tools import neg
 from components.automaton import Automaton
+import re
 
 def get_B_sys(AP_set):
     Q, qinit, AP, tau, Acc = B_sys(state_str="q")

@@ -1,6 +1,6 @@
 '''
 Gurobipy implementation of the MILP for static obstacles - using the callback
-function to terminate of the objective has not improved in 30s.
+function to terminate if the objective has not improved in 30s.
 '''
 
 import gurobipy as gp
