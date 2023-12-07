@@ -34,6 +34,7 @@ class MazeNetwork:
         self.original_next_state_dict = self.next_state_dict
         self.G_single = None
         self.active_cuts = []
+        self.setup_maze()
 
     def set_int(self, int):
         self.int = int
@@ -44,6 +45,7 @@ class MazeNetwork:
     def setup_maze(self):
         self.G_transitions, self.next_state_dict = self.setup_next_states_map()
         self.G_single = self.create_single_agent_graph()
+        self.original_next_state_dict = self.next_state_dict
 
     def state_info(self, node):
         # returns system_state, tester_state, player

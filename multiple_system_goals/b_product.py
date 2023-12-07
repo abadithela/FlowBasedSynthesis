@@ -66,10 +66,10 @@ def B_product(state_str="q"): # simplified
 def construct_b_prod(state_str="q"):
     " Construct product directly from spot and parse"
     # System spec
-    aut_sys = spot.translate('F(goal) & [](gold -> <>(bank))', 'Buchi', 'state-based', 'complete')
+    aut_sys = spot.translate('F(goal_1) & F(goal_2)', 'Buchi', 'state-based', 'complete')
 
     # Test spec
-    aut_test = spot.translate('F(gold)', 'Buchi', 'state-based', 'complete')
+    aut_test = spot.translate('F(int)', 'Buchi', 'state-based', 'complete')
 
     # Specification product:
     spec_prod = spot.product(aut_sys, aut_test)
