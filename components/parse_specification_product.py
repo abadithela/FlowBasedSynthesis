@@ -14,6 +14,7 @@ def get_hoa_list(spec_prod):
 
 def parse_spec_product(spec_prod, formula_dict):
     hoa = get_hoa_list(spec_prod)
+    tau = {}
     for line in hoa:
         if 'State:' in line:
             out_state=line.split()[1]
