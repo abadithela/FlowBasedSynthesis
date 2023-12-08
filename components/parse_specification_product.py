@@ -51,6 +51,7 @@ def get_initial_state(spot_aut):
             init_state=read_state(line.split()[1])
             assert isinstance(init_state, int)
             break
+    init_state = 'q' + str(init_state)
     return init_state
 
 def get_formula_dict(spot_aut):
@@ -130,7 +131,7 @@ def construct_product_Acc(spot_aut_sys, spot_aut_test):
             prod_st = product_states_dict[pair]
             prod_st_str = get_state_str(prod_st)
             sys_prod_acc_states_str.append(prod_st_str)
-        
+
         if pair[1] in test_acc_states:
             prod_st = product_states_dict[pair]
             prod_st_str = get_state_str(prod_st)
@@ -165,10 +166,10 @@ def count_automaton_states(spot_aut):
 
 def get_product_states(spec_prod):
     '''
-    Output: 
+    Output:
     - product_states: list of pairs of states
     - product_states_dict: dictionary of product state pairs mapping to a state number
-      as in: product_states_dict[pair_prod_state] = num_prod_state and 
+      as in: product_states_dict[pair_prod_state] = num_prod_state and
       product_states[num_prod_state] = pair_prod_state
     '''
     product_states = spec_prod.get_product_states()
@@ -214,7 +215,7 @@ def parse_conjunction_str(conj_str, formula_dict):
 
 def parse_cnf_str(cnf_str, formula_dict):
     '''
-    Unpacking a string cnf formula into a list of conjunctive formulas, and then parsing each of those 
+    Unpacking a string cnf formula into a list of conjunctive formulas, and then parsing each of those
     conjunctive formulas separately
     '''
     conj_str_list = [x.strip() for x in re.split(r"\|", cnf_str)]
@@ -234,7 +235,7 @@ def parse_hoa_transition_str(line):
     '''
     Function separating the hoa line into the cnf_portion, the incoming state, and
     any information on the accepting condition
-    
+
     Input: Line with transition formula, input state, and transition acceptance as a string
 
     Output: CNF formula, input_state_str, and list of accepting conditions (if any).
@@ -244,7 +245,7 @@ def parse_hoa_transition_str(line):
     transition_acc_conditions = None # Default
 
     # CNF formula embedded within the first occurence of [ and the last occurence of ]
-    cnf_str = line[line.find("[")+1: line.rfind("]")]  
+    cnf_str = line[line.find("[")+1: line.rfind("]")]
 
     # The rest of the string contains information on the incoming state, as well as any accepting
     # condition properties of that state.
@@ -256,7 +257,7 @@ def parse_hoa_transition_str(line):
     if len(in_state_and_transition_acc) > 1:
         transition_acc_conditions = in_state_and_transition_acc[1:]
     return cnf_str, qin_st, transition_acc_conditions
-    
+
 
 def get_transitions(spot_aut):
     formula_dict = get_formula_dict(spot_aut)

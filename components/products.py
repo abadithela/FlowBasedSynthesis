@@ -31,6 +31,8 @@ class Product(ProductTransys):
         super().__init__()
         self.transys=product_transys
         self.automaton=spec_prod_automaton
+        self.G_initial = None
+        self.G = None
         self.S = list(product(product_transys.S, spec_prod_automaton.Q))
         self.Sdict = od()
         self.reverse_Sdict = od()
@@ -213,7 +215,7 @@ class Product(ProductTransys):
             if s_out in init_dfs_tree_nodes:
                 edges.append(edge)
         self.G_initial.add_edges_from(edges)
-        # G_agr = self.base_dot_graph(graph=self.G_initial)
+        # G = self.base_dot_graph(graph=self.G_initial)
         # G_agr.draw(fn+"_pruned_unreach_nodes_dot.pdf",prog='dot')
 
     def base_dot_graph(self, graph=None):
@@ -241,7 +243,7 @@ class Product(ProductTransys):
         return G_agr
 
     def plot_product_dot(self, fn):
-        G_agr = self.base_dot_graph()
+        G_agr = self.base_dot_graph(graph=self.G_initial)
         G_agr.draw(fn+"_dot.pdf",prog='dot')
 
     def highlight_states(self, state_color_dict, fn):

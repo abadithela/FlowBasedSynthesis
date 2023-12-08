@@ -17,14 +17,16 @@ from b_product_1_intermed import get_B_product_automated
 
 from optimization.milp_static_obstacles import solve_min
 from optimization.find_bypass_flow import find_fby
-from optimization.milp_static_gurobipy import solve_max_gurobi
+from milp_static_gurobipy import solve_max_gurobi
+
+from components.parse_specification_product import *
 
 from components.transition_system import ProductTransys
 from components.setup_graphs import GraphData, setup_nodes_and_edges
 from components.plotting import plot_maze, plot_solutions, highlight_cuts, plot_flow_on_maze
 from components.tools import synchronous_product
 
-plot_results = False
+plot_results = True
 print_solution = True
 
 def solve_instance(virtual, system, b_pi, virtual_sys):
@@ -75,23 +77,30 @@ if __name__ == '__main__':
 
     print('S: {0}, I: {1}, T: {2}'.format(init, ints, goals))
 
+    sys_formula = 'G(gold -> F(bank)) & (F(goal))'
+    test_formula = 'F(gold)'
+
+    b_sys = get_system_automaton(sys_formula)
+    b_test = get_tester_automaton(test_formula)
+    b_pi = get_prod_automaton(sys_formula, test_formula)
+
     # get system
     system = ProductTransys()
     system.construct_sys(mazefile, init, ints, goals)
 
-    # get Buchi automata
-    b_pi = get_B_product_automated()
-    b_sys = get_B_sys_automated()
+    b_test.save_plot('btest')
+    b_sys.save_plot('bsys')
+    b_pi.save_plot('bprod')
 
     # get virtual sys
     virtual_sys = synchronous_product(system, b_sys)
     # get virtual product
     virtual = synchronous_product(system, b_pi)
 
-
-    st()
+    virtual.plot_product_dot('virtual')
+    virtual_sys.plot_product_dot('virtual_sys')
 
     exit_status, annot_cuts, flow, bypass = solve_instance(virtual, system, b_pi, virtual_sys)
-    print('exit status'.format(exit_status))
+    print('exit status {0}'.format(exit_status))
 
-    plot_solutions(system.maze, sols)
+    # plot_solutions(system.maze, sols)
