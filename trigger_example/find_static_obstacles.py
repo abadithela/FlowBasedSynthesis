@@ -11,9 +11,7 @@ import pdb
 import time
 import itertools
 import matplotlib.pyplot as plt
-
-from b_sys import get_B_sys_automated
-from b_product_1_intermed import get_B_product_automated
+import os
 
 from optimization.milp_static_obstacles import solve_min
 from optimization.find_bypass_flow import find_fby
@@ -88,17 +86,19 @@ if __name__ == '__main__':
     system = ProductTransys()
     system.construct_sys(mazefile, init, ints, goals)
 
-    b_test.save_plot('btest')
-    b_sys.save_plot('bsys')
-    b_pi.save_plot('bprod')
+    if not os.path.exists('imgs'):
+        os.makedirs('imgs')
+    b_test.save_plot('imgs/btest')
+    b_sys.save_plot('imgs/bsys')
+    b_pi.save_plot('imgs/bprod')
 
     # get virtual sys
     virtual_sys = synchronous_product(system, b_sys)
     # get virtual product
     virtual = synchronous_product(system, b_pi)
 
-    virtual.plot_product_dot('virtual')
-    virtual_sys.plot_product_dot('virtual_sys')
+    virtual.plot_product_dot('imgs/virtual')
+    virtual_sys.plot_product_dot('imgs/virtual_sys')
 
     exit_status, annot_cuts, flow, bypass = solve_instance(virtual, system, b_pi, virtual_sys)
     print('exit status {0}'.format(exit_status))
