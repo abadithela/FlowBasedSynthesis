@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 from b_product_3_intermed import get_B_product
 
 from optimization.find_bypass_flow import find_fby
-from milp_mixed_gurobipy import solve_max_gurobi
+from optimization.milp_mixed_gurobipy import solve_max_gurobi
 
 from components.b_sys import get_B_sys
 from components.transition_system import ProductTransys
