@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 from b_product_3_intermed import get_B_product
 
 from optimization.find_bypass_flow import find_fby
-from optimization.milp_reactive_gurobipy import solve_max_gurobi
+from milp_mixed_gurobipy import solve_max_gurobi
 
 from components.b_sys import get_B_sys
 from components.transition_system import ProductTransys
@@ -28,11 +28,11 @@ import datetime
 plot_results = True
 print_solution = True
 
-def solve_instance(virtual, system, b_pi, virtual_sys):
+def solve_instance(virtual, system, b_pi, virtual_sys, static_area):
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
 
     ti = time.time()
-    exit_status, ftest, d, flow = solve_max_gurobi(GD, SD)
+    exit_status, ftest, d, flow = solve_max_gurobi(GD, SD, static_area)
     tf = time.time()
     del_t = tf-ti
 
@@ -59,35 +59,6 @@ def solve_instance(virtual, system, b_pi, virtual_sys):
         return exit_status, del_t, annot_cuts, flow, bypass_flow
     else:
         return exit_status, 0, [], [], None
-
-def plot_runtimes(runtimes):
-
-    gridsizes = list(runtimes.keys())
-    gridsizes.sort()
-
-    meantimes = [np.mean(runtimes[num], axis=0) for num in gridsizes]
-
-    xs = []
-    ys = []
-    for gridsize in gridsizes:
-        for t in runtimes[gridsize]:
-            xs.append(gridsize)
-            ys.append(t)
-
-    fig, ax = plt.subplots()
-    ax.plot(gridsizes, meantimes, color = 'blue', label = 'MILP')
-    ax.scatter(xs, ys, alpha = 0.5, color = 'blue')
-
-    ax.ticklabel_format(useOffset=False)
-
-    ax.set(xlabel='Grid Size N', ylabel='Runtime (s)',
-           title='Reactive Obstacles - Runtime vs. Gridsize for 3 Intermediates')
-    ax.grid()
-    ax.legend(loc="upper left")
-    ax.set_facecolor('whitesmoke')
-    plt.grid(True,linestyle='--')
-    fig.savefig("imgs/reactive_runtimes_3_int.pdf")
-    plt.show()
 
 
 
@@ -121,10 +92,15 @@ if __name__ == '__main__':
     # get virtual product
     virtual = synchronous_product(system, b_pi)
 
-    exit_status, del_t, cuts, flow, bypass = solve_instance(virtual, system, b_pi, virtual_sys)
+    # st()
+    total_area = [node for node in system.maze.G_single.nodes]
+    reactive_area = [(k,2) for k in range(0,6)]
+    static_area = [state for state in total_area if state not in reactive_area]
+    # st()
+    exit_status, del_t, cuts, flow, bypass = solve_instance(virtual, system, b_pi, virtual_sys, static_area)
 
     if exit_status == 'opt':
-        print("Total time to solve opt: {1}, total flow = {2}, bypass = {3}".format(gridsize, del_t, flow, bypass))
+        print("Total time to solve opt: {0}, total flow = {1}, bypass flow = {2}".format(del_t, flow, bypass))
         del_ts.append(del_t)
     elif exit_status == 'inf':
         print('Infeasible Grid Layout')
