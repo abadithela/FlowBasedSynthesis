@@ -21,6 +21,10 @@ class Automaton:
         self.Sigma = powerset(ap)
         self.Acc = Acc
 
+    def print_transitions(self):
+        for k, v in self.delta.items():
+            print("out state and formula: ", k, " in state: ", v)
+
     def complement_negation(self, propositions):
         """
         Negation of all atomic propositions not listed in propositions
