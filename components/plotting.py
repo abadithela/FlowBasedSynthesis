@@ -6,6 +6,7 @@ import os
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle, Wedge
 import networkx as nx
+import datetime
 
 def highlight_cuts(cuts, GD, SD, virtual, virtual_sys):
     '''
@@ -115,7 +116,8 @@ def plot_flow_on_maze(maze, cuts, num_int=1):
     ax.invert_yaxis()
     ax.axis('equal')
     plt.show()
-    fig.savefig("imgs/maze_implementation.pdf")
+    now = str(datetime.datetime.now())
+    fig.savefig('imgs/maze_implementation'+ now +'.pdf')
 
 def plot_flow_soln_on_maze(maze, cuts, flow, num_int=1):
     # get the max flow for the cuts
@@ -316,7 +318,7 @@ def plot_maze(maze, cuts = []):
     tilesize = 1
     xs = np.linspace(0, maze.len_x*tilesize, maze.len_x+1)
     ys = np.linspace(0, maze.len_y*tilesize, maze.len_y+1)
-    
+
     fig, ax = plt.subplots()
 
     ax.xaxis.set_visible(False)
