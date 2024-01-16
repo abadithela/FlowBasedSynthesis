@@ -1,5 +1,5 @@
 '''
-Solving a random grid layout with two intermediate nodes (I) using the MILP for static obstacles.
+Solving a random grid layout with multiple intermediate nodes (I) using the MILP for static obstacles.
 '''
 import sys
 sys.path.append('../..')

@@ -1,21 +1,12 @@
 '''
-Solving a grid layout with one intermediate node (I) using the MILP for static obstacles
-for the following grid:
-
------------
-|T| |I| |T|
-+-+-+-+-+-+
-| | | | | |
-+-+-+-+-+-+
-|I| |S| |I|
------------
+Solving a grid layout with a trigger spec.
 '''
 import sys
 sys.path.append('../..')
 
 from static_examples.utils.solve_problem import solve_problem
 from static_examples.utils.get_graphs import get_graphs
-from static_examples.medium_example.problem_data import *
+from problem_data import *
 
 def find_cuts():
     print('S: {0}, I: {1}, T: {2}'.format(INIT, INTS, GOALS))

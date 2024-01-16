@@ -1,6 +1,5 @@
 '''
-Gurobipy implementation of the MILP for static obstacles - using the callback
-function to terminate if the objective has not improved in 30s.
+Gurobipy implementation of the MILP for static obstacles.
 '''
 
 import gurobipy as gp
@@ -28,9 +27,6 @@ def cb(model, where):
     # Terminate if objective has not improved in 30s
     if time.time() - model._time > 30:# and model.SolCount >= 1:
         model.terminate()
-
-    # if time.time() - model._time > 3600 and model.SolCount == 0:
-    #     model.terminate()
 
 # Gurobi implementation
 def solve_max_gurobi(GD, SD):
@@ -82,26 +78,26 @@ def solve_max_gurobi(GD, SD):
     # add variables
     # outer player
     f = model.addVars(model_edges, name="flow")
-    d_aux = model.addVars(model_edges, name="d_aux")
+    d = model.addVars(model_edges, vtype=GRB.BINARY, name="d")
     # inner player
-    d = model.addVars(model_edges_without_I, vtype=GRB.BINARY, name="d") # Binary variable
+    # d = model.addVars(model_edges_without_I, vtype=GRB.BINARY, name="d") # Binary variable
     m = model.addVars(model_nodes_without_I, name="m")
 
     # Define Objective
     term = sum(f[i,j] for (i, j) in model_edges if i in src)
-    ncuts = sum(d_aux[i,j] for (i, j) in model_edges)
+    ncuts = sum(d[i,j] for (i, j) in model_edges)
     model.setObjective(term - 10e-3*ncuts, GRB.MAXIMIZE)
 
     # Nonnegativity - lower bounds
-    model.addConstrs((d[i, j] >= 0 for (i,j) in model_edges_without_I), name='d_nonneg')
+    model.addConstrs((d[i, j] >= 0 for (i,j) in model_edges), name='d_nonneg')
     model.addConstrs((m[i] >= 0 for i in model_nodes_without_I), name='mu_nonneg')
     model.addConstrs((f[i, j] >= 0 for (i,j) in model_edges), name='f_nonneg')
-    model.addConstrs((d_aux[i, j] >= 0 for (i,j) in model_edges), name='d_aux_nonneg')
+    # model.addConstrs((d_aux[i, j] >= 0 for (i,j) in model_edges), name='d_aux_nonneg')
 
     # upper bounds
-    model.addConstrs((d[i, j] <= 1 for (i,j) in model_edges_without_I), name='d_upper_b')
+    model.addConstrs((d[i, j] <= 1 for (i,j) in model_edges), name='d_upper_b')
     model.addConstrs((m[i] <= 1 for i in model_nodes_without_I), name='mu_upper_b')
-    model.addConstrs((d_aux[i, j] <= 1 for (i,j) in model_edges), name='d_aux_upper_b')
+    # model.addConstrs((d_aux[i, j] <= 1 for (i,j) in model_edges), name='d_aux_upper_b')
     # capacity (upper bound for f)
     model.addConstrs((f[i, j] <= 1 for (i,j) in model_edges), name='capacity')
 
@@ -115,10 +111,7 @@ def solve_max_gurobi(GD, SD):
     model.addConstrs((f[i,j] == 0 for (i,j) in model_edges if j in src or i in sink), name="no_out_sink_in_src")
 
     # cut constraint
-    model.addConstrs((f[i,j] + d_aux[i,j] <= 1 for (i,j) in model_edges), name='cut_cons')
-
-    # map d to d_aux
-    model.addConstrs((d[i,j] == d_aux[i,j] for (i,j) in model_edges_without_I), name='match_d_to_all_edges')
+    model.addConstrs((f[i,j] + d[i,j] <= 1 for (i,j) in model_edges), name='cut_cons')
 
     # source sink partitions
     for i in model_nodes_without_I:
@@ -143,7 +136,8 @@ def solve_max_gurobi(GD, SD):
     for (i,j) in model_edges:
         imap = map_G_to_S[i]
         jmap = map_G_to_S[j]
-        model.addConstr(f_s[imap, jmap] + d_aux[i, j] <= 1)
+        if (imap,jmap) in model_s_edges:
+            model.addConstr(f_s[imap, jmap] + d[i, j] <= 1)
 
     # Preserve flow of 1 in S
     model.addConstr((1 <= sum(f_s[i,j] for (i, j) in model_s_edges if i == s_src)), name='conserve_F_on_S')
@@ -162,7 +156,7 @@ def solve_max_gurobi(GD, SD):
         in_state = GD.node_dict[j][0]
         for (imap,jmap) in model_edges[count+1:]:
             if out_state == GD.node_dict[imap][0] and in_state == GD.node_dict[jmap][0]:
-                model.addConstr(d_aux[i, j] == d_aux[imap, jmap])
+                model.addConstr(d[i, j] == d[imap, jmap])
 
 
     # ---------  add bidirectional cuts on G
@@ -172,7 +166,7 @@ def solve_max_gurobi(GD, SD):
         in_state = GD.node_dict[j][0]
         for (imap,jmap) in model_edges[count+1:]:
             if in_state == GD.node_dict[imap][0] and out_state == GD.node_dict[jmap][0]:
-                model.addConstr(d_aux[i, j] == d_aux[imap, jmap])
+                model.addConstr(d[i, j] == d[imap, jmap])
 
 
     # --------- set parameters
@@ -213,7 +207,7 @@ def solve_max_gurobi(GD, SD):
 
         for (i,j) in model_edges:
             f_vals.update({(i,j): f[i,j].X})
-        for (i,j) in model_edges_without_I:
+        for (i,j) in model_edges:
             d_vals.update({(i,j): d[i,j].X})
 
         flow = sum(f[i,j].X for (i,j) in model_edges if i in src)
