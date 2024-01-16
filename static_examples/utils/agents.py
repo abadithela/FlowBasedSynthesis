@@ -5,7 +5,6 @@ from __future__ import print_function
 import logging
 from tulip import transys, spec, synth
 from tulip import dumpsmach
-from ipdb import set_trace as st
 from static_examples.utils.quadruped_interface import quadruped_move
 
 class Quadruped:
@@ -42,8 +41,6 @@ class Quadruped:
         dynamics_spec =  maze.transition_specs('z','x')
         sys_safe |= dynamics_spec
 
-        # if self.safety_formula:
-        # st()
         if self.aux_formula['var']:
             sys_vars[self.aux_formula['var']] = 'boolean'
         if self.aux_formula['safe']:
@@ -67,7 +64,7 @@ class Quadruped:
         spc.qinit = r'\A \E'
         if not synth.is_realizable(spc, solver='omega'):
             print("Not realizable.")
-            st()
+
         else:
             ctrl = synth.synthesize(spc, solver='omega')
         # dunp the controller

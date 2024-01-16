@@ -1,7 +1,6 @@
 import sys
 sys.path.append('..')
 import _pickle as pickle
-from ipdb import set_trace as st
 
 class Scene:
     def __init__(self, timestamp, snapshot):
@@ -11,7 +10,6 @@ class Scene:
 def remove_redundant_empty_sets(trans_dict):
     transition_list = []
     for key in trans_dict.keys():
-        # st()
         clean_transitions = []
         clean_transitions = [i for i in trans_dict[key] if i != set()]
         if clean_transitions == []:

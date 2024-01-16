@@ -3,8 +3,6 @@
 import sys
 sys.path.append('../..')
 import os
-from ipdb import set_trace as st
-from copy import deepcopy
 
 from components.maze_network import MazeNetwork
 from static_examples.utils.agents import Quadruped
