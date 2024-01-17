@@ -5,6 +5,8 @@ from ipdb import set_trace as st
 from copy import deepcopy
 from find_cuts import find_cuts
 import random
+import _pickle as pickle
+from static_examples.utils.helper import load_opt_from_pkl_file
 
 class Game:
     def __init__(self, maze, sys):
@@ -14,8 +16,22 @@ class Game:
         self.trace = []
         self.setup()
 
+    def get_optimization_results(self):
+    # read pickle file - if not there save a new one
+        try:
+            print('Checking for the optimization results')
+            cuts = load_opt_from_pkl_file()
+            print('Optimization results loaded successfully')
+        except:
+            print('Result file not found, running optimization')
+            cuts = find_cuts()
+            opt_dict = {'cuts': cuts}
+            with open('stored_optimization_result.p', 'wb') as pckl_file:
+                pickle.dump(opt_dict, pckl_file)
+        return cuts
+
     def setup(self):
-        cuts = find_cuts()
+        cuts = self.get_optimization_results()
         # st()
         cuts = list(set(cuts))
         for cut in cuts:

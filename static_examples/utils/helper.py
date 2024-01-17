@@ -1,6 +1,7 @@
 import sys
 sys.path.append('..')
 import _pickle as pickle
+import os
 
 class Scene:
     def __init__(self, timestamp, snapshot):
@@ -46,3 +47,10 @@ def save_scene(game, trace): # save each scene in trace
     game.timestep += 1
     game.trace = trace
     return trace
+
+def load_opt_from_pkl_file():
+    opt_file = os.getcwd()+'/stored_optimization_result.p'
+    with open(opt_file, 'rb') as pckl_file:
+        opt = pickle.load(pckl_file)
+    cuts = opt['cuts']
+    return cuts
