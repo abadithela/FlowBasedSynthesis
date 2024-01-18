@@ -1,3 +1,10 @@
+"""
+Apurva: 
+1. Created Jan 17th to debug the script agents.py
+2. Quadruped code works, but quadruped assumptions are not the same as the tester dynamics.
+3. Tester code still needs to work.
+"""
+
 from __future__ import print_function
 import logging
 from tulip import transys, spec, synth
@@ -12,27 +19,59 @@ from find_cuts_two_flows.find_cuts import setup_nodes_and_edges
 from construct_automata.main import quad_test_sync
 
 class Tester:
-    def __init__(self, name, pos, maze, GD, cuts):
+    def __init__(self, name, system_init, tester_init, maze, cuts):
         self.name = name
-        self.q = pos
-        self.z = pos[0]
-        self.x = pos[1]
+        self.z = tester_init["z"]
+        self.x = tester_init["x"]
+        self.q = (self.z, self.x) # Tester state
+        self.system_position = (system_init["z"], system_init["x"])
+        self.qhist = 0 # DOUBLE-CHECK that 0 is always default state of automaton. 
         self.maze = maze
         self.turn = 0
-        self.GD = GD
+        self.GD = self.get_graph()
         self.cuts = cuts
         self.controller = self.find_controller()
+    
+    def update_trace(self, system_position):
+        '''
+        Determines how the history variable 'q' changes.
+        '''
+        node = (self.system_position, self.qhist) # Node before system transitions
+        edge_list = list(self.GD.graph.edges(node))
+        self.system_position = system_position # update state
+        if node[0] != (0,4):
+            for edge in edge_list:
+                in_node = self.GD.node_dict[edge[1]]
+                in_state = in_node[0]
+                in_q = in_node[-1]
+                if in_state == system_position:
+                    self.qhist = in_q
+                    break
+            
+            assert("Error: Could not update q.")
 
+    def get_graph(self):
+        virtual, system, b_pi, virtual_sys = quad_test_sync()
+        GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
+        return GD
+        
     def manual_move(self,cell):
         (self.z, self.x) = cell
         self.q = (self.z, self.x)
 
-    def tester_move(self, system_pos, q):
-        output = self.controller.move(system_pos[0],system_pos[1], q)
+    def tester_move(self, system_pos):
+        self.update_trace(system_pos)
+        sys_x = self.system_position[1]
+        sys_z = self.system_position[0]
+        try:
+            assert system_pos == (sys_z, sys_x)
+        except:
+            st()
+        output = self.controller.move(sys_x,sys_z, self.qhist)
         self.x = output['env_x']
         self.z = output['env_z']
         self.turn = output['turn']
-        self.s = (self.z,self.x)
+        self.q = (self.z,self.x)
         print(output)
 
     def find_controller(self):
@@ -67,11 +106,11 @@ class Tester:
         return M
 
 class Quadruped:
-    def __init__(self, name, pos, goal, maze, tester_init, cuts):
+    def __init__(self, name, system_init, goal, maze, tester_init, cuts):
         self.name = name
-        self.s = pos
-        self.z = pos[0]
-        self.x = pos[1]
+        self.z = system_init["z"]
+        self.x = system_init["x"]
+        self.s = (self.z, self.x)
         self.goal = goal
         self.index = 0
         self.maze = maze
@@ -102,7 +141,7 @@ class Quadruped:
         # sys_prog |= sys_occupies_cut_states
 
         env_vars = {}
-        env_vars['Z_t'] = (0,maze.len_z)
+        env_vars['Z_t'] = (-1,maze.len_z)
         env_vars['X_t'] = (0,maze.len_x)
         env_safe = set()
         # env_safe |= {'(X_t = 2 && Z_t = 1)'}
@@ -110,10 +149,12 @@ class Quadruped:
         env_prog = set()
         env_prog |= {'(X_t = 2 && Z_t = 1) || (X_t = 2 && Z_t = 3)'} # tester will eventually make space
         # tester can move up and down the middle column
-        dynamics_spec = {'(Z_t = 4) -> X((Z_t = 4) ||(Z_t = 3))'}
+        dynamics_spec = {'(Z_t = 4) -> X((Z_t = 4) ||(Z_t = 3) || Z_t = -1)'}
         dynamics_spec |= {'(Z_t = 3) -> X((Z_t = 4) || (Z_t = 3) ||(Z_t = 2))'}
         dynamics_spec |= {'(Z_t = 2) -> X((Z_t = 3) || (Z_t = 2) ||(Z_t = 1))'}
-        dynamics_spec |= {'(Z_t = 1) -> X((Z_t = 2) || (Z_t = 1))'}
+        dynamics_spec |= {'(Z_t = 1) -> X((Z_t = 2) || (Z_t = 1) || (Z_t = 0))'}
+        dynamics_spec |= {'(Z_t = 0) -> X((Z_t = 0) || (Z_t = 1)|| (Z_t = -1))'}
+        dynamics_spec |= {'(Z_t = -1) -> X((Z_t = -1))'}
         dynamics_spec |= {'(X_t = 2) -> X((X_t = 2))'}
 
         env_safe |= dynamics_spec
@@ -165,7 +206,8 @@ if __name__ == "__main__":
 
     cuts = [(((4, 2), 'q0'), ((3, 2), 'q0')), (((2, 2), 'q3'), ((1, 2), 'q3'))]
     cuts = [(((4, 2), 'q0'), ((3, 2), 'q0')), (((2, 2), 'q3'), ((1, 2), 'q3'))]
+    system_init = {"z": 4, "x": 0}
     tester_init = {"z": 4, "x": 2}
-    tester = Tester("tester", (1,2), maze, GD, cuts)
-    sys_quad = Quadruped("sys_quad", (4,0), (0,0), maze, tester_init, cuts)
+    tester = Tester("tester", system_init, tester_init, maze, cuts)
+    sys_quad = Quadruped("sys_quad", system_init, (0,0), maze, tester_init, cuts)
     st()

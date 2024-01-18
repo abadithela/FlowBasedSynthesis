@@ -53,6 +53,9 @@ class Game:
     def agent_take_step(self):
         self.agent.agent_move(self.tester.q)
 
+    def tester_take_step(self):
+        self.tester.tester_move(self.agent.s)
+
     def example_test_strategy(self):
         if self.agent.z == 4:
             self.tester.move((3,2))

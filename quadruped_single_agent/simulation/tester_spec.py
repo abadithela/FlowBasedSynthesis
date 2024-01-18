@@ -250,7 +250,7 @@ def do_not_overconstrain(GD, cuts, sys_z, sys_x, test_z, test_x, q_str, turn):
         if state_str != '':
             state_str = state_str[:-4]
             do_not_overconstrain |=  { current_state + ' -> !(' + state_str + ')'}
-    st()
+    # st()
     return do_not_overconstrain
 
 # full safety spec

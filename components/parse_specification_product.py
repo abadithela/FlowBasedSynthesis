@@ -51,7 +51,7 @@ def get_initial_state(spot_aut):
             init_state=read_state(line.split()[1])
             assert isinstance(init_state, int)
             break
-    init_state = 'q' + str(init_state)
+    init_state = get_state_str(init_state)
     return init_state
 
 def get_formula_dict(spot_aut):

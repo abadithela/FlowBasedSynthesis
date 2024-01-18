@@ -14,8 +14,17 @@ from copy import deepcopy
 
 def new_World(mazefile):
     network = MazeNetwork(mazefile)
-    tester = Tester('tester', (4,2))
-    sys = Quadruped('sys', (4,0), (0,4), network, tester)
+    # OLD:
+    # tester = Tester('tester', (4,2))
+    # sys = Quadruped('sys', (4,0), (0,4), network, tester)
+
+    # Added by Apurva (1/17):
+    cuts = [(((4, 2), 'q0'), ((3, 2), 'q0')), (((2, 2), 'q3'), ((1, 2), 'q3'))]
+    system_init = {"z": 4, "x": 0}
+    tester_init = {"z": 4, "x": 2}
+    tester = Tester("tester", system_init, tester_init, network, cuts)
+    sys = Quadruped("sys", system_init, (0,0), network, tester_init, cuts)
+
     game = Game(network, sys, tester)
     return game, network, sys
 
@@ -31,7 +40,7 @@ def run_sim(max_timestep, filepath):
         print('Timestep {}'.format(t))
         game.agent_take_step()
         game.print_game_state()
-        game.example_test_strategy()
+        game.tester_take_step()
         game.print_game_state()
         # save the trace
         trace = save_scene(game,trace)
