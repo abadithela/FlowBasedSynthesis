@@ -1,4 +1,4 @@
-# Simulate Runner Blocker Example
+# Simulate
 # J. Graebener
 # January 2023
 
@@ -14,16 +14,15 @@ from copy import deepcopy
 
 def new_World(mazefile):
     network = MazeNetwork(mazefile)
-    # OLD:
-    # tester = Tester('tester', (4,2))
-    # sys = Quadruped('sys', (4,0), (0,4), network, tester)
+    network.set_int_1_and_2((3,4), (1,0))
+    network.goal = (0,4)
 
     # Added by Apurva (1/17):
     cuts = [(((4, 2), 'q0'), ((3, 2), 'q0')), (((2, 2), 'q3'), ((1, 2), 'q3'))]
     system_init = {"z": 4, "x": 0}
     tester_init = {"z": 4, "x": 2}
     tester = Tester("tester", system_init, tester_init, network, cuts)
-    sys = Quadruped("sys", system_init, (0,0), network, tester_init, cuts)
+    sys = Quadruped("sys", system_init, (0,4), network, tester_init, cuts)
 
     game = Game(network, sys, tester)
     return game, network, sys

@@ -17,12 +17,12 @@ TILESIZE = 50
 GRID_LINES = False
 
 main_dir = os.path.dirname(os.path.dirname(os.path.realpath("__file__")))
-car_figure = main_dir + '/imglib/robot.png'
+car_figure = main_dir + '/simulation/imglib/robot.png'
 
 def draw_maze(orig_maze, merge = False):
     maze = orig_maze.map
     size = max(maze.keys())
-    z_min = 0
+    z_min = -1 * TILESIZE
     z_max = (size[0]+1) * TILESIZE
     x_min = 0
     x_max = (size[1]+1) * TILESIZE
@@ -32,7 +32,6 @@ def draw_maze(orig_maze, merge = False):
     ax.xaxis.set_visible(False)
     ax.yaxis.set_visible(False)
     # ax.crop((x_min, z_min, x_max, z_max))
-
     # fill in the road regions
     road_tiles = []
     x_tiles = np.arange(0,size[0]+2)*TILESIZE
@@ -41,44 +40,23 @@ def draw_maze(orig_maze, merge = False):
         for k in np.arange(0,size[1]+1):
             # print('{0},{1}'.format(i,k))
             if maze[(i,k)] != '*' and maze[(i,k)] != 'o':
-                if i == 0 and k == 2:
-                    tile = patches.Rectangle((z_tiles[k],x_tiles[i]),TILESIZE,TILESIZE,linewidth=1,facecolor='#dc267f', alpha=0.2)
-                    # road_tiles.append(tile)
-                elif i == 0 and k == 8:
-                    # st()
-                    if orig_maze.goal2_unlocked:
-                        tile = patches.Rectangle((z_tiles[k],x_tiles[i]),TILESIZE,TILESIZE,linewidth=1,facecolor='#dc267f', alpha=0.3)
-                    else:
-                        tile = patches.Rectangle((z_tiles[k],x_tiles[i]),TILESIZE,TILESIZE,linewidth=1,facecolor='gray', alpha=0.3)
-
-                elif i == 0 and k == 6:
-                    tile = patches.Rectangle((z_tiles[k],x_tiles[i]),TILESIZE,TILESIZE,linewidth=1,facecolor='#648fff', alpha=0.3)
-                elif i == 0 and k == 0:
-                    # st()
-                    if orig_maze.goal1_unlocked:
-                        tile = patches.Rectangle((z_tiles[k],x_tiles[i]),TILESIZE,TILESIZE,linewidth=1,facecolor='#648fff', alpha=0.3)
-                    else:
-                        tile = patches.Rectangle((z_tiles[k],x_tiles[i]),TILESIZE,TILESIZE,linewidth=1,facecolor='gray', alpha=0.3)
-
+                if (i,k) in orig_maze.int:
+                    tile = patches.Rectangle((z_tiles[k],x_tiles[i]),TILESIZE,TILESIZE,linewidth=1,facecolor='#648fff', alpha=0.2)
+                elif (i,k) == orig_maze.goal:
+                    tile = patches.Rectangle((z_tiles[k],x_tiles[i]),TILESIZE,TILESIZE,linewidth=1,facecolor='#dc267f', alpha=0.3)
+                elif i % 2 == k % 2:
+                    tile = patches.Rectangle((z_tiles[k],x_tiles[i]),TILESIZE,TILESIZE,linewidth=1,facecolor='gray', alpha=0.3)
                 else:
-                    # ax.add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.5))
                     tile = patches.Rectangle((z_tiles[k],x_tiles[i]),TILESIZE,TILESIZE, fill=True, color='gray', alpha=.1)
-
-                    # tile = patches.Rectangle((z_tiles[k],x_tiles[i]),TILESIZE,TILESIZE, color='black', alpha=.1)
-                    # if i % 2 == k % 2: # racing flag style
-                    #     # ax.add_patch(Rectangle((x, y), w, h, fill=True, color='gray', alpha=.1))
-                    #     tile = patches.Rectangle((z_tiles[k],x_tiles[i]),TILESIZE,TILESIZE, fill=True, color='gray', alpha=.1)
-
-                    # tile = patches.Rectangle((z_tiles[k],x_tiles[i]),TILESIZE,TILESIZE,linewidth=1,facecolor='k', alpha=0.4)
-                    # tile = patches.Rectangle((z_tiles[k],x_tiles[i]),TILESIZE,TILESIZE, fill=True, color='gray', alpha=.1)
-                road_tiles.append(tile)
             elif maze[(i,k)] == '*':
                 tile = patches.Rectangle((z_tiles[k],x_tiles[i]),TILESIZE,TILESIZE,linewidth=1,facecolor='k', alpha=0.8)
-                road_tiles.append(tile)
-            # elif maze[(i,k)] == 'o':
-            #     # tile = patches.Rectangle((z_tiles[k],x_tiles[i]),TILESIZE,TILESIZE,linewidth=1,facecolor='tomato', alpha=0.5)
-            #     tile = patches.Rectangle((z_tiles[k],x_tiles[i]),TILESIZE,TILESIZE, fill=True, color='gray', alpha=.1)
-            #     road_tiles.append(tile)
+            road_tiles.append(tile)
+    # add empty row on top
+    z_top = -1 * TILESIZE
+    for i in np.arange(0,size[0]+1):
+        tile = patches.Rectangle((z_top,x_tiles[i]),TILESIZE,TILESIZE,linewidth=1,facecolor='white', alpha=1)
+        road_tiles.append(tile)
+
     ax.add_collection(PatchCollection(road_tiles, match_original=True))
     # grid lines
     if GRID_LINES:
@@ -96,9 +74,9 @@ def draw_timestamp(t, merge = False):
         ax.text(0.3,0.7,t, transform=plt.gcf().transFigure,fontsize='large',
              bbox={"boxstyle" : "circle", "color":"white", "ec":"black"})
 
-def draw_car(pac_data, theta_d, merge = False):
-    y_tile = pac_data[0][1]
-    x_tile = pac_data[0][2]
+def draw_sys(pac_data, theta_d, merge = False):
+    y_tile = pac_data[1]
+    x_tile = pac_data[0]
     # theta_d = ORIENTATIONS[orientation]
     x = (x_tile) * TILESIZE
     z = (y_tile) * TILESIZE
@@ -106,8 +84,23 @@ def draw_car(pac_data, theta_d, merge = False):
     car_fig = ImageOps.flip(car_fig)
     car_fig = car_fig.rotate(theta_d, expand=False)
     offset = 0.1
+    background = patches.Circle((z+TILESIZE/2,x+TILESIZE/2), (TILESIZE-10)/2, linewidth=1,facecolor='red')
+    ax.add_artist(background)
     ax.imshow(car_fig, zorder=1, interpolation='bilinear', extent=[z+10, z+TILESIZE-10, x+5, x+TILESIZE-5])
 
+def draw_test(pac_data, theta_d, merge = False):
+    y_tile = pac_data[1]
+    x_tile = pac_data[0]
+    # theta_d = ORIENTATIONS[orientation]
+    x = (x_tile) * TILESIZE
+    z = (y_tile) * TILESIZE
+    car_fig = Image.open(car_figure)
+    car_fig = ImageOps.flip(car_fig)
+    car_fig = car_fig.rotate(theta_d, expand=False)
+    offset = 0.1
+    background = patches.Circle((z+TILESIZE/2,x+TILESIZE/2), (TILESIZE-10)/2, linewidth=1,facecolor='blue')
+    ax.add_artist(background)
+    ax.imshow(car_fig, zorder=1, interpolation='bilinear', extent=[z+10, z+TILESIZE-10, x+5, x+TILESIZE-5])
 
 def animate_images(output_dir):
     # Create the frames
@@ -127,27 +120,24 @@ def animate_images(output_dir):
 def traces_to_animation(filename, output_dir):
     # extract out traces from pickle file
     with open(filename, 'rb') as pckl_file:
-        # st()
         traces = pickle.load(pckl_file)
     ##
-    # st()
     t_start = 0
     t_end = len(traces)
-    # t_start = traces[0].timestamp
-    # t_end = traces[-1].timestamp
     maze = traces[0].maze
-    #import pdb; pdb.set_trace()
     global ax
     fig, ax = plt.subplots()
 
     t_array = np.arange(t_end)
-    # plot map once
+    # plot the same map
     for t in t_array:
         plt.gca().cla()
         draw_maze(traces[t].maze)
-        car_data = traces[t].car
+        sys_data = traces[t].snapshot['sys']
+        test_data = traces[t].snapshot['test']
         theta_d = 0#angle(traces,t)
-        draw_car(car_data, theta_d)
+        draw_sys(sys_data, theta_d)
+        draw_test(test_data, theta_d)
         plot_name = str(t).zfill(5)
         img_name = output_dir+'/plot_'+plot_name+'.png'
         fig.savefig(img_name, dpi=1200)

@@ -16,6 +16,7 @@ class Game:
         self.state_map = None
         self.node_dict = None
         self.inv_node_dict = None
+        self.turn = 'sys'
         # self.state_in_G, self.G, self.node_dict = self.setup()
 
     def setup(self):
@@ -54,6 +55,9 @@ class Game:
         self.agent.agent_move(self.tester.q)
 
     def tester_take_step(self):
+        # the tester move will stay the same here but the turn will update
+        self.tester.tester_move(self.agent.s)
+        # now the tester moves
         self.tester.tester_move(self.agent.s)
 
     def example_test_strategy(self):
@@ -61,7 +65,7 @@ class Game:
             self.tester.move((3,2))
         elif self.agent.z == 3:
             self.tester.move((2,2))
-        else:# self.agent.z == 2:
+        else:
             self.tester.move((1,2))
 
     def test_strategy(self):

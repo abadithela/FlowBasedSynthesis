@@ -106,7 +106,7 @@ def set_variables(maze, GD):
 def set_init(init_pos, z_str, x_str, turn, q_str):
     (z,x) = init_pos
     # init = {x_str +' = '+str(x)+' && '+z_str+' = '+str(z)+' && '+turn+' = 0 && '+q_str+' = 0'}
-    init = {x_str +' = '+str(x)+' && '+z_str+' = '+str(z)+' && '+turn+' = 0 '}
+    init = {x_str +' = '+str(x)+' && '+z_str+' = '+str(z)+' && '+turn+' = 1 '}
     return init
 
 # SAFETY
@@ -193,7 +193,7 @@ def history_var_dynamics_v2(GD, sys_z, sys_x, q_str):
         out_node = GD.node_dict[node]
         out_state = out_node[0]
         out_q = out_node[-1]
-        
+
         if out_state != (0,4): # not at goal
             edge_list = list(GD.graph.edges(node))
             for edge in edge_list:
@@ -212,7 +212,7 @@ def history_var_dynamics_v2(GD, sys_z, sys_x, q_str):
 def occupy_cuts(GD, cuts, sys_z, sys_x, test_z, test_x, q_str, turn):
     '''
     Tester needs to occupy the cells that correspond to the cuts.
-    Tester needs to be in the cut state when the system is in a q position and it is the system's 
+    Tester needs to be in the cut state when the system is in a q position and it is the system's
     turn to act.
     '''
     cut_specs = set()
@@ -268,7 +268,7 @@ def get_tester_safety(maze, z_str, x_str, z, x, turn, GD, cuts, q):
 # Tester transiently blocks the system, but not forever
 def transiently_block(z_str, x_str):
     '''
-    If it is the tester turn, it should not choose to stay in the same 
+    If it is the tester turn, it should not choose to stay in the same
     blocking state in the next step
     '''
     transient_spec = set()

@@ -25,6 +25,7 @@ class MazeNetwork:
         self.goal = None
         self.int_1 = None
         self.int_2 = None
+        self.int = None
         self.map, self.len_x, self.len_z = create_network_from_file(mazefile)
         self.len_y = self.len_z
         self.tester_init = (4,2)
@@ -35,6 +36,11 @@ class MazeNetwork:
     def set_int_1_and_2(self, int_1, int_2):
         self.int_1 = int_1
         self.int_2 = int_2
+        ints = {int_1: 'int_1', int_2: 'int_2'}
+        self.set_int(ints)
+
+    def set_int(self, ints):
+        self.int = ints
 
     def state_info(self, node):
         # returns system_state, tester_state, player
@@ -163,7 +169,7 @@ class MazeNetwork:
                 # st()
                     if self.map[(z,x)] == 'S':
                         self.init = (z,x)
-                    if (z,x) == (0,4):
+                    if self.map[(z,x)] == 'G':
                         self.goal = (z,x)
 
         next_state_dict = dict()
