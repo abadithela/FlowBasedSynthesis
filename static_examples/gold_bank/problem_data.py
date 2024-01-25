@@ -12,5 +12,7 @@ BANK = (4,2)
 
 INTS = {GOLD: 'gold', BANK: 'bank'}
 
-SYS_FORMULA = 'G(gold -> F(bank)) & (F(goal))'
+# SYS_FORMULA = 'G(gold -> F(bank)) & (F(goal))'
+SYS_FORMULA = 'G(!(bank)U(gold)) & (F(goal))'
+
 TEST_FORMULA = 'F(gold)'

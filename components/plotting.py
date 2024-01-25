@@ -103,15 +103,15 @@ def plot_flow_on_maze(maze, cuts, num_int=1):
         ax.plot([y_val+ tilesize/2, y_val+ tilesize/2], [x_val+ tilesize/2, x_val+ tilesize/2], color='black', alpha=intensity, marker='o')
         # ax.plot([xs[0], xs[-1]], [y, y], color='black', alpha=.33, linestyle=':')
 
-    for out_node in flow_dict.keys():
-        if out_node != 'goal':
-            startxy = out_node
-            for in_node in flow_dict[out_node]:
-                if in_node != 'goal':
-                    endxy = in_node
-                    intensity = flow_dict[out_node][in_node]/2
-                    if intensity:
-                        ax.plot([startxy[1]+ tilesize/2, endxy[1]+ tilesize/2], [startxy[0]+ tilesize/2, endxy[0]+ tilesize/2], color=colorstr, alpha=intensity, linestyle='-')
+    # for out_node in flow_dict.keys():
+    #     if out_node != 'goal':
+    #         startxy = out_node
+    #         for in_node in flow_dict[out_node]:
+    #             if in_node != 'goal':
+    #                 endxy = in_node
+    #                 intensity = flow_dict[out_node][in_node]/2
+    #                 if intensity:
+    #                     ax.plot([startxy[1]+ tilesize/2, endxy[1]+ tilesize/2], [startxy[0]+ tilesize/2, endxy[0]+ tilesize/2], color=colorstr, alpha=intensity, linestyle='-')
 
     ax.invert_yaxis()
     ax.axis('equal')
