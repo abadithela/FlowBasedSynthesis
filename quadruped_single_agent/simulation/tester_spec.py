@@ -44,6 +44,7 @@ def set_sys_variables(maze, GD):
     vars['z'] = (0,maze.len_z)
     qs = list(set([GD.node_dict[node][-1] for node in list(GD.nodes)]))
     vals = [str(q[1:]) for q in qs]
+    vals = [int(val) for val in vals]
     vars['q'] = (int(min(vals)), int(max(vals)))
     return vars
 
@@ -66,7 +67,6 @@ def turn_based_asm(z, x, turn, maze):
 def get_system_safety(maze, GD, z, x, q, z_str, x_str, turn):
     safety = set()
     safety |= no_collision_asm(maze, z_str, x_str, z, x)
-    # safety |= maze.transition_specs(z,x)
     safety |= history_var_dynamics(GD, z, x, q)
     safety |= turn_based_asm(z, x, turn, maze)
     return safety
