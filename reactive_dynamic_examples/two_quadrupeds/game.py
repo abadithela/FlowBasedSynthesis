@@ -4,6 +4,7 @@ from find_cuts import find_cuts
 import random
 import _pickle as pickle
 from reactive_dynamic_examples.utils.helper import load_opt_from_pkl_file
+from reactive_dynamic_examples.utils.quadruped_interface import quadruped_move
 
 class Game:
     def __init__(self, maze, sys, tester):
@@ -42,7 +43,6 @@ class Game:
         cuts = [(((2, 2), 'q12'), ((1, 2), 'q12')), (((4, 2), 'q15'), ((3, 2), 'q15')), (((6, 2), 'q0'), ((5, 2), 'q0'))]
 
         self.agent.find_controller(self.maze)
-        st()
         self.tester.set_optimization_results(cuts, GD)
         self.tester.find_controller()
 
@@ -69,12 +69,14 @@ class Game:
 
     def agent_take_step(self):
         self.agent.agent_move(self.tester.q)
+        quadruped_move('system', (self.agent.z,self.agent.x))
 
     def tester_take_step(self):
         # the tester move will stay the same here but the turn will update
         self.tester.tester_move(self.agent.s)
         # now the tester moves
         self.tester.tester_move(self.agent.s)
+        quadruped_move('tester', (self.tester.z,self.tester.x))
 
     def is_terminal(self):
         terminal = False

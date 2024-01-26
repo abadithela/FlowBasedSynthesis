@@ -109,8 +109,8 @@ class MazeNetwork:
                     single_states.append(((z,x)))
                     if self.map[(z,x)] == 'S':
                         self.init = (z,x)
-                    # if self.map[(z,x)] == 'T':
-                    #     self.goal.append((z,x))
+                    if self.map[(z,x)] == 'T':
+                        self.goal.append((z,x))
 
         next_state_dict = dict()
         for node in single_states:

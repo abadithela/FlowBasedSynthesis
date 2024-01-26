@@ -76,7 +76,7 @@ def history_var_dynamics(GD, sys_z, sys_x, q_str, maze):
         current_state = '('+sys_z+' = '+str(out_state[0])+' && '+sys_x+' = '+str(out_state[1])+' && '+q_str+' = '+str(out_q[1:])+')'
 
         if out_state not in maze.goal: # not at goal
-            next_state_str = ''
+            next_state_str = current_state + ' || '
             edge_list = list(GD.graph.edges(node))
             for edge in edge_list:
                 in_node = GD.node_dict[edge[1]]
@@ -99,8 +99,6 @@ def get_system_safety(maze, GD, z, x, q, z_str, x_str, turn):
 
 def get_system_progress(maze, z, x):
     progress = set()
-    # st()
-    # for goal in maze.goal:
     progress |= {'('+z+' = '+str(maze.goal[0][0])+' && '+x+' = '+str(maze.goal[0][1])+')'}
     return progress
 
