@@ -1,0 +1,1 @@
+This folder comprises of examples to show why winning set approaches might not work for static, dynamic, and mixed settings. We attempt to write specifications in Tulip and show why the different examples might/might not work.
