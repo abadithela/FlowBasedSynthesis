@@ -295,3 +295,5 @@ def get_tester_progress(maze, cuts, test_z, test_x, q_str):
 def get_tester_progress_empty(maze, cuts, test_z, test_x, q_str):
     progress = set()
     return progress
+
+
