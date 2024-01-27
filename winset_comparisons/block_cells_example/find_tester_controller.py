@@ -23,9 +23,20 @@ class TesterCtrl:
         test_vars['cell2'] = (0,1)
         test_vars['cell3'] = (0,1)
         test_vars['cell4'] = (0,1)
+        test_vars['cell5'] = (0,1)
+        test_vars['cell6'] = (0,1)
+        test_vars['cell7'] = (0,1)
+        test_vars['cell8'] = (0,1)
+        test_vars['cell9'] = (0,1)
+        test_vars['auxI'] = (0,1)
 
         test_init = set()
         test_init |= {'(cell0 = 0 || cell0 = 1) && (cell1 = 0 || cell1 = 1) && (cell2 = 0 || cell2 = 1) && (cell3 = 0 || cell3 = 1) && (cell4 = 0 || cell4 = 1)'}
+        test_init |= {'(cell5 = 0 || cell5 = 1) && (cell6 = 0 || cell6 = 1) && (cell7 = 0 || cell7 = 1)'}
+        test_init |= {'(cell8 = 0 || cell8 = 1) && (cell9 = 0 || cell9 = 1)'}
+
+        test_init |= {'auxI = 0'}
+        test_init |= {'cell2 = 0'}
 
         test_safety = set()
         test_safety |= {'cell0 = 0 -> X(cell0 = 0)'}
@@ -38,13 +49,27 @@ class TesterCtrl:
         test_safety |= {'cell3 = 1 -> X(cell3 = 1)'}
         test_safety |= {'cell4 = 0 -> X(cell4 = 0)'}
         test_safety |= {'cell4 = 1 -> X(cell4 = 1)'}
+        test_safety |= {'cell5 = 0 -> X(cell5 = 0)'}
+        test_safety |= {'cell5 = 1 -> X(cell5 = 1)'}
+        test_safety |= {'cell6 = 0 -> X(cell6 = 0)'}
+        test_safety |= {'cell6 = 1 -> X(cell6 = 1)'}
+        test_safety |= {'cell7 = 0 -> X(cell7 = 0)'}
+        test_safety |= {'cell7 = 1 -> X(cell7 = 1)'}
+        test_safety |= {'cell8 = 0 -> X(cell7 = 0)'}
+        test_safety |= {'cell8 = 1 -> X(cell7 = 1)'}
+        test_safety |= {'cell9 = 0 -> X(cell7 = 0)'}
+        test_safety |= {'cell9 = 1 -> X(cell7 = 1)'}
 
+        test_safety |= {'auxI = 1 -> X(auxI = 1)'}
+        test_safety |= {'(auxI = 0 && cell = 3) -> X(auxI = 1)'}
+        test_safety |= {'(auxI = 0 && !(cell = 3)) -> X(auxI = 0)'}
+        # test_safety |= {'!(cell = 4)'}
 
         test_progress = set()
-        test_progress |= {'cell = 0'}
+        test_progress |= {'(auxI = 1)'}
 
         sys_vars = {}
-        sys_vars['cell'] = (0,4)
+        sys_vars['cell'] = (0,9)
 
         sys_init = set()
         sys_init |= {'cell = 2'}
@@ -52,28 +77,22 @@ class TesterCtrl:
         sys_safety = set()
         # don't collide with blocked cell
         sys_safety |= {'!(cell = 0 && cell0 = 1) && !(cell = 1 && cell1 = 1) && !(cell = 2 && cell2 = 1) && !(cell = 3 && cell3 = 1) && !(cell = 4 && cell4 = 1)'}
+        sys_safety |= {'!(cell = 5 && cell5 = 1) && !(cell = 6 && cell6 = 1) && !(cell = 7 && cell7 = 1)'}
+        sys_safety |= {'!(cell = 8 && cell8 = 1) && !(cell = 9 && cell9 = 1)'}
         # dynamics
         sys_safety |= {'cell = 0 -> X(cell = 0 || cell = 1)'}
         sys_safety |= {'cell = 1 -> X(cell = 0 || cell = 1 || cell = 2)'}
-        sys_safety |= {'cell = 2 -> X(cell = 1 || cell = 2 || cell = 3)'}
-        sys_safety |= {'cell = 3 -> X(cell = 2 || cell = 3 || cell = 4)'}
-        sys_safety |= {'cell = 4 -> X(cell = 3 || cell = 4)'}
-
-        # sys_safety |= {'cell = 0 && cell1 = 1 -> X(!(cell = 1))'}
-        # sys_safety |= {'cell = 1 && cell0 = 1 -> X(!(cell = 0))'}
-        # sys_safety |= {'cell = 1 && cell2 = 1 -> X(!(cell = 2))'}
-        # sys_safety |= {'cell = 2 && cell1 = 1 -> X(!(cell = 1))'}
-        # sys_safety |= {'cell = 2 && cell3 = 1 -> X(!(cell = 3))'}
-        # sys_safety |= {'cell = 3 && cell2 = 1 -> X(!(cell = 2))'}
-        # sys_safety |= {'cell = 3 && cell4 = 1 -> X(!(cell = 4))'}
-        # sys_safety |= {'cell = 4 && cell3 = 1 -> X(!(cell = 3))'}
-
-
-
-        # sys_safety |= {'!(cell = 0)'}
+        sys_safety |= {'cell = 2 -> X(cell = 1 || cell = 2 || cell = 3 || cell = 5 || cell = 8)'}
+        sys_safety |= {'cell = 3 -> X(cell = 2 || cell = 3 || cell = 4 || cell = 6)'}
+        sys_safety |= {'cell = 4 -> X(cell = 4 || cell = 3 || cell = 7)'}
+        sys_safety |= {'cell = 5 -> X(cell = 2 || cell = 5 || cell = 6)'}
+        sys_safety |= {'cell = 6 -> X(cell = 5 || cell = 6 || cell = 7 || cell = 3)'}
+        sys_safety |= {'cell = 7 -> X(cell = 6 || cell = 7 || cell = 4)'}
+        sys_safety |= {'cell = 8 -> X(cell = 2 || cell = 8 || cell = 9)'}
+        sys_safety |= {'cell = 9 -> X(cell = 9)'}
 
         sys_progress = set()
-        sys_progress |= {'cell = 0 || cell = 4'}
+        sys_progress |= {'cell = 4 || cell = 0'}
 
 
         spc = spec.GRSpec(sys_vars, test_vars, sys_init, test_init,
