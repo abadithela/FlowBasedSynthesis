@@ -84,6 +84,7 @@ class MapConstraints:
                 predecessor_st = self.GD.node_dict[predecessor]
                 self.cuts_with_dynamic_agent.append((predecessor_st, blocked_st))
 
+    
 
     def cuts_to_blocked_states(self):
         self.blocked_states = []
