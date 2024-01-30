@@ -41,8 +41,9 @@ class Game:
     def setup(self):
         cuts, GD, SD = self.get_optimization_results()
         map_constraints = MapConstraints(cuts, GD, SD)
+        cuts = map_constraints.cuts_with_dynamic_agent
         st()
-        cuts = [(((2, 2), 'q12'), ((1, 2), 'q12')), (((4, 2), 'q15'), ((3, 2), 'q15')), (((6, 2), 'q0'), ((5, 2), 'q0'))]
+        # cuts = [(((2, 2), 'q12'), ((1, 2), 'q12')), (((4, 2), 'q15'), ((3, 2), 'q15')), (((6, 2), 'q0'), ((5, 2), 'q0'))]
 
         self.agent.find_controller(self.maze)
         self.tester.set_optimization_results(cuts, GD)
