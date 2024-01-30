@@ -16,10 +16,12 @@ class MapConstraints:
         self.annot_cuts = annot_cuts
         self.GD = GD
         self.SD = SD
-        self.cuts = [(34, 50), (44, 28)]
+        self.cuts = [(GD.inv_node_dict[u], GD.inv_node_dict[v]) for (u,v) in annot_cuts]
+        # self.cuts = [(34, 50), (44, 28)]
         self.cuts_to_blocked_edges()
         self.get_map_G_to_S()
         self.cuts_to_blocked_states()
+        self.map_system_state_to_blocked_states()
         
     def get_virtual_product_graph(self):
         return self.GD
@@ -46,14 +48,14 @@ class MapConstraints:
 
         # Create a test graph
         Stest = nx.DiGraph()
-        Stest.add_nodes_from(self.S.nodes)
-        Stest.add_edges_from(self.S.edges)
+        Stest.add_nodes_from(self.SD.nodes)
+        Stest.add_edges_from(self.SD.edges)
 
         # Remove the blocked node
         Stest.remove_node(Snode)
         nodes = Stest.nodes
-        init_states_Stest = [s for s in self.S.init if s in nodes]
-        target_states_Stest = [s for s in self.S.acc_sys if s in nodes]
+        init_states_Stest = [s for s in self.SD.init if s in nodes]
+        target_states_Stest = [s for s in self.SD.acc_sys if s in nodes]
         assert init_states_Stest!=[] and target_states_Stest !=[]
         for init_st in init_states_Stest:
             for target_st in target_states_Stest:
@@ -67,18 +69,21 @@ class MapConstraints:
             u_st = self.GD.node_dict[u]
             v_st = self.GD.node_dict[v]
             self.blocked_edges.append((u_st, v_st))
-        st()
-
+        
     def map_system_state_to_blocked_states(self):
         '''
         When a state is blocked by the tester, we also need information of
-        the corresponding system state
-        TO-DO: Finish implementing.
+        the corresponding system state. For instance, if (u,v) is the edge that is cut,
+        and u is the blocked state occupied by the tester, then all predecessors of u are 
+        possible states of the system that are constrained.
         '''
-        self.constraint_map = dict()
+        self.cuts_with_dynamic_agent = []
         for blocked_st in self.blocked_states:
-            tester_st = blocked_st[0]
-            self.constraint_map[tester_st] = None
+            node_k = self.GD.inv_node_dict[blocked_st]
+            for predecessor in self.GD.graph.predecessors(node_k):
+                predecessor_st = self.GD.node_dict[predecessor]
+                self.cuts_with_dynamic_agent.append((predecessor_st, blocked_st))
+
 
     def cuts_to_blocked_states(self):
         self.blocked_states = []
@@ -95,15 +100,6 @@ class MapConstraints:
             else:
                 print("Cannot place static obstacle. Must constrain edge instead")
                 st()
-
-    def parse_cuts_to_states(self):
-        self.cuts_to_blocked_states()
-        # With reactive obstacles, implement code here to convert blocked states to system and tester states. This
-        # would require reasoning over Bpi.
-        constraints_i1 = [((4,1),(3,2)), ((4,2),(3,2)), ((4,3),(3,2)), ((4,4), (3,2)), ((2,2),(1,2))]
-        constraints_i2 = [((4,2),(3,2)), ((2,2),(1,2))]
-        constraints = [((4,2),(3,2), "q0"), ((2,2),(1,2), "q3")]
-        return constraints
 
 if __name__ == "__main__":
     mazefile = 'maze.txt'

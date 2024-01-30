@@ -2,6 +2,7 @@
 import sys
 sys.path.append('..')
 from pdb import set_trace as st
+from tester_progress import Tester_Progress_States
 
 # put the specs together
 class Spec:
@@ -31,7 +32,6 @@ def get_tester_spec(init_pos, maze, GD, cuts):
     env_init = set_sys_init(z, x, q, maze)
     env_safety = get_system_safety(maze, GD, z, x, q, z_str, x_str, turn)
     env_progress = get_system_progress(maze, z, x)
-
     tester_spec = Spec(vars, init, safety, progress, env_vars, env_init, env_safety, env_progress)
 
     return tester_spec
@@ -138,7 +138,7 @@ def no_collision_grt(maze, z_str, x_str, z, x):
             no_collision_spec |= {no_collision_str}
     return no_collision_spec
 
-# dynamics
+# Dynamics
 def restrictive_dynamics(z_str, x_str):
     dynamics_spec = set()
     dynamics_spec |= {'('+z_str+' = 6) -> X(('+z_str+' = 6) || ('+z_str+' = 5) || ('+z_str+' = -1))'}
@@ -148,9 +148,7 @@ def restrictive_dynamics(z_str, x_str):
     dynamics_spec |= {'('+z_str+' = 2) -> X(('+z_str+' = 3) || ('+z_str+' = 2) || ('+z_str+' = 1))'}
     dynamics_spec |= {'('+z_str+' = 1) -> X(('+z_str+' = 2) || ('+z_str+' = 1) || ('+z_str+' = 0))'}
     dynamics_spec |= {'('+z_str+' = 0) -> X(('+z_str+' = 0) || ('+z_str+' = 1) || ('+z_str+' = -1))'}
-    # Tester can exit to parking state -1 and must stay there
     dynamics_spec |= {'('+z_str+' = -1) -> X(('+z_str+' = -1))'}
-    # Tester x variable is always 2
     dynamics_spec |= {'('+x_str+' = 2) -> X(('+x_str+' = 2))'}
     return dynamics_spec
 
@@ -221,15 +219,32 @@ def transiently_block(z_str, x_str):
     transient_spec |= {'('+z_str+' = 0 && turn = 1) -> X(!('+z_str+' = 0))'}
     return transient_spec
 
+# Tester transiently blocks the system, but not forever
+def transiently_block_states(z_str, x_str, states):
+    '''
+    z_str, x_str: variables for the tester string
+    states: list of states that have to be transiently blocked.
+    If it is the tester turn, it should not choose to stay in the same
+    blocking state in the next step
+    '''
+    transient_spec = set()
+    for (z,x) in states:
+        transient_spec |= {'('+z_str+' = '+z+' && '+x_str+' = '+x+' && turn = 1) -> X(!('+z_str+' = '+z+' && '+x_str+' = '+x+'))'}
+    return transient_spec
+
 # full safety spec
 def get_tester_safety(maze, z_str, x_str, z, x, turn, GD, cuts, q):
     safety = set()
     safety |= no_collision_grt(maze, z_str, x_str, z, x)
     safety |= restrictive_dynamics(z_str, x_str)
-    safety |= transiently_block(z_str, x_str)
     safety |= turn_based_grt(z_str, x_str, turn, maze)
     safety |= occupy_cuts(GD, cuts, z, x, z_str, x_str, q, turn)
     safety |= do_not_overconstrain(GD, cuts, z, x, z_str, x_str, q, turn)
+
+    safety |= transiently_block(z_str, x_str)
+    # progress_states = Tester_Progress_States()
+    # states = progress_states.compute_tester_nodes()
+    # transiently_block_states(z_str, x_str, states)
     return safety
 
 # TESTER PROGRESS

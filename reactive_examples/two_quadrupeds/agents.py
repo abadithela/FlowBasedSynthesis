@@ -31,6 +31,14 @@ class Tester:
         self.GD = None
         self.cuts = None
         self.controller = None
+        self.static_area = None
+        self.reactive_area = None
+    
+    def set_static_area(self):
+        pass
+
+    def set_reactive_area(self):
+        pass
 
     def set_optimization_results(self,cuts, GD):
         self.set_GD(GD)
@@ -130,7 +138,7 @@ class Quadruped:
         self.index = 0
         self.maze = maze
         self.tester_init = tester_init
-        self.controller = None#self.find_controller(maze, tester_init)
+        self.controller = None #self.find_controller(maze, tester_init)
         # maze.goal.append(goal)
 
     def find_controller(self,maze):
