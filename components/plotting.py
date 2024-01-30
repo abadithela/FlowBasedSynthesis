@@ -337,11 +337,11 @@ def plot_maze(maze, cuts = []):
                 ax.text(x+tilesize/2, y+tilesize/2, 'T')
             elif i % 2 == j % 2:
                 ax.add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.1))
-                if (j,i) in maze.init:
+                if (j,i) == maze.init:
                     ax.text(x+tilesize/2, y+tilesize/2, 'S')
             elif maze.map[j,i]=='':
                 ax.add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.2))
-                if (j,i) in maze.init:
+                if (j,i) == maze.init:
                     ax.text(x+tilesize/2, y+tilesize/2, 'S')
 
     # grid lines
