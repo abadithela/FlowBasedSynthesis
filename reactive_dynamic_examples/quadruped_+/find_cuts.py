@@ -18,19 +18,29 @@ MILP for reactive obstacles for the following grid:
 import sys
 sys.path.append('../..')
 
-from reactive_dynamic_examples.utils.solve_problem import solve_problem
+from reactive_dynamic_examples.utils.solve_problem import solve_problem_augmented
 from reactive_dynamic_examples.utils.get_graphs import get_graphs
 from problem_data import *
+from components.plotting import make_history_plots
+from reactive_dynamic_examples.utils.helper import load_opt_from_pkl_file
 
 def find_cuts():
     intstr = ''.join('%s = %s, ' % (val,key) for (key,val) in INTS.items())
     print('S = '+str(INIT)+', '+intstr+' T = '+str(GOALS))
 
+    static_area = [(0,0), (0,1), (1,0), (3,0), (4,0), (4,1), (0,3), (0,4), (1,4), (3,4), (4,4), (4,3)]
+
     virtual, system, b_pi, virtual_sys = get_graphs(SYS_FORMULA, TEST_FORMULA, MAZEFILE, INIT, INTS, GOALS)
 
-    exit_status, annot_cuts, flow, bypass, GD = solve_problem(virtual, system, b_pi, virtual_sys)
-    print('exit status {0}'.format(exit_status))
+    try:
+        print('Checking for the optimization results')
+        annot_cuts, GD = load_opt_from_pkl_file()
+        print('Optimization results loaded successfully')
+    except:
+        exit_status, annot_cuts, flow, bypass, GD = solve_problem_augmented(virtual, system, b_pi, virtual_sys, static_area=static_area)
+        print('exit status {0}'.format(exit_status))
 
+    make_history_plots(annot_cuts, GD, system.maze)
     return annot_cuts, GD
 
 

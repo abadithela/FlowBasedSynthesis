@@ -366,7 +366,10 @@ def plot_maze(maze, cuts = []):
     fig.savefig("imgs/maze.pdf")
 
 def make_history_plots(cuts, GD, maze):
-    cuts_info = [(GD.node_dict[i], GD.node_dict[j]) for (i,j) in cuts]
+    if isinstance(cuts[0][0][-1], str):
+        cuts_info = cuts
+    else:
+        cuts_info = [(GD.node_dict[i], GD.node_dict[j]) for (i,j) in cuts]
 
     qs = list(set([item[0][-1] for item in cuts_info]))
 
@@ -507,7 +510,8 @@ def make_history_plots(cuts, GD, maze):
 
 
     plt.show()
-    fig.savefig("imgs/reactive_cuts.pdf")
+    now =  str(datetime.datetime.now())
+    fig.savefig("imgs/reactive_cuts"+now+".pdf")
 
 def plot_solutions(maze, sols):
     npanels = len(sols)
