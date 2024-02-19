@@ -5,6 +5,7 @@ import random
 import _pickle as pickle
 from reactive_dynamic_examples.utils.helper import load_opt_from_pkl_file
 from reactive_dynamic_examples.utils.quadruped_interface import quadruped_move
+from reactive_dynamic_examples.utils.parse_cuts import Map_Reactive_Cuts
 
 class Game:
     def __init__(self, maze, sys, tester):
@@ -27,24 +28,25 @@ class Game:
     # read pickle file - if not there save a new one
         try:
             print('Checking for the optimization results')
-            cuts, GD = load_opt_from_pkl_file()
+            cuts, GD, SD = load_opt_from_pkl_file()
             print('Optimization results loaded successfully')
         except:
             print('Result file not found, running optimization')
-            cuts, GD = find_cuts()
-            opt_dict = {'cuts': cuts, 'GD': GD}
+            cuts, GD, SD = find_cuts()
+            opt_dict = {'cuts': cuts, 'GD': GD, "SD": SD}
             with open('stored_optimization_result.p', 'wb') as pckl_file:
                 pickle.dump(opt_dict, pckl_file)
-        return cuts, GD
+        return cuts, GD, SD
 
     def setup(self):
-        cuts, GD = self.get_optimization_results()
-        # to do - map the cuts from the optimization to the blocked states HERE
-        st()
+        cuts, GD, SD = self.get_optimization_results()
+        map_cuts = Map_Reactive_Cuts(cuts, GD, SD)
+        mapped_cuts = map_cuts.get_cuts_with_dyn_agent()
 
         self.agent.find_controller(self.maze)
-        self.tester.set_optimization_results(cuts, GD)
+        self.tester.set_optimization_results(mapped_cuts, GD, SD)
         self.tester.find_controller()
+        
 
     def print_game_state(self):
         z_old = []
@@ -69,6 +71,13 @@ class Game:
 
     def agent_take_step(self):
         self.agent.agent_move(self.tester.q)
+        quadruped_move('system', (self.agent.z,self.agent.x))
+
+    def agent_take_manual_step(self):
+        sys_z = input("system z: ")
+        sys_x = input("system x: " )
+        sys_pos = (int(sys_z), int(sys_x))
+        self.agent.agent_manual_move(sys_pos)
         quadruped_move('system', (self.agent.z,self.agent.x))
 
     def tester_take_step(self):

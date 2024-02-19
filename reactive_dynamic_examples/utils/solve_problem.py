@@ -39,9 +39,9 @@ def solve_problem(virtual, system, b_pi, virtual_sys, print_solution=True, plot_
             make_history_plots(cuts, GD, system.maze)
 
         annot_cuts = [(GD.node_dict[cut[0]], GD.node_dict[cut[1]]) for cut in cuts]
-        return exit_status, annot_cuts, flow, bypass_flow, GD
+        return exit_status, annot_cuts, flow, bypass_flow, GD, SD
     else:
-        return exit_status, [], [], None, GD
+        return exit_status, [], [], None, GD, SD
 
 def solve_problem_augmented(virtual, system, b_pi, virtual_sys, static_area, print_solution=True, plot_results=True):
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
@@ -69,6 +69,6 @@ def solve_problem_augmented(virtual, system, b_pi, virtual_sys, static_area, pri
         # with open('stored_optimization_result.p', 'wb') as pckl_file:
         #     pickle.dump(opt_dict, pckl_file)
 
-        return exit_status, annot_cuts, flow, bypass_flow, GD
+        return exit_status, annot_cuts, flow, bypass_flow, GD, SD
     else:
-        return exit_status, [], [], None, GD
+        return exit_status, [], [], None, GD, SD

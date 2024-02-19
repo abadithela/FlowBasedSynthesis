@@ -55,4 +55,5 @@ def load_opt_from_pkl_file():
         opt = pickle.load(pckl_file)
     cuts = opt['cuts']
     GD = opt['GD']
-    return cuts, GD
+    SD = opt['SD']
+    return cuts, GD, SD

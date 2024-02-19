@@ -13,7 +13,7 @@ from ipdb import set_trace as st
 import sys
 sys.path.append('..')
 from components.maze_network import MazeNetwork
-# from tester_spec import get_tester_spec
+from tester_spec import get_tester_spec
 
 # from quadruped_interface import quadruped_move
 # from find_cuts import setup_nodes_and_edges
@@ -33,12 +33,13 @@ class Tester:
         self.cuts = None
         self.controller = None
 
-    def set_optimization_results(self,cuts, GD):
-        self.set_GD(GD)
+    def set_optimization_results(self,cuts, GD, SD):
+        self.set_graphs(GD, SD)
         self.set_cuts(cuts)
 
-    def set_GD(self, GD):
+    def set_graphs(self, GD, SD):
         self.GD = GD
+        self.SD = SD
 
     def set_cuts(self, cuts):
         self.cuts = cuts
@@ -79,7 +80,7 @@ class Tester:
         self.z = output['Z_t']
         self.turn = output['turn']
         self.q = (self.z,self.x)
-        # print(output)
+        print(output)
         # interface the tester quadruped here (only when it was the quadruped's turn)
 
     def find_controller(self):
@@ -95,7 +96,7 @@ class Tester:
             logging.getLogger('tulip.synth').setLevel(logging.WARNING)
             logging.getLogger('tulip.interfaces.omega').setLevel(logging.WARNING)
 
-            specs = get_tester_spec(self.q, self.maze, self.GD, self.cuts)
+            specs = get_tester_spec(self.q, self.maze, self.GD, self.SD, self.cuts)
 
             spc = spec.GRSpec(specs.env_vars, specs.vars, specs.env_init, specs.init,
                             specs.env_safety, specs.safety, specs.env_progress, specs.progress)
@@ -167,29 +168,32 @@ class Quadruped:
 
             env_vars = {}
             env_vars['Z_t'] = (-1,maze.len_z)
-            env_vars['X_t'] = (0,maze.len_x)
+            env_vars['X_t'] = (-1,maze.len_x)
             env_safe = set()
             # env_safe |= {'(X_t = 2 && Z_t = 1)'}
             env_init = {'Z_t = '+str(self.tester_init["z"])+' && X_t = '+str(self.tester_init["x"])}
             env_prog = set()
-            env_prog |= {'(X_t = 2 && Z_t = 1) || (X_t = 2 && Z_t = 3) || (X_t = 2 && Z_t = 5) || (X_t = 2 && Z_t = -1)'} # tester will eventually make space
+            env_prog |= {'(X_t = 2 && Z_t = 1) || (X_t = 1 && Z_t = 2) || (X_t = 2 && Z_t = 3) || (X_t = 3 && Z_t = 2) || (Z_t = -1 && X_t = 2) || (X_t = -1 && Z_t =2)'} # tester will eventually make space
             # tester can move up and down the middle column
-            dynamics_spec = {'(Z_t = 6) -> X((Z_t = 6) ||(Z_t = 5) || Z_t = -1)'}
-            dynamics_spec |= {'(Z_t = 5) -> X((Z_t = 5) ||(Z_t = 4) || Z_t = 3)'}
-            dynamics_spec |= {'(Z_t = 4) -> X((Z_t = 4) ||(Z_t = 3) || Z_t = 5)'}
-            dynamics_spec |= {'(Z_t = 3) -> X((Z_t = 4) || (Z_t = 3) ||(Z_t = 2))'}
-            dynamics_spec |= {'(Z_t = 2) -> X((Z_t = 3) || (Z_t = 2) ||(Z_t = 1))'}
-            dynamics_spec |= {'(Z_t = 1) -> X((Z_t = 2) || (Z_t = 1) || (Z_t = 0))'}
-            dynamics_spec |= {'(Z_t = 0) -> X((Z_t = 0) || (Z_t = 1)|| (Z_t = -1))'}
-            dynamics_spec |= {'(Z_t = -1) -> X((Z_t = -1))'}
-            dynamics_spec |= {'(X_t = 2) -> X((X_t = 2))'}
-            env_safe |= dynamics_spec
+            test_dynamics_spec = {'(Z_t = 2 && X_t = 2) -> X((Z_t = 3 && X_t = 2) || (Z_t = 2 && X_t = 2) ||(Z_t = 1 && X_t = 2) || (Z_t = 2 && X_t = 3) || (Z_t = 2 && X_t=1))'}
 
+            test_dynamics_spec |= {'(Z_t = 4 && X_t = 2) -> X((X_t = 2) && ((Z_t = 4) ||(Z_t = 3) || (Z_t = -1)))'}
+            test_dynamics_spec |= {'(Z_t = 3 && X_t = 2) -> X((X_t = 2) && ((Z_t = 4) || (Z_t = 3) ||(Z_t = 2)))'}
+            test_dynamics_spec |= {'(Z_t = 1 && X_t = 2) -> X((X_t = 2) && ((Z_t = 2) || (Z_t = 1) || (Z_t = 0)))'}
+            test_dynamics_spec |= {'(Z_t = 0 && X_t = 2) -> X((X_t = 2) && ((Z_t = 0) || (Z_t = 1)|| (Z_t = -1)))'}
+            test_dynamics_spec |= {'(Z_t = -1 && X_t = 2) -> X((Z_t = -1 && X_t = 2))'}
+
+            test_dynamics_spec |= {'(X_t = 4 && Z_t = 2) -> X((Z_t = 2) && ((X_t = 4) ||(X_t = 3) || (X_t = -1)))'}
+            test_dynamics_spec |= {'(X_t = 3 && Z_t = 2) -> X((Z_t = 2) && ((X_t = 4) || (X_t = 3) ||(X_t = 2)))'}
+            test_dynamics_spec |= {'(X_t = 1 && Z_t = 2) -> X((Z_t = 2) && ((X_t = 2) || (X_t = 1) || (X_t = 0)))'}
+            test_dynamics_spec |= {'(X_t = 0 && Z_t = 2) -> X((Z_t = 2) && ((X_t = 0) || (X_t = 1)|| (X_t = -1)))'}
+            test_dynamics_spec |= {'(X_t = -1 && Z_t = 2) -> X((X_t = -1 && Z_t = 2))'}
+            env_safe |= test_dynamics_spec
+            
             spc = spec.GRSpec(env_vars, sys_vars, env_init, sys_init,
                             env_safe, sys_safe, env_prog, sys_prog)
 
             print(spc.pretty())
-
             spc.moore = False
             spc.qinit = r'\A \E'
             if not synth.is_realizable(spc, solver='omega'):
@@ -213,6 +217,17 @@ class Quadruped:
         self.x = output['x']
         self.z = output['z']
         self.s = (self.z,self.x)
+
+    def agent_manual_move(self, sys_pos):
+        self.z = sys_pos[0]
+        self.x = sys_pos[1]
+        self.s = (self.z, self.x)
+
+    def agent_sp_move(self):
+        #todo: this is where we interface the shortest path controller for the system with exponential forgetting factor.
+        self.z = sys_pos[0]
+        self.x = sys_pos[1]
+        self.s = (self.z, self.x)
 
 def next_move(tester, maze):
     maze.print_maze()
