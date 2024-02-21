@@ -8,8 +8,8 @@ import time
 from optimization.find_bypass_flow import find_fby
 from optimization.milp_reactive_gurobipy import solve_max_gurobi
 from components.setup_graphs import setup_nodes_and_edges
-from components.plotting import highlight_cuts, plot_flow_on_maze
-
+from components.plotting import highlight_cuts, plot_flow_on_maze, plot_maze
+from utils.plotting_utils import make_history_plots, highlight_history_cuts
 
 def solve_problem(virtual, system, b_pi, virtual_sys, print_solution=True, plot_results=True):
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
@@ -33,9 +33,11 @@ def solve_problem(virtual, system, b_pi, virtual_sys, print_solution=True, plot_
 
         if plot_results:
             highlight_cuts(cuts, GD, SD, virtual, virtual_sys)
+            highlight_history_cuts(cuts, GD, SD, virtual, virtual_sys)
             sys_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
-            plot_flow_on_maze(system.maze, sys_cuts)
-
+            plot_flow_on_maze(system.maze, [])
+            # plot_flow_on_maze(system.maze, sys_cuts)
+            
         # from ipdb import set_trace as st
         # st()
         annot_cuts = [(GD.node_dict[cut[0]], GD.node_dict[cut[1]]) for cut in cuts]

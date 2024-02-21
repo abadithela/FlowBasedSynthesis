@@ -256,6 +256,22 @@ class Guarantees:
         return turns
 
     def occupy_cuts(self):
+        '''
+        Tester needs to occupy the cells that correspond to the cuts.
+        Tester needs to be in the cut state when the system is in a q position and it is the system's
+        turn to act.
+        '''
+        cut_specs = set()
+        for cut in self.cuts:
+            out_node = cut[0]
+            out_state = out_node[0]
+            out_q = out_node[-1]
+            in_node = cut[1]
+            in_state = in_node[0]
+            system_state = '('+ sys_z + ' = ' + str(out_state[0]) + ' && ' + sys_x + ' = ' + str(out_state[1]) + ' && ' +q_str+' = '+str(out_q[1:])+' && '+turn+' = 0)'
+            block_state = '('+ test_z + ' = ' + str(in_state[0]) + ' && ' + test_x + ' = ' + str(in_state[1])+')'
+            cut_specs |= {system_state + ' -> ' + block_state}
+        return cut_specs
         pass
     
     def do_not_overconstrain(self):
@@ -331,31 +347,6 @@ def get_tester_spec(init_pos, maze, GD, cuts):
     tester_spec = Spec(test_vars, test_init, test_safety, test_progress, env_vars, env_init, env_safety, env_progress)
     return tester_spec
 
-# Dynamics
-def restrictive_dynamics(z_test, x_test):
-    dynamics_spec = set()
-    dynamics_spec |= {'('+z_test+' = 6) -> X(('+z_test+' = 6) || ('+z_test+' = 5) || ('+z_test+' = -1))'}
-    dynamics_spec |= {'('+z_test+' = 5) -> X(('+z_test+' = 6) || ('+z_test+' = 5) || ('+z_test+' = 4))'}
-    dynamics_spec |= {'('+z_test+' = 4) -> X(('+z_test+' = 4) || ('+z_test+' = 3) || ('+z_test+' = 5))'}
-    dynamics_spec |= {'('+z_test+' = 3) -> X(('+z_test+' = 4) || ('+z_test+' = 3) || ('+z_test+' = 2))'}
-    dynamics_spec |= {'('+z_test+' = 2) -> X(('+z_test+' = 3) || ('+z_test+' = 2) || ('+z_test+' = 1))'}
-    dynamics_spec |= {'('+z_test+' = 1) -> X(('+z_test+' = 2) || ('+z_test+' = 1) || ('+z_test+' = 0))'}
-    dynamics_spec |= {'('+z_test+' = 0) -> X(('+z_test+' = 0) || ('+z_test+' = 1) || ('+z_test+' = -1))'}
-    dynamics_spec |= {'('+z_test+' = -1) -> X(('+z_test+' = -1))'}
-    dynamics_spec |= {'('+x_test+' = 2) -> X(('+x_test+' = 2))'}
-    return dynamics_spec
-
-# turn based game
-def turn_based_grt(z_test, x_test, turn, maze):
-    turns = set()
-    # turn changes every step
-    turns |= {'('+turn+' = 0 -> X('+turn+' = 1))'} # System turn to play
-    turns |= {'('+turn+' = 1 -> X('+turn+' = 0))'} # Tester turn to play
-    # testers stays in place at turn = 0
-    for x_p in range(0,maze.len_x):
-        for z_p in range(0,maze.len_z):
-            turns |= {'('+turn+' = 0 && '+z_test+' = '+str(z_p)+' && '+x_test+' = '+str(x_p)+') -> X('+z_test+' = '+str(z_p)+' && '+x_test+' = '+str(x_p)+')'}
-    return turns
 
 def occupy_cuts(GD, cuts, sys_z, sys_x, test_z, test_x, q_str, turn):
     '''
