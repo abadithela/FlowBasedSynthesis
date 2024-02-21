@@ -73,6 +73,7 @@ def make_comparison_plots(output, maze, flow_cuts):
         for cut in cuts[k]:
             startxy = cut[0]
             endxy = cut[1]
+            st()
             delx = startxy[0] - endxy[0]
             dely = startxy[1] - endxy[1]
             if delx == 0:
@@ -236,7 +237,11 @@ class AugMazeNetwork(MazeNetwork):
                         for item in self.next_state_dict[(ii,jj)]:
                             if item != (ii,jj):
                                 next_steps_string = next_steps_string + ' || ('+z_str+' = '+str(item[0])+' && '+x_str+' = '+str(item[1])+')'
+                        if (ii,jj) in self.goal:
+                            next_steps_string = next_steps_string + ' || ('+z_str+' = '+str(ii-1)+' && '+x_str+' = '+str(jj)+')'
+                            next_steps_string = next_steps_string + ' || ('+z_str+' = '+str(ii)+' && '+x_str+' = '+str(jj-1)+')'
                         dynamics_spec |= {'('+z_str+' = '+str(ii)+' && '+x_str+' = '+str(jj)+') -> X(('+ next_steps_string +'))'}
+                        
         return dynamics_spec
 
     def create_graph(self):
