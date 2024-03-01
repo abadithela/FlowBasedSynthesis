@@ -35,6 +35,8 @@ def find_cuts():
     exit_status, annot_cuts, flow, bypass, GD = solve_problem(virtual, system, b_pi, virtual_sys)
     print('exit status {0}'.format(exit_status))
 
+    make_history_plots(annot_cuts, GD, system.maze)
+
     return annot_cuts, GD
 
 

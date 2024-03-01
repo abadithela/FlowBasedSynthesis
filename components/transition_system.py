@@ -45,6 +45,12 @@ class ProductTransys(Transys):
         self.maze.set_goal(goals)
         self.maze.setup_maze()
 
+    def get_maze_from_network(self, network, int, goals, obs):
+        self.maze = network
+        self.maze.set_int(int)
+        self.maze.set_goal(goals)
+        self.maze.setup_maze()
+
     def get_APs(self):
         """
         Set of atomic propositions required to define a specification
@@ -84,6 +90,25 @@ class ProductTransys(Transys):
                 print("Incorrect transition function")
                 pdb.set_trace()
 
+    def construct_transition_function_fuel(self):
+        self.E = dict()
+        # st()
+        for (s, ns) in self.maze.graph.edges():
+
+            if s[0][0] == ns[0][0] + 1 and ns[0][1] == s[0][1]:
+                self.E[(s, 'sys_s')] = ns
+            elif s[0][0] == ns[0][0] - 1 and ns[0][1] == s[0][1]:
+                self.E[(s, 'sys_n')] = ns
+            elif ns[0][0] == s[0][0] and ns[0][1] == s[0][1] + 1:
+                self.E[(s, 'sys_e')] = ns
+            elif ns[0][0] == s[0][0] and ns[0][1] == s[0][1] - 1:
+                self.E[(s, 'sys_w')] = ns
+            elif ns == s:
+                self.E[(s, 'sys_o')] = ns
+            else:
+                print("Incorrect transition function")
+                pdb.set_trace()
+
     def construct_labels(self):
         self.L = od()
         for s in self.S:
@@ -108,6 +133,14 @@ class ProductTransys(Transys):
         self.construct_initial_conditions(init)
         self.construct_labels()
 
+    def construct_sys_from_network(self, network, init, ints, goals, obs=[]):
+        self.get_maze_from_network(network, ints, goals, obs)
+        self.S = list(self.maze.graph.nodes()) # All system and tester nodes
+        self.A = ['sys_n','sys_s','sys_e','sys_w', 'sys_o']
+        self.construct_transition_function_fuel()
+        self.get_APs()
+        self.construct_initial_conditions(init)
+        self.construct_labels()
 
     def add_set_intermediate_nodes(self, node_dict):
         for node, formula in node_dict.items():

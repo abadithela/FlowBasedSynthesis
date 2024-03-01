@@ -148,19 +148,19 @@ def solve_max_gurobi(GD, SD, callback=True):
 
     # --------- map static obstacles to other edges in G
     for count, (i,j) in enumerate(model_edges):
-        out_state = GD.node_dict[i][0]
-        in_state = GD.node_dict[j][0]
+        out_state = GD.node_dict[i][0][0]
+        in_state = GD.node_dict[j][0][0]
         for (imap,jmap) in model_edges[count+1:]:
-            if out_state == GD.node_dict[imap][0] and in_state == GD.node_dict[jmap][0]:
+            if out_state == GD.node_dict[imap][0][0] and in_state == GD.node_dict[jmap][0][0]:
                 model.addConstr(d[i, j] == d[imap, jmap])
 
 
     # ---------  add bidirectional cuts on G
     for count, (i,j) in enumerate(model_edges):
-        out_state = GD.node_dict[i][0]
-        in_state = GD.node_dict[j][0]
+        out_state = GD.node_dict[i][0][0]
+        in_state = GD.node_dict[j][0][0]
         for (imap,jmap) in model_edges[count+1:]:
-            if in_state == GD.node_dict[imap][0] and out_state == GD.node_dict[jmap][0]:
+            if in_state == GD.node_dict[imap][0][0] and out_state == GD.node_dict[jmap][0][0]:
                 model.addConstr(d[i, j] == d[imap, jmap])
 
 
@@ -185,13 +185,6 @@ def solve_max_gurobi(GD, SD, callback=True):
         exit_status = 'inf'
 
         return exit_status, [], [], None
-    # elif model.status == 11:
-    #     if model.SolCount <= 1:
-    #
-    #         model.optimize(callback=cb_max)
-    #         if model.SolCount <= 1:
-    #             exit_status = 'not solved'
-    #             return exit_status, [], [], None
 
     elif model.status == 2 or model.status == 11:
         if model.status == 11 and model.SolCount < 1:
