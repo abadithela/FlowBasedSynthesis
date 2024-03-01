@@ -1,15 +1,11 @@
-# File to parse optimization constraints from the output of the optimization
-import sys
-sys.path.append('../..')
 import numpy as np
 from ipdb import set_trace as st
 import networkx as nx
 from find_cuts import find_cuts
 from optimization.feasibility_constraints import find_map_G_S
-# from synthesize_tester_from_constraints import Quadruped_Tester
 from components.maze_network import MazeNetwork
 
-class MapConstraints:
+class Map_Reactive_Cuts:
     def __init__(self, annot_cuts, GD, SD):
         self.blocked_edges = []
         self.blocked_states = []
@@ -17,7 +13,6 @@ class MapConstraints:
         self.GD = GD
         self.SD = SD
         self.cuts = [(GD.inv_node_dict[u], GD.inv_node_dict[v]) for (u,v) in annot_cuts]
-        # self.cuts = [(34, 50), (44, 28)]
         self.cuts_to_blocked_edges()
         self.get_map_G_to_S()
         self.cuts_to_blocked_states()
@@ -82,35 +77,24 @@ class MapConstraints:
             node_k = self.GD.inv_node_dict[blocked_st]
             for predecessor in self.GD.graph.predecessors(node_k):
                 predecessor_st = self.GD.node_dict[predecessor]
-                self.cuts_with_dynamic_agent.append((predecessor_st, blocked_st))
+                if (predecessor_st, blocked_st) not in self.cuts_with_dynamic_agent:
+                    self.cuts_with_dynamic_agent.append((predecessor_st, blocked_st))
 
+    def get_cuts_with_dyn_agent(self):
+        return self.cuts_with_dynamic_agent
     
-
     def cuts_to_blocked_states(self):
         self.blocked_states = []
         for edge_cut in self.cuts:
             u, v = edge_cut
             exist_path_u = self.check_path_in_S(u)
             exist_path_v = self.check_path_in_S(v)
-            if exist_path_u:
-                u_st = self.GD.node_dict[u]
-                self.blocked_states.append(u_st)
-            elif exist_path_v:
+            if exist_path_v:
                 v_st = self.GD.node_dict[v]
                 self.blocked_states.append(v_st)
+            elif exist_path_u:
+                u_st = self.GD.node_dict[u]
+                self.blocked_states.append(u_st)
             else:
                 print("Cannot place static obstacle. Must constrain edge instead")
                 st()
-
-if __name__ == "__main__":
-    mazefile = 'maze.txt'
-    maze = MazeNetwork(mazefile)
-    opt_constr = MapConstraints()
-    constraints = opt_constr.parse_cuts_to_states()
-    blocked_states = opt_constr.get_blocked_states()
-    blocked_edges= opt_constr.get_blocked_edges()
-    # quadruped = Quadruped_Tester(name="tulip_tester_quad", maze = maze, tester_init=(4,2))
-    # quadruped.set_constraints_opt(constraints)
-    # quadruped.synthesize_controller()
-    # quadruped.agent_move((4,0))
-    st()

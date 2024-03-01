@@ -181,16 +181,16 @@ class Quadruped:
             env_prog = set()
             env_prog |= {'(X_t = 2 && Z_t = 1) || (X_t = 2 && Z_t = 3) || (X_t = 2 && Z_t = 5) || (X_t = 2 && Z_t = -1)'} # tester will eventually make space
             # tester can move up and down the middle column
-            dynamics_spec = {'(Z_t = 6) -> X((Z_t = 6) ||(Z_t = 5) || Z_t = -1)'}
-            dynamics_spec |= {'(Z_t = 5) -> X((Z_t = 5) ||(Z_t = 4) || Z_t = 3)'}
-            dynamics_spec |= {'(Z_t = 4) -> X((Z_t = 4) ||(Z_t = 3) || Z_t = 5)'}
-            dynamics_spec |= {'(Z_t = 3) -> X((Z_t = 4) || (Z_t = 3) ||(Z_t = 2))'}
-            dynamics_spec |= {'(Z_t = 2) -> X((Z_t = 3) || (Z_t = 2) ||(Z_t = 1))'}
-            dynamics_spec |= {'(Z_t = 1) -> X((Z_t = 2) || (Z_t = 1) || (Z_t = 0))'}
-            dynamics_spec |= {'(Z_t = 0) -> X((Z_t = 0) || (Z_t = 1)|| (Z_t = -1))'}
-            dynamics_spec |= {'(Z_t = -1) -> X((Z_t = -1))'}
-            dynamics_spec |= {'(X_t = 2) -> X((X_t = 2))'}
-            env_safe |= dynamics_spec
+            test_dynamics_spec = {'(Z_t = 6) -> X((Z_t = 6) ||(Z_t = 5) || Z_t = -1)'}
+            test_dynamics_spec |= {'(Z_t = 5) -> X((Z_t = 5) ||(Z_t = 4) || Z_t = 3)'}
+            test_dynamics_spec |= {'(Z_t = 4) -> X((Z_t = 4) ||(Z_t = 3) || Z_t = 5)'}
+            test_dynamics_spec |= {'(Z_t = 3) -> X((Z_t = 4) || (Z_t = 3) ||(Z_t = 2))'}
+            test_dynamics_spec |= {'(Z_t = 2) -> X((Z_t = 3) || (Z_t = 2) ||(Z_t = 1))'}
+            test_dynamics_spec |= {'(Z_t = 1) -> X((Z_t = 2) || (Z_t = 1) || (Z_t = 0))'}
+            test_dynamics_spec |= {'(Z_t = 0) -> X((Z_t = 0) || (Z_t = 1)|| (Z_t = -1))'}
+            test_dynamics_spec |= {'(Z_t = -1) -> X((Z_t = -1))'}
+            test_dynamics_spec |= {'(X_t = 2) -> X((X_t = 2))'}
+            env_safe |= test_dynamics_spec
 
             spc = spec.GRSpec(env_vars, sys_vars, env_init, sys_init,
                             env_safe, sys_safe, env_prog, sys_prog)

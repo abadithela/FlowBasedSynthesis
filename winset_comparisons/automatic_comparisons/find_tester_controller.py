@@ -43,10 +43,16 @@ class TesterCtrl:
         int_str = int_str[:-4]
         test_safety |= {'(auxI = 0 && ('+int_str+')) -> X(auxI = 1)'}
         test_safety |= {'(auxI = 0 && !('+int_str+')) -> X(auxI = 0)'}
-
+        
         # have you seen I
         test_progress = set()
-        test_progress |= {'(auxI = 1)'}
+        # test_progress |= {'(auxI = 1)'}
+        goal_str = ''
+        for goal in self.maze.goal:
+            goal_str += 'x = '+str(goal[1])+' && z = '+str(goal[0])+' || '
+        goal_str = goal_str[:-4]
+        test_progress |= {goal_str}
+        test_safety |= {'!(auxI=1)'}
 
         sys_vars = {}
         sys_vars['x'] = (0,self.maze.len_x)
@@ -60,6 +66,7 @@ class TesterCtrl:
         sys_safety |=  self.maze.augmented_dynamics_specs('x','z')
         # relate the edge cuts
         sys_safety |= relate_edge_cuts_to_system_moves(self.maze)
+        # sys_safety |= {'(x = 2 && z=2) -> X()'}
 
         sys_progress = set()
         goal_str = ''
