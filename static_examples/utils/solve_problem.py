@@ -33,7 +33,7 @@ def solve_problem_w_fuel(virtual, system, b_pi, virtual_sys, callback = True, pr
                 print('Cutting {0} to {1}'.format(GD.node_dict[cut[0]], GD.node_dict[cut[1]]))
 
         if plot_results:
-            highlight_cuts(cuts, GD, SD, virtual, virtual_sys)
+            # highlight_cuts(cuts, GD, SD, virtual, virtual_sys)
             sys_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
             plot_flow_on_maze_w_fuel(system.maze, sys_cuts)
 
