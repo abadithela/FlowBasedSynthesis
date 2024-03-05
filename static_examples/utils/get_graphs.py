@@ -36,7 +36,7 @@ def get_graphs_from_network(sys_formula, test_formula, network, init, ints, goal
 
     return virtual, system, b_pi, virtual_sys
 
-def get_graphs(sys_formula, test_formula, mazefile, init, ints, goals, obs=[], save_figures = True):
+def get_graphs(sys_formula, test_formula, mazefile, init, ints, goals, obs=[], save_figures = False):
     b_sys = get_system_automaton(sys_formula)
     b_test = get_tester_automaton(test_formula)
     b_pi = get_prod_automaton(sys_formula, test_formula)
