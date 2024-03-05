@@ -10,7 +10,7 @@ from components.parse_specification_product import *
 from components.transition_system import ProductTransys
 from components.tools import synchronous_product
 
-def get_graphs_from_network(sys_formula, test_formula, network, init, ints, goals, obs=[], save_figures = True):
+def get_graphs_from_network(sys_formula, test_formula, network, init, ints, goals, obs=[], save_figures = False):
     b_sys = get_system_automaton(sys_formula)
     b_test = get_tester_automaton(test_formula)
     b_pi = get_prod_automaton(sys_formula, test_formula)

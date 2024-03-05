@@ -22,10 +22,10 @@ from static_examples.utils.get_graphs import get_graphs_from_network
 from problem_data import *
 from network_fuel import FuelNetwork
 
-def find_cuts(mazefile):
-    intstr = ''.join('%s = %s, ' % (val,key) for (key,val) in INTS.items())
-    print('S = '+str(INIT)+', '+intstr+' T = '+str(GOALS))
-    network = FuelNetwork(mazefile)
+def find_cuts(network):
+    # intstr = ''.join('%s = %s, ' % (val,key) for (key,val) in INTS.items())
+    # print('S = '+str(INIT)+', '+intstr+' T = '+str(GOALS))
+    # network = FuelNetwork(mazefile)
 
     virtual, system, b_pi, virtual_sys = get_graphs_from_network(SYS_FORMULA, TEST_FORMULA, network, INIT, INTS, GOALS)
 

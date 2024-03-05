@@ -12,8 +12,8 @@ class FuelNetwork(MazeNetwork):
         MazeNetwork.__init__(self, mazefile, obs = [])
         self.fuelcap = 10
         self.refuel = []
-        # self.deadends = []
         self.setup_states()
+        self.next_state_dict_w_fuel = None
         self.graph = self.create_graph_with_fuel_level()
 
     def setup_states(self):
@@ -27,6 +27,23 @@ class FuelNetwork(MazeNetwork):
                     if self.map[(z,x)] == 'R':
                         self.refuel.append((z,x))
         # self.int = {pos: 'I' for pos in self.intermed}
+
+    def dynamics_specs_w_fuel(self, x_str, z_str, f_str):
+        dynamics_spec = set()
+        for ii in range(0,self.len_z):
+            for jj in range(0,self.len_x):
+                for ff in range(0,self.fuelcap+1):
+                    if not self.map[(ii,jj)] == '*':
+                        if ((ii,jj),ff) in self.next_state_dict_w_fuel.keys():
+                            next_steps_string = '('+z_str+' = '+str(ii)+' && '+x_str+' = '+str(jj)+' && '+f_str+'='+str(ff)+')'
+                            # if (ii,jj) not in self.deadends:
+                            for item in self.next_state_dict_w_fuel[((ii,jj),ff)]:
+                                if (((ii,jj),ff), item) not in self.active_cuts:
+                                    if item != ((ii,jj),ff):
+                                        next_steps_string = next_steps_string + ' || ('+z_str+' = '+str(item[0][0])+' && '+x_str+' = '+str(item[0][1])+' && '+f_str+'='+str(item[-1])+')'
+                            dynamics_spec |= {'('+z_str+' = '+str(ii)+' && '+x_str+' = '+str(jj)+' && '+f_str+'='+str(ff)+') -> X(('+ next_steps_string +'))'}
+        # st()
+        return dynamics_spec
 
     def augmented_dynamics_specs(self, x_str, z_str):
         dynamics_spec = set()
@@ -96,4 +113,11 @@ class FuelNetwork(MazeNetwork):
                 to_remove.append((i,j))
         G.remove_edges_from(to_remove)
         # st()
+
+        self.next_state_dict_w_fuel = next_state_dict
         return G
+
+    def add_cut_w_fuel(self, cut):
+        # st()
+        self.next_state_dict_w_fuel[cut[0]].remove(cut[1])
+        self.active_cuts.append(cut)
