@@ -14,6 +14,7 @@ class FuelNetwork(MazeNetwork):
         self.refuel = []
         # self.deadends = []
         self.setup_states()
+        self.next_state_dict_w_fuel = None
         self.graph = self.create_graph_with_fuel_level()
 
     def setup_states(self):
@@ -28,13 +29,30 @@ class FuelNetwork(MazeNetwork):
                         self.refuel.append((z,x))
         # self.int = {pos: 'I' for pos in self.intermed}
 
+    def dynamics_specs_w_fuel(self, x_str, z_str, f_str):
+        dynamics_spec = set()
+        for ii in range(0,self.len_z):
+            for jj in range(0,self.len_x):
+                for ff in range(0,self.fuelcap+1):
+                    if not self.map[(ii,jj)] == '*':
+                        if ((ii,jj),ff) in self.next_state_dict_w_fuel.keys():
+                            next_steps_string = '('+z_str+' = '+str(ii)+' && '+x_str+' = '+str(jj)+' && '+f_str+'='+str(ff)+')'
+                            if (ii,jj) not in self.goal:
+                                for item in self.next_state_dict_w_fuel[((ii,jj),ff)]:
+                                    if (((ii,jj),ff), item) not in self.active_cuts:
+                                        if item != ((ii,jj),ff):
+                                            next_steps_string = next_steps_string + ' || ('+z_str+' = '+str(item[0][0])+' && '+x_str+' = '+str(item[0][1])+' && '+f_str+'='+str(item[-1])+')'
+                            dynamics_spec |= {'('+z_str+' = '+str(ii)+' && '+x_str+' = '+str(jj)+' && '+f_str+'='+str(ff)+') -> X(('+ next_steps_string +'))'}
+        # st()
+        return dynamics_spec
+
     def augmented_dynamics_specs(self, x_str, z_str):
         dynamics_spec = set()
         for ii in range(0,self.len_z):
             for jj in range(0,self.len_x):
                 if not self.map[(ii,jj)] == '*':
                     next_steps_string = '('+z_str+' = '+str(ii)+' && '+x_str+' = '+str(jj)+')'
-                    if (ii,jj) not in self.deadends:
+                    if (ii,jj) not in self.goals:
                         for item in self.next_state_dict[(ii,jj)]:
                             if item != (ii,jj):
                                 next_steps_string = next_steps_string + ' || ('+z_str+' = '+str(item[0])+' && '+x_str+' = '+str(item[1])+')'
@@ -55,7 +73,7 @@ class FuelNetwork(MazeNetwork):
         transitions = []
         # adding system transitions
         next_state_dict = {}
-        for state in states: #tester can move according to
+        for state in states: # tester can move according to
             # for fuel_level in range(self.fuelcap):
             next_states = [(state)]
             fuel = state[-1]
@@ -77,14 +95,14 @@ class FuelNetwork(MazeNetwork):
 
         for state in states:
             # st()
-            # if state not in self.goal: # when test done then done
-            out_node = state
-            in_nodes = [next_state for next_state in next_state_dict[state]]
-            for in_node in in_nodes:
-                actions = []
-                if in_node in states:
-                    actions.append((out_node, in_node))
-                edges = edges + actions
+            if state[0] not in self.goal: # when test done then done
+                out_node = state
+                in_nodes = [next_state for next_state in next_state_dict[state]]
+                for in_node in in_nodes:
+                    actions = []
+                    if in_node in states:
+                        actions.append((out_node, in_node))
+                    edges = edges + actions
 
         G = nx.DiGraph()
         G.add_nodes_from(nodes)
@@ -95,5 +113,12 @@ class FuelNetwork(MazeNetwork):
             if i == j:
                 to_remove.append((i,j))
         G.remove_edges_from(to_remove)
+
+        self.next_state_dict_w_fuel = next_state_dict
         # st()
         return G
+
+    def add_cut_w_fuel(self, cut):
+        # st()
+        self.next_state_dict_w_fuel[cut[0]].remove(cut[1])
+        self.active_cuts.append(cut)
