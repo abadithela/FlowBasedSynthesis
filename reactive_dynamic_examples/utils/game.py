@@ -33,7 +33,7 @@ class Game:
         except:
             print('Result file not found, running optimization')
             cuts, GD, SD = find_cuts()
-            opt_dict = {'cuts': cuts, 'GD': GD, "SD": SD}
+            opt_dict = {'cuts': cuts, 'GD': GD, 'SD': SD}
             with open('stored_optimization_result.p', 'wb') as pckl_file:
                 pickle.dump(opt_dict, pckl_file)
         return cuts, GD, SD
@@ -46,7 +46,7 @@ class Game:
         self.agent.find_controller(self.maze)
         self.tester.set_optimization_results(mapped_cuts, GD, SD)
         self.tester.find_controller()
-        
+
 
     def print_game_state(self):
         z_old = []

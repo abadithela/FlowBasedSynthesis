@@ -27,18 +27,18 @@ class Game:
     # read pickle file - if not there save a new one
         try:
             print('Checking for the optimization results')
-            cuts, GD = load_opt_from_pkl_file()
+            cuts, GD, SD = load_opt_from_pkl_file()
             print('Optimization results loaded successfully')
         except:
             print('Result file not found, running optimization')
-            cuts, GD = find_cuts()
-            opt_dict = {'cuts': cuts, 'GD': GD}
+            cuts, GD, SD = find_cuts()
+            opt_dict = {'cuts': cuts, 'GD': GD, 'SD': SD}
             with open('stored_optimization_result.p', 'wb') as pckl_file:
                 pickle.dump(opt_dict, pckl_file)
-        return cuts, GD
+        return cuts, GD, SD
 
     def setup(self):
-        cuts, GD = self.get_optimization_results()
+        cuts, GD, SD = self.get_optimization_results()
         # to do - map the cuts from the optimization to the blocked states HERE
         cuts = [(((2, 2), 'q12'), ((1, 2), 'q12')), (((4, 2), 'q15'), ((3, 2), 'q15')), (((6, 2), 'q0'), ((5, 2), 'q0'))]
 
