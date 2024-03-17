@@ -73,6 +73,21 @@ class Game:
         self.agent.agent_move(self.tester.q)
         quadruped_move('system', (self.agent.z,self.agent.x))
 
+    def agent_take_step_augmented(self):
+        output = self.agent.controller.move()
+        next_x = output['x']
+        next_z = output['z']
+        if not (next_z,next_x) == self.tester.q:
+            print('Agent moving to {}'.format((next_z,next_x)))
+            self.agent.x = next_x
+            self.agent.z = next_z
+            self.agent.s = (next_z,next_x)
+        else:
+            # resynthesize controller and add the blocked state!
+            unsafe = (next_z,next_x)
+            self.agent.resynthesize_controller(unsafe)
+        quadruped_move('system', (self.agent.z,self.agent.x))
+
     def agent_take_manual_step(self):
         sys_z = input("system z: ")
         sys_x = input("system x: " )
