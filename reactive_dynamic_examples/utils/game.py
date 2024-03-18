@@ -40,11 +40,11 @@ class Game:
 
     def setup(self):
         cuts, GD, SD = self.get_optimization_results()
-        map_cuts = Map_Reactive_Cuts(cuts, GD, SD)
-        mapped_cuts = map_cuts.get_cuts_with_dyn_agent()
+        # map_cuts = Map_Reactive_Cuts(cuts, GD, SD)
+        # mapped_cuts = map_cuts.get_cuts_with_dyn_agent()
 
         self.agent.find_controller(self.maze)
-        self.tester.set_optimization_results(mapped_cuts, GD, SD)
+        self.tester.set_optimization_results(cuts, GD, SD)
         self.tester.find_controller()
 
 

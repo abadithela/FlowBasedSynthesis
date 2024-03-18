@@ -35,14 +35,34 @@ def find_map_G_S(GD,SD):
     S_annot = {}
     map_G_to_S = {}
     for node in GD.node_dict:
-        G_truncated.update({node: (str(GD.node_dict[node][0]))})
+        G_truncated.update({node: GD.node_dict[node][0]})
     for node in SD.node_dict:
-        S_annot.update({node: (str(SD.node_dict[node][0]))})
+        S_annot.update({node: SD.node_dict[node][0]})
     for node in G_truncated:
         for sys_node in S_annot:
             if G_truncated[node]  == S_annot[sys_node]:
                 map_G_to_S.update({node: sys_node})
 
+    return map_G_to_S
+
+def find_map_G_S_w_fuel(GD,SD):
+    # st()
+    G_truncated = {}
+    S_annot = {}
+    map_G_to_S = {}
+    for node in GD.node_dict:
+        G_truncated.update({node: GD.node_dict[node][0]})
+    # G_truncated = list(set(G_truncated))
+    for node in SD.node_dict:
+        S_annot.update({node: SD.node_dict[node][0]})
+    # S_annot = list(set(S_annot))
+    for node in G_truncated:
+        sys_nodes = []
+        for sys_node in S_annot:
+            if G_truncated[node][0]  == S_annot[sys_node][0]:
+                sys_nodes.append(sys_node)
+        map_G_to_S.update({node: sys_nodes})
+    # st()
     return map_G_to_S
 
 
