@@ -19,12 +19,12 @@ LOW_FUEL = list(set(LOW_FUEL))
 # LOW_FUEL_S = [((z,x),f) for z in range(3,5) for x in range(0,5) for f in range(2)]
 # LOW_FUEL = list(set(LOW_FUEL_S + [((z,x),f) for z in range(0,5) for x in range(3,5) for f in range(0,2)]))
 EMPTY = [((x,y),0) for x in range(0,7) for y in range(0,7)]
-ICE = [((3,3), f) for f in range(0,MAX_FUEL)]
-ROCK = [((5,5), f) for f in range(0,MAX_FUEL)]
-DROPOFF = [((0,8), f) for f in range(0,MAX_FUEL)]
-# DROPOFF.extend([((3,0), f) for f in range(0,MAX_FUEL)])
+ICE = [((1,4), f) for f in range(0,MAX_FUEL)]
+ROCK = [((4,1), f) for f in range(0,MAX_FUEL)]
+DROPOFF_1 = [((4,5), f) for f in range(0,MAX_FUEL)]
+DROPOFF = DROPOFF_1 + [((3,0), f) for f in range(0,MAX_FUEL)]
 
-# SAMPLE = ICE + ROCK
+SAMPLE = ICE + ROCK
 
 INTS = {}
 INTS.update({pos: 'lowfuel' for pos in LOW_FUEL})

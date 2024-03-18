@@ -33,20 +33,20 @@ class Game:
         except:
             print('Result file not found, running optimization')
             cuts, GD, SD = find_cuts()
-            opt_dict = {'cuts': cuts, 'GD': GD, "SD": SD}
+            opt_dict = {'cuts': cuts, 'GD': GD, 'SD': SD}
             with open('stored_optimization_result.p', 'wb') as pckl_file:
                 pickle.dump(opt_dict, pckl_file)
         return cuts, GD, SD
 
     def setup(self):
         cuts, GD, SD = self.get_optimization_results()
-        map_cuts = Map_Reactive_Cuts(cuts, GD, SD)
-        mapped_cuts = map_cuts.get_cuts_with_dyn_agent()
+        # map_cuts = Map_Reactive_Cuts(cuts, GD, SD)
+        # mapped_cuts = map_cuts.get_cuts_with_dyn_agent()
 
         self.agent.find_controller(self.maze)
-        self.tester.set_optimization_results(mapped_cuts, GD, SD)
+        self.tester.set_optimization_results(cuts, GD, SD)
         self.tester.find_controller()
-        
+
 
     def print_game_state(self):
         z_old = []
@@ -71,6 +71,21 @@ class Game:
 
     def agent_take_step(self):
         self.agent.agent_move(self.tester.q)
+        quadruped_move('system', (self.agent.z,self.agent.x))
+
+    def agent_take_step_augmented(self):
+        output = self.agent.controller.move()
+        next_x = output['x']
+        next_z = output['z']
+        if not (next_z,next_x) == self.tester.q:
+            print('Agent moving to {}'.format((next_z,next_x)))
+            self.agent.x = next_x
+            self.agent.z = next_z
+            self.agent.s = (next_z,next_x)
+        else:
+            # resynthesize controller and add the blocked state!
+            unsafe = (next_z,next_x)
+            self.agent.resynthesize_controller(unsafe)
         quadruped_move('system', (self.agent.z,self.agent.x))
 
     def agent_take_manual_step(self):

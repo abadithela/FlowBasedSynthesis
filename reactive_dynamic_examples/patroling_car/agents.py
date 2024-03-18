@@ -11,13 +11,9 @@ from tulip import transys, spec, synth
 from tulip import dumpsmach
 from ipdb import set_trace as st
 import sys
+from problem_data import *
 sys.path.append('..')
-from components.maze_network import MazeNetwork
 from tester_spec import get_tester_spec
-
-# from quadruped_interface import quadruped_move
-# from find_cuts import setup_nodes_and_edges
-# from construct_automata.main import quad_test_sync
 
 class Tester:
     def __init__(self, name, system_init, tester_init, maze):
@@ -26,11 +22,13 @@ class Tester:
         self.x = tester_init["x"]
         self.q = (self.z, self.x) # Tester state
         self.system_position = (system_init["z"], system_init["x"])
+        self.system_fuel = system_init["f"]
         self.qhist = 0 # DOUBLE-CHECK that 0 is always default state of automaton.
         self.maze = maze
         self.turn = 0
         self.GD = None
         self.cuts = None
+        self.static_area = [state[0] for state in STATIC_AREA]
         self.controller = None
 
     def set_optimization_results(self,cuts, GD, SD):
@@ -48,13 +46,20 @@ class Tester:
         '''
         Determines how the history variable 'q' changes.
         '''
-        node = (self.system_position, 'q'+str(self.qhist)) # Node before system transitions
+        # st()
+        node = ((self.system_position, self.system_fuel), 'q'+str(self.qhist)) # Node before system transitions
         edge_list = list(self.GD.graph.edges(self.GD.inv_node_dict[node]))
+        if self.system_position == self.maze.refuel:
+            self.system_fuel = MAX_FUEL
+        elif self.system_position == system_position:
+            self.system_fuel = self.system_fuel
+        else:
+            self.system_fuel = self.system_fuel - 1
         self.system_position = system_position # update state
-        if node[0] != (0,4):
+        if node[0][0] != (5,0):
             for edge in edge_list:
                 in_node = self.GD.node_dict[edge[1]]
-                in_state = in_node[0]
+                in_state = in_node[0][0]
                 in_q = in_node[-1]
                 if in_state == system_position:
                     self.qhist = int(in_q[1:])
@@ -96,7 +101,9 @@ class Tester:
             logging.getLogger('tulip.synth').setLevel(logging.WARNING)
             logging.getLogger('tulip.interfaces.omega').setLevel(logging.WARNING)
 
-            specs = get_tester_spec(self.q, self.maze, self.GD, self.SD, self.cuts)
+            reactive_cuts = [cut for cut in self.cuts if cut[0] not in self.static_area and cut[1] not in self.static_area]
+
+            specs = get_tester_spec(self.q, self.maze, self.GD, self.SD, reactive_cuts)
 
             spc = spec.GRSpec(specs.env_vars, specs.vars, specs.env_init, specs.init,
                             specs.env_safety, specs.safety, specs.env_progress, specs.progress)

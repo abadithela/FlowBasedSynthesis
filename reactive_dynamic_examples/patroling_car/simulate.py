@@ -3,7 +3,7 @@
 # January 2024
 import sys
 sys.path.append('../..')
-from components.maze_network import MazeNetwork
+from network_fuel import FuelNetwork
 from reactive_dynamic_examples.utils.game import Game
 from problem_data import *
 
@@ -14,13 +14,12 @@ from ipdb import set_trace as st
 from utils.helper import *
 
 def new_World(mazefile):
-    network = MazeNetwork(mazefile)
+    network = FuelNetwork(mazefile)
     network.set_int(INTS)
-
-    system_init = {"z": 4, "x": 0}
-    tester_init = {"z": 3, "x": 2}
+    system_init = {"z": 5, "x": 5, "f": MAX_FUEL}
+    tester_init = {"z": 5, "x": 2}
     tester = Tester("tester", system_init, tester_init, network)
-    sys = Quadruped("sys", system_init, (0,4), network, tester_init)
+    sys = Quadruped("sys", system_init, (0,5), network, tester_init)
     game = Game(network, sys, tester)
 
     return game, network, sys
@@ -35,7 +34,7 @@ def run_sim(max_timestep, filepath):
     game.print_game_state()
     for t in range(1,max_timestep):
         print('Timestep {}'.format(t))
-        game.agent_take_step_augmented() # Change this back to something automatic
+        game.agent_take_manual_step() # Change this back to something automatic
         game.print_game_state()
         game.tester_take_step()
         game.print_game_state()

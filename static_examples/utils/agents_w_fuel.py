@@ -35,27 +35,30 @@ class Quadruped:
         sys_init = {'x = '+str(self.x)+' && z = '+str(self.z)+' && f = '+str(self.f)}
         sys_prog = set()
         goalstr = ''
-        for goal in self.goals:
-            goalstr += '(z = '+str(goal[0][0])+' && x = '+str(goal[0][1])+') || '
+        reduced_GOALS = list(set([goal[0] for goal in self.goals]))
+        for goal in reduced_GOALS:
+            goalstr += '(z = '+str(goal[0])+' && x = '+str(goal[1])+') || '
         goalstr = goalstr[:-4]
         sys_prog |= {goalstr}
         sys_safe = set()
+
         # add the dynamics for the system
         dynamics_spec =  maze.dynamics_specs_w_fuel('x','z','f')
         sys_safe |= dynamics_spec
 
-        # never run out of fuel
+        # Safety spec, never run out of fuel
         sys_safe |= {'f > 0'}
 
-
+        # add auxiliary formula (re-written reaction spec)
         if self.aux_formula['var']:
-            sys_vars[self.aux_formula['var']] = 'boolean'
+            for var in self.aux_formula['var']:
+                sys_vars[var] = 'boolean'
         if self.aux_formula['safe']:
-            sys_safe |= {self.aux_formula['safe']}
+            sys_safe |= self.aux_formula['safe']
         if self.aux_formula['init']:
-            sys_init |= {self.aux_formula['init']}
+            sys_init |= self.aux_formula['init']
         if self.aux_formula['prog']:
-            sys_prog |= {self.aux_formula['prog']}
+            sys_prog |= self.aux_formula['prog']
 
         env_vars = {}
         env_safe = set()
