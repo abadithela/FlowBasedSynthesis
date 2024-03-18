@@ -125,7 +125,8 @@ def no_collision_asm(maze, z_str, x_str, z, x):
     for x_p in range(0,maze.len_x):
         for z_p in range(0,maze.len_z):
             # no collision in same timestep
-            no_collision_str = '!((' + z_str + ' = '+str(z_p)+' && '+ x_str + ' = '+str(x_p) +') && (' + z + ' = '+str(z_p)+' && '+ x + ' = '+str(x_p) +'))'
+            # no_collision_str = '!((' + z_str + ' = '+str(z_p)+' && '+ x_str + ' = '+str(x_p) +') && (' + z + ' = '+str(z_p)+' && '+ x + ' = '+str(x_p) +'))'
+            no_collision_str = '((' + z_str + ' = '+str(z_p)+' && '+ x_str + ' = '+str(x_p) +') -> X !(' + z + ' = '+str(z_p)+' && '+ x + ' = '+str(x_p) +'))'
             no_collision_spec |= {no_collision_str}
     return no_collision_spec
 
@@ -135,6 +136,7 @@ def no_collision_grt(maze, z_str, x_str, z, x):
         for z_p in range(0,maze.len_z):
             # no collision in same timestep
             no_collision_str = '((' + z + ' = '+str(z_p)+' && '+ x + ' = '+str(x_p) +') -> X !(' + z_str + ' = '+str(z_p)+' && '+ x_str + ' = '+str(x_p) +'))'
+            # no_collision_str = '!((' + z + ' = '+str(z_p)+' && '+ x + ' = '+str(x_p) +') && (' + z_str + ' = '+str(z_p)+' && '+ x_str + ' = '+str(x_p) +'))'
             no_collision_spec |= {no_collision_str}
     return no_collision_spec
 

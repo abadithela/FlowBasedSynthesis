@@ -14,11 +14,12 @@ from components.plotting import highlight_cuts, plot_flow_on_maze, plot_flow_on_
 
 def solve_problem_w_fuel(virtual, system, b_pi, virtual_sys, callback = True, print_solution=True, plot_results=True):
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
-
+    
     ti = time.time()
     exit_status, ftest, d, flow = solve_max_gurobi_w_fuel(GD, SD, callback=callback)
     tf = time.time()
     del_t = tf-ti
+    print("Time to solve opt: ", str(del_t))
 
     if exit_status == 'opt':
         fby = find_fby(GD, d)
@@ -29,8 +30,9 @@ def solve_problem_w_fuel(virtual, system, b_pi, virtual_sys, callback = True, pr
             print('Cut {} edges in the virtual game graph.'.format(len(cuts)))
             print('The max flow through I is {}'.format(flow))
             print('The bypass flow is {}'.format(bypass_flow))
-            for cut in cuts:
-                print('Cutting {0} to {1}'.format(GD.node_dict[cut[0]], GD.node_dict[cut[1]]))
+            print("Time to solve opt: ", str(del_t))
+            # for cut in cuts:
+                # print('Cutting {0} to {1}'.format(GD.node_dict[cut[0]], GD.node_dict[cut[1]]))
 
         if plot_results:
             # highlight_cuts(cuts, GD, SD, virtual, virtual_sys)
@@ -46,10 +48,12 @@ def solve_problem_w_fuel(virtual, system, b_pi, virtual_sys, callback = True, pr
 def solve_problem(virtual, system, b_pi, virtual_sys, callback = True, print_solution=True, plot_results=True):
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
 
+
     ti = time.time()
     exit_status, ftest, d, flow = solve_max_gurobi(GD, SD, callback=callback)
     tf = time.time()
     del_t = tf-ti
+    print("Time to solve opt: ", str(del_t))
 
     if exit_status == 'opt':
         fby = find_fby(GD, d)

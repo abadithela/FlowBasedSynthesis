@@ -5,7 +5,7 @@ Defining the problem data for the example.
 MAZEFILE = 'maze.txt'
 MAX_FUEL = 10
 
-INIT = [((5,0),MAX_FUEL)] # in (7,0) with full tank
+INIT = [((6,0),MAX_FUEL)] # in (7,0) with full tank
 GOALS = [((0,0),k) for k in range(0,MAX_FUEL)]
 
 LOW_FUEL = []
@@ -34,5 +34,8 @@ INTS.update({pos: 'rock' for pos in ROCK})
 INTS.update({pos: 'dropoff' for pos in DROPOFF})
 # INTS.update({pos: 'sample' for pos in SAMPLE})
 
-SYS_FORMULA = 'F(goal) & G(!(unsafe)) & G((ice || rock) -> F(dropoff))'
-TEST_FORMULA = 'F(lowfuel) & F(ice) & F(rock)'
+SYS_FORMULA = 'F(goal) & G(!(unsafe)) & G((rock) -> F(dropoff))'
+TEST_FORMULA = 'F(lowfuel) & F(rock)'
+
+# SYS_FORMULA = 'F(goal) & G(!(unsafe)) & G((ice || rock) -> F(dropoff))'
+# TEST_FORMULA = 'F(lowfuel) & F(ice) & F(rock)'
