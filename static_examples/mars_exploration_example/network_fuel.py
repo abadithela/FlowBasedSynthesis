@@ -77,14 +77,14 @@ class FuelNetwork(MazeNetwork):
 
         for state in states:
             # st()
-            # if state not in self.goal: # when test done then done
-            out_node = state
-            in_nodes = [next_state for next_state in next_state_dict[state]]
-            for in_node in in_nodes:
-                actions = []
-                if in_node in states:
-                    actions.append((out_node, in_node))
-                edges = edges + actions
+            if state not in self.goal: # when test done then done
+                out_node = state
+                in_nodes = [next_state for next_state in next_state_dict[state]]
+                for in_node in in_nodes:
+                    actions = []
+                    if in_node in states:
+                        actions.append((out_node, in_node))
+                    edges = edges + actions
 
         G = nx.DiGraph()
         G.add_nodes_from(nodes)

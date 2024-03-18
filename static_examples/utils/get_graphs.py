@@ -5,12 +5,13 @@ import sys
 sys.path.append('../..')
 import os
 from ipdb import set_trace as st
-
+import time
 from components.parse_specification_product import *
 from components.transition_system import ProductTransys
 from components.tools import synchronous_product
 
 def get_graphs_from_network(sys_formula, test_formula, network, init, ints, goals, obs=[], save_figures = False):
+    tgi = time.time()
     b_sys = get_system_automaton(sys_formula)
     b_test = get_tester_automaton(test_formula)
     b_pi = get_prod_automaton(sys_formula, test_formula)
@@ -24,6 +25,9 @@ def get_graphs_from_network(sys_formula, test_formula, network, init, ints, goal
     virtual_sys = synchronous_product(system, b_sys)
     # get virtual product
     virtual = synchronous_product(system, b_pi)
+    tgf = time.time()
+    del_t_g = tgf-tgi
+    print("Time to construct graph: ", str(del_t_g))
 
     if save_figures:
         if not os.path.exists('imgs'):
@@ -37,6 +41,7 @@ def get_graphs_from_network(sys_formula, test_formula, network, init, ints, goal
     return virtual, system, b_pi, virtual_sys
 
 def get_graphs(sys_formula, test_formula, mazefile, init, ints, goals, obs=[], save_figures = False):
+    tgi = time.time()
     b_sys = get_system_automaton(sys_formula)
     b_test = get_tester_automaton(test_formula)
     b_pi = get_prod_automaton(sys_formula, test_formula)
@@ -49,6 +54,9 @@ def get_graphs(sys_formula, test_formula, mazefile, init, ints, goals, obs=[], s
     virtual_sys = synchronous_product(system, b_sys)
     # get virtual product
     virtual = synchronous_product(system, b_pi)
+    tgf = time.time()
+    del_t_g = tgf-tgi
+    print("Time to construct graph: ", str(del_t_g))
 
     if save_figures:
         if not os.path.exists('imgs'):

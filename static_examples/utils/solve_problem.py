@@ -13,12 +13,8 @@ from components.setup_graphs import setup_nodes_and_edges
 from components.plotting import highlight_cuts, plot_flow_on_maze, plot_flow_on_maze_w_fuel
 
 def solve_problem_w_fuel(virtual, system, b_pi, virtual_sys, callback = True, print_solution=True, plot_results=True):
-    tgi = time.time()
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
-    tgf = time.time()
-    del_t_g = tgf-tgi
-    print("Time to construct graph: ", str(del_t_g))
-
+    
     ti = time.time()
     exit_status, ftest, d, flow = solve_max_gurobi_w_fuel(GD, SD, callback=callback)
     tf = time.time()
@@ -34,7 +30,6 @@ def solve_problem_w_fuel(virtual, system, b_pi, virtual_sys, callback = True, pr
             print('Cut {} edges in the virtual game graph.'.format(len(cuts)))
             print('The max flow through I is {}'.format(flow))
             print('The bypass flow is {}'.format(bypass_flow))
-            print("Time to construct graph: ", str(del_t_g))
             print("Time to solve opt: ", str(del_t))
             # for cut in cuts:
                 # print('Cutting {0} to {1}'.format(GD.node_dict[cut[0]], GD.node_dict[cut[1]]))
@@ -51,11 +46,7 @@ def solve_problem_w_fuel(virtual, system, b_pi, virtual_sys, callback = True, pr
 
 
 def solve_problem(virtual, system, b_pi, virtual_sys, callback = True, print_solution=True, plot_results=True):
-    tgi = time.time()
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
-    tgf = time.time()
-    del_t_g = tgi-tgf
-    print("Time to construct graph: ", str(del_t_g))
 
 
     ti = time.time()
