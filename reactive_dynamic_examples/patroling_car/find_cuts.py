@@ -25,6 +25,8 @@ from components.plotting import make_history_plots_w_fuel
 from reactive_dynamic_examples.utils.helper import load_opt_from_pkl_file
 from network_fuel import FuelNetwork
 
+from pdb import set_trace as st
+
 def find_cuts(mazefile):
     network = FuelNetwork(mazefile)
     # intstr = ''.join('%s = %s, ' % (val,key) for (key,val) in INTS.items())

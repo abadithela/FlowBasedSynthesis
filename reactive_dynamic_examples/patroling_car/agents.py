@@ -101,8 +101,9 @@ class Tester:
             logging.getLogger('tulip.synth').setLevel(logging.WARNING)
             logging.getLogger('tulip.interfaces.omega').setLevel(logging.WARNING)
 
-            reactive_cuts = [cut for cut in self.cuts if cut[0] not in self.static_area and cut[1] not in self.static_area]
-
+            # TODO: self.static_area has repeated pose states
+            reactive_cuts = [cut for cut in self.cuts if cut[0][0][0] not in self.static_area or cut[1][0][0] not in self.static_area]
+            
             specs = get_tester_spec(self.q, self.maze, self.GD, self.SD, reactive_cuts)
 
             spc = spec.GRSpec(specs.env_vars, specs.vars, specs.env_init, specs.init,
