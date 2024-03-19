@@ -2,7 +2,6 @@
 import sys
 sys.path.append('..')
 from pdb import set_trace as st
-# from tester_progress import Tester_Progress_States
 
 # put the specs together
 class Spec:
@@ -68,10 +67,11 @@ def history_var_dynamics(GD, sys_z, sys_x, q_str, maze):
     '''
     Determines how the history variable 'q' changes.
     '''
+
     hist_var_dyn = set()
     for node in list(GD.graph.nodes):
         out_node = GD.node_dict[node]
-        out_state = out_node[0][0]
+        out_state = out_node[0][0] # For the extra refueling
         out_q = out_node[-1]
         current_state = '('+sys_z+' = '+str(out_state[0])+' && '+sys_x+' = '+str(out_state[1])+' && '+q_str+' = '+str(out_q[1:])+')'
 
@@ -79,7 +79,7 @@ def history_var_dynamics(GD, sys_z, sys_x, q_str, maze):
             next_state_str = current_state + ' || '
             edge_list = list(GD.graph.edges(node))
             for edge in edge_list:
-                in_node = GD.node_dict[edge[1]]
+                in_node = GD.node_dict[edge[1]] # TODO: For the extra refueling. Change fuel to just be a third element in tuple
                 in_state = in_node[0][0]
                 in_q = in_node[-1]
                 next_state_str = next_state_str+'('+sys_z+' = '+str(in_state[0])+' && '+sys_x+' = '+str(in_state[1])+' && '+q_str+' = '+str(in_q[1:])+') || '
@@ -90,10 +90,53 @@ def history_var_dynamics(GD, sys_z, sys_x, q_str, maze):
             hist_var_dyn |=  {current_state + ' -> X(' + current_state + ')'}
     return hist_var_dyn
 
+def history_var_dynamics_merged(GD, sys_z, sys_x, q_str, maze):
+    '''
+    Determines how the history variable 'q' changes.
+    similar to hist_var_dynamics but since we have refueling,
+    we have 
+    '''
+    # begin debug
+    # track_out_states = set()
+    # end debug
+    transition_dict = dict()
+    hist_var_dyn = set()
+    for node in list(GD.graph.nodes):
+        out_node = GD.node_dict[node]
+        out_state = out_node[0][0] # For the extra refueling
+        out_q = out_node[-1]
+        current_state = '('+sys_z+' = '+str(out_state[0])+' && '+sys_x+' = '+str(out_state[1])+' && '+q_str+' = '+str(out_q[1:])+')'
+        # begin debug
+        # if out_node in track_out_states or current_state == "(z = 5 && x = 4 && q = 0)":
+        #     st()
+        # else:
+        #     track_out_states |= {out_node}
+        # end debug
+        if current_state not in transition_dict.keys():
+            transition_dict[current_state] = {current_state}
+
+        if out_state not in maze.goal: # not at goal
+            edge_list = list(GD.graph.edges(node))
+            for edge in edge_list:
+                in_node = GD.node_dict[edge[1]] # TODO: For the extra refueling. Change fuel to just be a third element in tuple
+                in_state = in_node[0][0]
+                in_q = in_node[-1]
+                next_state_str = '('+sys_z+' = '+str(in_state[0])+' && '+sys_x+' = '+str(in_state[1])+' && '+q_str+' = '+str(in_q[1:])+')'
+                transition_dict[current_state] |= {next_state_str}
+    
+    for current_state, next_states in transition_dict.items():
+        all_next_state_str = current_state
+        for next_state in next_states:
+            if next_state != current_state:
+                all_next_state_str = all_next_state_str + ' || ' + next_state
+
+        hist_var_dyn |=  {current_state + ' -> X(' + all_next_state_str + ')'}
+    return hist_var_dyn
+
 def get_system_safety(maze, GD, z, x, q, z_str, x_str, turn):
     safety = set()
     safety |= no_collision_asm(maze, z_str, x_str, z, x)
-    safety |= history_var_dynamics(GD, z, x, q, maze)
+    safety |= history_var_dynamics_merged(GD, z, x, q, maze)
     safety |= turn_based_asm(z, x, turn, maze)
     return safety
 
@@ -107,7 +150,7 @@ def get_system_progress(maze, z, x):
 
 def set_variables(maze, GD):
     vars = {}
-    vars['X_t'] = (1,2)
+    vars['X_t'] = (-1,maze.len_x)
     vars['Z_t'] = (-1,maze.len_z)
     vars['turn'] = (0,1)
     return vars
@@ -125,7 +168,8 @@ def no_collision_asm(maze, z_str, x_str, z, x):
     for x_p in range(0,maze.len_x):
         for z_p in range(0,maze.len_z):
             # no collision in same timestep
-            no_collision_str = '!((' + z_str + ' = '+str(z_p)+' && '+ x_str + ' = '+str(x_p) +') && (' + z + ' = '+str(z_p)+' && '+ x + ' = '+str(x_p) +'))'
+            # no_collision_str = '!((' + z_str + ' = '+str(z_p)+' && '+ x_str + ' = '+str(x_p) +') && (' + z + ' = '+str(z_p)+' && '+ x + ' = '+str(x_p) +'))'
+            no_collision_str = '((' + z_str + ' = '+str(z_p)+' && '+ x_str + ' = '+str(x_p) +') -> X !(' + z + ' = '+str(z_p)+' && '+ x + ' = '+str(x_p) +'))'
             no_collision_spec |= {no_collision_str}
     return no_collision_spec
 
@@ -135,6 +179,7 @@ def no_collision_grt(maze, z_str, x_str, z, x):
         for z_p in range(0,maze.len_z):
             # no collision in same timestep
             no_collision_str = '((' + z + ' = '+str(z_p)+' && '+ x + ' = '+str(x_p) +') -> X !(' + z_str + ' = '+str(z_p)+' && '+ x_str + ' = '+str(x_p) +'))'
+            # no_collision_str = '!((' + z + ' = '+str(z_p)+' && '+ x + ' = '+str(x_p) +') && (' + z_str + ' = '+str(z_p)+' && '+ x_str + ' = '+str(x_p) +'))'
             no_collision_spec |= {no_collision_str}
     return no_collision_spec
 
@@ -235,8 +280,14 @@ def get_tester_safety(maze, z_str, x_str, z, x, turn, GD, SD, cuts, q):
     safety |= no_collision_grt(maze, z_str, x_str, z, x)
     safety |= restrictive_dynamics(z_str, x_str)
     safety |= turn_based_grt(z_str, x_str, turn, maze)
-    # safety |= occupy_cuts(GD, cuts, z, x, z_str, x_str, q, turn)
-    # safety |= do_not_overconstrain(GD, cuts, z, x, z_str, x_str, q, turn)
+    safety |= occupy_cuts(GD, cuts, z, x, z_str, x_str, q, turn)
+    safety |= do_not_overconstrain(GD, cuts, z, x, z_str, x_str, q, turn)
+
+    # safety |= transiently_block(z_str, x_str)
+    # st()
+    # progress_states = Tester_Progress_States(GD, SD, tester_nodes, states)
+    # states = progress_states.compute_tester_nodes()
+    # safety |= transiently_block_states(z_str, x_str, states)
     return safety
 
 # TESTER PROGRESS
