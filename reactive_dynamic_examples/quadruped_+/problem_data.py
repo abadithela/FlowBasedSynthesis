@@ -15,3 +15,5 @@ SYS_FORMULA = 'F(goal)'
 TEST_FORMULA = 'F(int_1) & F(int_2)'
 
 static_area = [(0,0), (0,1), (1,0), (3,0), (4,0), (4,1), (0,3), (0,4), (1,4), (3,4), (4,4), (4,3)]
+
+STATIC_AREA = static_area

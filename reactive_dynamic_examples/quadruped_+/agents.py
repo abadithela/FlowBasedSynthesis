@@ -212,34 +212,13 @@ class Quadruped:
             # add the dynamics for the system
             dynamics_spec =  maze.transition_specs('z','x')
             sys_safe |= dynamics_spec
-            # add collision constraints
-            # safe_spec = set()
-            # for x in range(0,maze.len_x):
-            #     for z in range(0,maze.len_z):
-            #         safe_spec |= {'!((z = '+str(z)+' && '+'x = '+str(x) +') && (Z_t = '+str(z)+' && '+'X_t = '+str(x)+'))'}
-            # sys_safe |= safe_spec
+
 
             env_vars = {}
-            # env_vars['Z_t'] = (-1,maze.len_z)
-            # env_vars['X_t'] = (-1,maze.len_x)
             env_safe = set()
 
             env_init = set()#{'Z_t = '+str(self.tester_init["z"])+' && X_t = '+str(self.tester_init["x"])}
             env_prog = set()
-            # env_prog |= {'(X_t = 2 && Z_t = 1) || (X_t = 1 && Z_t = 2) || (X_t = 2 && Z_t = 3) || (X_t = 3 && Z_t = 2) || (Z_t = -1 && X_t = 2) || (X_t = -1 && Z_t =2)'}
-            # # tester can move up and down the middle row and column
-            # test_dynamics_spec = {'(Z_t = 2 && X_t = 2) -> X((Z_t = 3 && X_t = 2) || (Z_t = 2 && X_t = 2) ||(Z_t = 1 && X_t = 2) || (Z_t = 2 && X_t = 3) || (Z_t = 2 && X_t=1))'}
-            # test_dynamics_spec |= {'(Z_t = 4 && X_t = 2) -> X((X_t = 2) && ((Z_t = 4) ||(Z_t = 3) || (Z_t = -1)))'}
-            # test_dynamics_spec |= {'(Z_t = 3 && X_t = 2) -> X((X_t = 2) && ((Z_t = 4) || (Z_t = 3) ||(Z_t = 2)))'}
-            # test_dynamics_spec |= {'(Z_t = 1 && X_t = 2) -> X((X_t = 2) && ((Z_t = 2) || (Z_t = 1) || (Z_t = 0)))'}
-            # test_dynamics_spec |= {'(Z_t = 0 && X_t = 2) -> X((X_t = 2) && ((Z_t = 0) || (Z_t = 1)|| (Z_t = -1)))'}
-            # test_dynamics_spec |= {'(Z_t = -1 && X_t = 2) -> X((Z_t = -1 && X_t = 2))'}
-            # test_dynamics_spec |= {'(X_t = 4 && Z_t = 2) -> X((Z_t = 2) && ((X_t = 4) ||(X_t = 3) || (X_t = -1)))'}
-            # test_dynamics_spec |= {'(X_t = 3 && Z_t = 2) -> X((Z_t = 2) && ((X_t = 4) || (X_t = 3) ||(X_t = 2)))'}
-            # test_dynamics_spec |= {'(X_t = 1 && Z_t = 2) -> X((Z_t = 2) && ((X_t = 2) || (X_t = 1) || (X_t = 0)))'}
-            # test_dynamics_spec |= {'(X_t = 0 && Z_t = 2) -> X((Z_t = 2) && ((X_t = 0) || (X_t = 1)|| (X_t = -1)))'}
-            # test_dynamics_spec |= {'(X_t = -1 && Z_t = 2) -> X((X_t = -1 && Z_t = 2))'}
-            # env_safe |= test_dynamics_spec
 
             spc = spec.GRSpec(env_vars, sys_vars, env_init, sys_init,
                             env_safe, sys_safe, env_prog, sys_prog)

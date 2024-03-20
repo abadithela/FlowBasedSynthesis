@@ -46,10 +46,15 @@ class Tester:
         '''
         Determines how the history variable 'q' changes.
         '''
-        # st()
+        # if self.system_position == (1, 5) or self.system_position == (1, 4):
+        #     st()
         node = ((self.system_position, self.system_fuel), 'q'+str(self.qhist)) # Node before system transitions
+
+        # try:
         edge_list = list(self.GD.graph.edges(self.GD.inv_node_dict[node]))
-        if self.system_position == self.maze.refuel:
+        # except:
+        #     st()
+        if system_position in self.maze.refuel:
             self.system_fuel = MAX_FUEL
         elif self.system_position == system_position:
             self.system_fuel = self.system_fuel
@@ -103,7 +108,7 @@ class Tester:
 
             # TODO: self.static_area has repeated pose states
             reactive_cuts = [cut for cut in self.cuts if cut[0][0][0] not in self.static_area or cut[1][0][0] not in self.static_area]
-            
+
             specs = get_tester_spec(self.q, self.maze, self.GD, self.SD, reactive_cuts)
 
             spc = spec.GRSpec(specs.env_vars, specs.vars, specs.env_init, specs.init,
@@ -139,9 +144,10 @@ class Quadruped:
         self.goal = goal
         self.index = 0
         self.maze = maze
+        self.f = MAX_FUEL
         self.tester_init = tester_init
         self.unsafe = []
-        self.controller = self.find_controller(maze)
+        self.controller = None #self.find_controller(maze)
         # maze.goal.append(goal)
 
     def resynthesize_controller(self,unsafe):
@@ -155,14 +161,17 @@ class Quadruped:
         sys_vars = {}
         sys_vars['x'] = (0,self.maze.len_x)
         sys_vars['z'] = (0,self.maze.len_z)
-
-        sys_init = {'x = '+str(self.x)+' && z = '+str(self.z)}
+        sys_vars['f'] = (0,MAX_FUEL)
+        sys_init = {'x = '+str(self.x)+' && z = '+str(self.z)+' && f = '+str(self.f)}
         sys_prog = set()
         sys_prog |= {'(z = '+str(self.goal[0])+' && x = '+str(self.goal[1])+')'}
         sys_safe = set()
         # add the dynamics for the system
-        dynamics_spec =  self.maze.transition_specs('z','x')
+        dynamics_spec =  self.maze.dynamics_specs_w_fuel('x','z','f')
         sys_safe |= dynamics_spec
+
+        # Safety spec, never run out of fuel
+        sys_safe |= {'f > 0'}
 
         for unsafe_state in self.unsafe:
             sys_safe |= {'!(x = '+str(unsafe_state[1])+' && z = '+str(unsafe_state[0])+')'}
@@ -170,14 +179,13 @@ class Quadruped:
 
         env_vars = {}
         env_safe = set()
-
         env_init = set()
         env_prog = set()
 
         spc = spec.GRSpec(env_vars, sys_vars, env_init, sys_init,
                         env_safe, sys_safe, env_prog, sys_prog)
 
-        print(spc.pretty())
+        # print(spc.pretty())
         spc.moore = False
         spc.qinit = r'\A \E'
         if not synth.is_realizable(spc, solver='omega'):
@@ -212,47 +220,28 @@ class Quadruped:
             sys_vars = {}
             sys_vars['x'] = (0,maze.len_x)
             sys_vars['z'] = (0,maze.len_z)
-
-            sys_init = {'x = '+str(self.x)+' && z = '+str(self.z)}
+            sys_vars['f'] = (0,MAX_FUEL)
+            sys_init = {'x = '+str(self.x)+' && z = '+str(self.z)+' && f = '+str(self.f)}
             sys_prog = set()
             sys_prog |= {'(z = '+str(self.goal[0])+' && x = '+str(self.goal[1])+')'}
             sys_safe = set()
             # add the dynamics for the system
-            dynamics_spec =  maze.transition_specs('z','x')
+            # add the dynamics for the system
+            dynamics_spec =  self.maze.dynamics_specs_w_fuel('x','z','f')
             sys_safe |= dynamics_spec
-            # add collision constraints
-            # safe_spec = set()
-            # for x in range(0,maze.len_x):
-            #     for z in range(0,maze.len_z):
-            #         safe_spec |= {'!((z = '+str(z)+' && '+'x = '+str(x) +') && (Z_t = '+str(z)+' && '+'X_t = '+str(x)+'))'}
-            # sys_safe |= safe_spec
+            # Safety spec, never run out of fuel
+            sys_safe |= {'f > 0'}
 
             env_vars = {}
-            # env_vars['Z_t'] = (-1,maze.len_z)
-            # env_vars['X_t'] = (-1,maze.len_x)
             env_safe = set()
 
-            env_init = set()#{'Z_t = '+str(self.tester_init["z"])+' && X_t = '+str(self.tester_init["x"])}
+            env_init = set()
             env_prog = set()
-            # env_prog |= {'(X_t = 2 && Z_t = 1) || (X_t = 1 && Z_t = 2) || (X_t = 2 && Z_t = 3) || (X_t = 3 && Z_t = 2) || (Z_t = -1 && X_t = 2) || (X_t = -1 && Z_t =2)'}
-            # # tester can move up and down the middle row and column
-            # test_dynamics_spec = {'(Z_t = 2 && X_t = 2) -> X((Z_t = 3 && X_t = 2) || (Z_t = 2 && X_t = 2) ||(Z_t = 1 && X_t = 2) || (Z_t = 2 && X_t = 3) || (Z_t = 2 && X_t=1))'}
-            # test_dynamics_spec |= {'(Z_t = 4 && X_t = 2) -> X((X_t = 2) && ((Z_t = 4) ||(Z_t = 3) || (Z_t = -1)))'}
-            # test_dynamics_spec |= {'(Z_t = 3 && X_t = 2) -> X((X_t = 2) && ((Z_t = 4) || (Z_t = 3) ||(Z_t = 2)))'}
-            # test_dynamics_spec |= {'(Z_t = 1 && X_t = 2) -> X((X_t = 2) && ((Z_t = 2) || (Z_t = 1) || (Z_t = 0)))'}
-            # test_dynamics_spec |= {'(Z_t = 0 && X_t = 2) -> X((X_t = 2) && ((Z_t = 0) || (Z_t = 1)|| (Z_t = -1)))'}
-            # test_dynamics_spec |= {'(Z_t = -1 && X_t = 2) -> X((Z_t = -1 && X_t = 2))'}
-            # test_dynamics_spec |= {'(X_t = 4 && Z_t = 2) -> X((Z_t = 2) && ((X_t = 4) ||(X_t = 3) || (X_t = -1)))'}
-            # test_dynamics_spec |= {'(X_t = 3 && Z_t = 2) -> X((Z_t = 2) && ((X_t = 4) || (X_t = 3) ||(X_t = 2)))'}
-            # test_dynamics_spec |= {'(X_t = 1 && Z_t = 2) -> X((Z_t = 2) && ((X_t = 2) || (X_t = 1) || (X_t = 0)))'}
-            # test_dynamics_spec |= {'(X_t = 0 && Z_t = 2) -> X((Z_t = 2) && ((X_t = 0) || (X_t = 1)|| (X_t = -1)))'}
-            # test_dynamics_spec |= {'(X_t = -1 && Z_t = 2) -> X((X_t = -1 && Z_t = 2))'}
-            # env_safe |= test_dynamics_spec
 
             spc = spec.GRSpec(env_vars, sys_vars, env_init, sys_init,
                             env_safe, sys_safe, env_prog, sys_prog)
 
-            print(spc.pretty())
+            # print(spc.pretty())
             spc.moore = False
             spc.qinit = r'\A \E'
             if not synth.is_realizable(spc, solver='omega'):
@@ -260,10 +249,10 @@ class Quadruped:
                 st()
             else:
                 ctrl = synth.synthesize(spc, solver='omega')
-            # dunp the controller
-            controller_namestr = "system_controller.py"
-            dumpsmach.write_python_case(controller_namestr, ctrl, classname="AgentCtrl")
             self.index += 1
+            # dunp the controller
+            controller_namestr = "system_controller"+str(self.index)+".py"
+            dumpsmach.write_python_case(controller_namestr, ctrl, classname="AgentCtrl")
 
             # print(dumpsmach.python_case(g, classname='AgentCtrl', start=))
             exe_globals = dict()
@@ -272,22 +261,15 @@ class Quadruped:
             self.controller = M
 
     def agent_move(self, tester_pos):
-        output = self.controller.move(tester_pos[0],tester_pos[1])
+        # st()
+        output = self.controller.move()
         self.x = output['x']
         self.z = output['z']
-        self.s = (self.z,self.x)
+        self.f = output['f']
+        self.s = ((self.z,self.x), self.f)
 
     def agent_manual_move(self, sys_pos):
-        self.z = sys_pos[0]
-        self.x = sys_pos[1]
-        self.s = (self.z, self.x)
-
-    def agent_sp_move(self):
-        #todo: this is where we interface the shortest path controller for the system with exponential forgetting factor.
-        self.z = sys_pos[0]
-        self.x = sys_pos[1]
-        self.s = (self.z, self.x)
-
-def next_move(tester, maze):
-    maze.print_maze()
-    pass
+        self.z = sys_pos[0][0]
+        self.x = sys_pos[0][1]
+        self.f = sys_pos[-11]
+        self.s = ((self.z,self.x), self.f)

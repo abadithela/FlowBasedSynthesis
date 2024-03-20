@@ -19,7 +19,7 @@ def new_World(mazefile):
     system_init = {"z": 5, "x": 5, "f": MAX_FUEL}
     tester_init = {"z": 5, "x": 2}
     tester = Tester("tester", system_init, tester_init, network)
-    sys = Quadruped("sys", system_init, (0,5), network, tester_init)
+    sys = Quadruped("sys", system_init, (5,0), network, tester_init)
     game = Game(network, sys, tester)
 
     return game, network, sys
@@ -34,7 +34,7 @@ def run_sim(max_timestep, filepath):
     game.print_game_state()
     for t in range(1,max_timestep):
         print('Timestep {}'.format(t))
-        game.agent_take_manual_step() # Change this back to something automatic
+        game.agent_take_step_augmented_fuel() # Change this back to something automatic
         game.print_game_state()
         game.tester_take_step()
         game.print_game_state()

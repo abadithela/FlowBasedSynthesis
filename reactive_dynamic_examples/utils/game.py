@@ -6,6 +6,7 @@ import _pickle as pickle
 from reactive_dynamic_examples.utils.helper import load_opt_from_pkl_file
 from reactive_dynamic_examples.utils.quadruped_interface import quadruped_move
 from reactive_dynamic_examples.utils.parse_cuts import Map_Reactive_Cuts
+from problem_data import *
 
 class Game:
     def __init__(self, maze, sys, tester):
@@ -40,8 +41,11 @@ class Game:
 
     def setup(self):
         cuts, GD, SD = self.get_optimization_results()
-        # map_cuts = Map_Reactive_Cuts(cuts, GD, SD)
-        # mapped_cuts = map_cuts.get_cuts_with_dyn_agent()
+        # st()
+        static_cuts = list(set([(cut[0][0], cut[1][0]) for cut in cuts if cut[0][0] in STATIC_AREA and cut[1][0] in STATIC_AREA]))
+
+        for cut in static_cuts:
+            self.maze.add_cut_w_fuel(cut)
 
         self.agent.find_controller(self.maze)
         self.tester.set_optimization_results(cuts, GD, SD)
@@ -81,6 +85,23 @@ class Game:
             print('Agent moving to {}'.format((next_z,next_x)))
             self.agent.x = next_x
             self.agent.z = next_z
+            self.agent.s = (next_z,next_x)
+        else:
+            # resynthesize controller and add the blocked state!
+            unsafe = (next_z,next_x)
+            self.agent.resynthesize_controller(unsafe)
+        quadruped_move('system', (self.agent.z,self.agent.x))
+
+    def agent_take_step_augmented_fuel(self):
+        output = self.agent.controller.move()
+        next_x = output['x']
+        next_z = output['z']
+        next_f = output['f']
+        if not (next_z,next_x) == self.tester.q:
+            print('System moving to {0} - fuel {1}'.format((next_z,next_x), next_f))
+            self.agent.x = next_x
+            self.agent.z = next_z
+            self.agent.f = next_f
             self.agent.s = (next_z,next_x)
         else:
             # resynthesize controller and add the blocked state!
