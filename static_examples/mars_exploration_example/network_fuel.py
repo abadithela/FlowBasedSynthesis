@@ -39,7 +39,7 @@ class FuelNetwork(MazeNetwork):
                     if not self.map[(ii,jj)] == '*':
                         if ((ii,jj),ff) in self.next_state_dict_w_fuel.keys():
                             next_steps_string = '('+z_str+' = '+str(ii)+' && '+x_str+' = '+str(jj)+' && '+f_str+'='+str(ff)+')'
-                            if (ii,jj) not in self.goal:
+                            if not (ii,jj) == (0,0):
                                 for item in self.next_state_dict_w_fuel[((ii,jj),ff)]:
                                     if (((ii,jj),ff), item) not in self.active_cuts:
                                         if item != ((ii,jj),ff):
