@@ -7,6 +7,7 @@ from tulip import transys, spec, synth
 from tulip import dumpsmach
 from static_examples.utils.quadruped_interface import quadruped_move
 from problem_data import MAX_FUEL
+from pdb import set_trace as st
 
 class Quadruped:
     def __init__(self, name, pos, goals, maze, aux_formula={'safe': None, 'init': None, 'prog': None, 'var': None}):

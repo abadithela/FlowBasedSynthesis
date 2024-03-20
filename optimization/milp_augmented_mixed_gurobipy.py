@@ -1,5 +1,5 @@
 '''
-Gurobipy implementation of the MILP for mixed obstacles (static + reactive).
+Gurobipy implementation of the MILP for mixed obstacles (static + reactive) with augmented objective.
 '''
 
 import gurobipy as gp

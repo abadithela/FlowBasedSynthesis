@@ -16,6 +16,8 @@ class FuelNetwork(MazeNetwork):
         self.setup_states()
         self.next_state_dict_w_fuel = None
         self.graph = self.create_graph_with_fuel_level()
+        # self.len_x += 1
+        # self.len_z += 1
 
     def setup_states(self):
         for z in range(0,self.len_z):
