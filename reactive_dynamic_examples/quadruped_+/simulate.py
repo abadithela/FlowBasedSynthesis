@@ -18,7 +18,7 @@ def new_World(mazefile):
     network.set_int(INTS)
 
     system_init = {"z": 4, "x": 0}
-    tester_init = {"z": 3, "x": 2}
+    tester_init = {"z": 2, "x": 2}
     tester = Tester("tester", system_init, tester_init, network)
     sys = Quadruped("sys", system_init, (0,4), network, tester_init)
     game = Game(network, sys, tester)
