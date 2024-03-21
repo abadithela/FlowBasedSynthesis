@@ -109,7 +109,7 @@ class Tester:
 
             if not synth.is_realizable(spc, solver='omega'):
                 print("Not realizable.")
-                st()
+                # st()
             else:
                 ctrl = synth.synthesize(spc, solver='omega')
             # dunp the controller

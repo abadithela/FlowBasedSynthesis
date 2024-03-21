@@ -30,7 +30,7 @@ def cb(model, where):
         model.terminate()
 
 # Gurobi implementation
-def solve_max_gurobi(GD, SD, static_area = []):
+def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = []):
     cleaned_intermed = [x for x in GD.acc_test if x not in GD.acc_sys]
     # create G and remove self-loops
     G = GD.graph
@@ -205,7 +205,11 @@ def solve_max_gurobi(GD, SD, static_area = []):
                     model.addConstr(f_s[k][imap, jmap] + d_aux[i, j] <= 1)
                 elif GD.node_dict[i][-1] == curr_q:
                     model.addConstr(f_s[k][imap, jmap] + d_aux[i, j] <= 1)
-
+    # --- Exclude specific solutions that cannot be realized
+    # st()
+    for excluded_sol in excluded_sols:
+        model.addConstr(sum(d[i, j] for (i,j) in excluded_sol) <= len(excluded_sol)-1)
+        
     # --------- set parameters
     # Last updated objective and time (for callback function)
     model._cur_obj = float('inf')
