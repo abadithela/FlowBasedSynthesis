@@ -45,11 +45,11 @@ def solve_problem(virtual, system, b_pi, virtual_sys, print_solution=True, plot_
     else:
         return exit_status, [], [], None, GD, SD
 
-def solve_problem_augmented(virtual, system, b_pi, virtual_sys, static_area, print_solution=True, plot_results=True):
+def solve_problem_augmented(virtual, system, b_pi, virtual_sys, static_area, excluded_sols = [], print_solution=True, plot_results=True):
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
 
     ti = time.time()
-    exit_status, ftest, d, flow = solve_max_gurobi_augmented(GD, SD, static_area = static_area)
+    exit_status, ftest, d, flow = solve_max_gurobi_augmented(GD, SD, static_area = static_area, excluded_sols=excluded_sols)
     tf = time.time()
     del_t = tf-ti
 

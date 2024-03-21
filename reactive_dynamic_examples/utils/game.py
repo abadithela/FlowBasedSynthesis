@@ -23,7 +23,7 @@ class Game:
         self.inv_node_dict = None
         self.turn = 'sys'
         # self.state_in_G, self.G, self.node_dict = self.setup()
-        self.setup()
+        self.setup_cex()
 
     def get_optimization_results(self):
     # read pickle file - if not there save a new one
@@ -50,6 +50,37 @@ class Game:
         self.agent.find_controller(self.maze)
         self.tester.set_optimization_results(cuts, GD, SD)
         self.tester.find_controller()
+        
+    
+    def setup_cex(self):
+        # Solving optimization with counterexample guided search.
+        strategy_found = False
+        cuts, GD, SD = self.get_optimization_results()
+        excluded_sols = []
+
+        while not strategy_found:
+            # st()
+            static_cuts = list(set([(cut[0][0], cut[1][0]) for cut in cuts if cut[0][0] in STATIC_AREA and cut[1][0] in STATIC_AREA]))
+
+            for cut in static_cuts:
+                self.maze.add_cut_w_fuel(cut)
+
+            try: 
+                self.agent.find_controller(self.maze)
+                self.tester.set_optimization_results(cuts, GD, SD)
+                self.tester.find_controller()
+                strategy_found = True
+                print("Test Agent Strategy synthesized!.")
+            except:
+                n_exc = len(excluded_sols)
+                print("!! Could not synthesize test agent strategy!!")
+                print(f"Re-solving optimization with {n_exc} solutions excluded.")
+                graph_cuts = [(GD.inv_node_dict[cut[0]], GD.inv_node_dict[cut[1]]) for cut in cuts]
+                excluded_sols.append(graph_cuts)
+                cuts, GD, SD = find_cuts(excluded_sols = excluded_sols, load_sol=False)
+                opt_dict = {'cuts': cuts, 'GD': GD, 'SD': SD}
+                with open('stored_optimization_result.p', 'wb') as pckl_file:
+                    pickle.dump(opt_dict, pckl_file)
 
 
     def print_game_state(self):
