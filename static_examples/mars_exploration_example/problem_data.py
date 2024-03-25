@@ -34,8 +34,8 @@ INTS.update({pos: 'rock' for pos in ROCK})
 INTS.update({pos: 'dropoff' for pos in DROPOFF})
 # INTS.update({pos: 'sample' for pos in SAMPLE})
 
-SYS_FORMULA = 'F(goal) & G(!(unsafe)) & G((rock) -> F(dropoff))'
-TEST_FORMULA = 'F(lowfuel) & F(rock)'
+# SYS_FORMULA = 'F(goal) & G(!(unsafe)) & G((rock) -> F(dropoff))'
+# TEST_FORMULA = 'F(lowfuel) & F(rock)'
 
-# SYS_FORMULA = 'F(goal) & G(!(unsafe)) & G((ice || rock) -> F(dropoff))'
-# TEST_FORMULA = 'F(lowfuel) & F(ice) & F(rock)'
+SYS_FORMULA = 'F(goal) & G(!(unsafe)) & G((ice || rock) -> F(dropoff))'
+TEST_FORMULA = 'F(lowfuel) & F(ice) & F(rock)'

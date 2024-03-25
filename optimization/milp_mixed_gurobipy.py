@@ -40,18 +40,18 @@ def cb(model, where):
             model._cur_obj = obj
             model._time = time.time()
             
-    # Terminate if objective has not improved in 30s
-    # Current objective is less than infinity.
-    if obj < float(np.inf):
-        # if time.time() - model._time > 30:# and model.SolCount >= 1:
-        if len(model._data["best_obj"]) > 5:
-            last_five = model._data["best_obj"][-5:]
-            if last_five.count(last_five[0]) == len(last_five): # If the objective has not changed in 5 iterations, terminate
+        # Terminate if objective has not improved in 30s
+        # Current objective is less than infinity.
+        if obj < float(np.inf):
+            # if time.time() - model._time > 30:# and model.SolCount >= 1:
+            if len(model._data["best_obj"]) > 5:
+                last_five = model._data["best_obj"][-5:]
+                if last_five.count(last_five[0]) == len(last_five): # If the objective has not changed in 5 iterations, terminate
+                    model.terminate()
+        else:
+            # Total termination time if the optimizer has not found anything in 5 min:
+            if time.time() - model._time > 3000: 
                 model.terminate()
-    else:
-        # Total termination time if the optimizer has not found anything in 5 min:
-        if time.time() - model._time > 3000: 
-            model.terminate()
 
 # Gurobi implementation
 def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = []):
@@ -243,10 +243,6 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = []):
     for key in ["opt_time", "best_obj", "bound", "node_count", "sol_count"]:
         model._data[key] = []
 
-    model._data["n_bin_vars"] = model.NumBinVars
-    model._data["n_cont_vars"] = model.NumVars - model.NumBinVars
-    model._data["n_constrs"] = model.NumConstrs
-
     # model.Params.InfUnbdInfo = 1
 
     # optimize
@@ -254,6 +250,10 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = []):
 
     # Store runtime:
     model._data["runtime"] = model.Runtime
+
+    model._data["n_bin_vars"] = model.NumBinVars
+    model._data["n_cont_vars"] = model.NumVars - model.NumBinVars
+    model._data["n_constrs"] = model.NumConstrs
 
     if model.status == 4:
         model.Params.DualReductions = 0

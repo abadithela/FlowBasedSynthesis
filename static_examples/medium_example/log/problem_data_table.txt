@@ -1,0 +1,18 @@
+\begin{table}[h!]
+\centering
+\begin{tabular}{l|l}
+\hline
+medium_example & 2024-03-25 10:35:58.008671 \\
+\hline
+Object & Value \\
+Transition System & (15, 53) \\
+Buchi (System) & (2, 3) \\
+Buchi (Test) & (2, 3) \\
+Buchi (Product) & (4, 9) \\
+Gsys & (30, 106) \\
+G & (60, 212) \\
+\hline
+\end{tabular}
+\caption{Caption here}
+\label{table:label_here}
+\end{table}

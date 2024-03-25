@@ -20,7 +20,7 @@ def new_cb(model, where):
     if where == GRB.Callback.MIPNODE:
         # Get model objective
         obj = model.cbGet(GRB.Callback.MIPNODE_OBJBST) # Current best objective
-        opt_time = model.cbGet(GRB.Callback.RUNTIME) # Optimizer runtime
+        opt_time = model.cbGet(GRB.Callback.RUNTIME) # Optimizer time
         obj_bound = model.cbGet(GRB.Callback.MIPNODE_OBJBND) # Objective bound
         node_count = model.cbGet(GRB.Callback.MIPNODE_NODCNT) # No. of unexplored nodes 
         sol_count = model.cbGet(GRB.Callback.MIPNODE_SOLCNT) # No. of feasible solns found.
@@ -40,18 +40,18 @@ def new_cb(model, where):
             model._cur_obj = obj
             model._time = time.time()
             
-    # Terminate if objective has not improved in 30s
-    # Current objective is less than infinity.
-    if obj < float(np.inf):
-        # if time.time() - model._time > 30:# and model.SolCount >= 1:
-        if len(model._data["best_obj"]) > 5:
-            last_five = model._data["best_obj"][-5:]
-            if last_five.count(last_five[0]) == len(last_five): # If the objective has not changed in 5 iterations, terminate
+        # Terminate if objective has not improved in 30s
+        # Current objective is less than infinity.
+        if obj < float(np.inf):
+            # if time.time() - model._time > 30:# and model.SolCount >= 1:
+            if len(model._data["best_obj"]) > 5:
+                last_five = model._data["best_obj"][-5:]
+                if last_five.count(last_five[0]) == len(last_five): # If the objective has not changed in 5 iterations, terminate
+                    model.terminate()
+        else:
+            # Total termination time if the optimizer has not found anything in 5 min:
+            if time.time() - model._time > 3000: 
                 model.terminate()
-    else:
-        # Total termination time if the optimizer has not found anything in 5 min:
-        if time.time() - model._time > 3000: 
-            model.terminate()
 
 # Callback function
 def cb(model, where):
@@ -214,9 +214,7 @@ def solve_max_gurobi(GD, SD, callback=True):
     for key in ["opt_time", "best_obj", "bound", "node_count", "sol_count"]:
         model._data[key] = []
 
-    model._data["n_bin_vars"] = model.NumBinVars
-    model._data["n_cont_vars"] = model.NumVars - model.NumBinVars
-    model._data["n_constrs"] = model.NumConstrs
+    
     # model.Params.InfUnbdInfo = 1
 
     # optimize
@@ -226,6 +224,13 @@ def solve_max_gurobi(GD, SD, callback=True):
         model.optimize()
     model._data["runtime"] = model.Runtime
     
+    # Storing problem variables:
+    model._data["n_bin_vars"] = model.NumBinVars
+    model._data["n_cont_vars"] = model.NumVars - model.NumBinVars
+    model._data["n_constrs"] = model.NumConstrs
+    
+    # model.Params.InfUnbdInfo = 1
+
     if model.status == 4:
         model.Params.DualReductions = 0
         model.optimize(callback=new_cb)

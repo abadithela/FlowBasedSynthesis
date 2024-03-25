@@ -27,7 +27,9 @@ def find_cuts():
 
     exit_status, annot_cuts, flow, bypass = solve_problem(virtual, system, b_pi, virtual_sys)
     print('exit status {0}'.format(exit_status))
-
+    
+    logger.print_runtime_latex()
+    logger.print_problem_data_latex()
     return annot_cuts
 
 
