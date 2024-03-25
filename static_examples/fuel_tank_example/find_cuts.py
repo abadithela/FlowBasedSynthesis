@@ -38,4 +38,5 @@ def find_cuts(network):
 
 if __name__ == '__main__':
     mazefile = 'maze.txt'
-    find_cuts(mazefile)
+    maze = FuelNetwork(mazefile)
+    find_cuts(maze)
