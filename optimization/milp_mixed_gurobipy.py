@@ -12,22 +12,46 @@ import networkx as nx
 from optimization.feasibility_constraints import find_map_G_S
 from gurobipy import *
 from copy import deepcopy
+import json
+import os
 
 # Callback function
 def cb(model, where):
     if where == GRB.Callback.MIPNODE:
         # Get model objective
-        obj = model.cbGet(GRB.Callback.MIPNODE_OBJBST)
+        obj = model.cbGet(GRB.Callback.MIPNODE_OBJBST) # Current best objective
+        opt_time = model.cbGet(GRB.Callback.RUNTIME) # Optimizer runtime
+        obj_bound = model.cbGet(GRB.Callback.MIPNODE_OBJBND) # Objective bound
+        node_count = model.cbGet(GRB.Callback.MIPNODE_NODCNT) # No. of unexplored nodes 
+        sol_count = model.cbGet(GRB.Callback.MIPNODE_SOLCNT) # No. of feasible solns found.
 
+        # Save model and opt data:
+        model._data["opt_time"].append(opt_time)
+        model._data["best_obj"].append(obj)
+        model._data["bound"].append(obj_bound)
+        model._data["node_count"].append(node_count)
+        model._data["sol_count"].append(sol_count)
+
+        # 5 iterations.
+        # cur_obj to float(np.inf)
         # Has objective changed?
         if abs(obj - model._cur_obj) > 1e-8:
             # If so, update incumbent and time
             model._cur_obj = obj
             model._time = time.time()
-
+            
     # Terminate if objective has not improved in 30s
-    if time.time() - model._time > 30:# and model.SolCount >= 1:
-        model.terminate()
+    # Current objective is less than infinity.
+    if obj < float(np.inf):
+        # if time.time() - model._time > 30:# and model.SolCount >= 1:
+        if len(model._data["best_obj"]) > 5:
+            last_five = model._data["best_obj"][-5:]
+            if last_five.count(last_five[0]) == len(last_five): # If the objective has not changed in 5 iterations, terminate
+                model.terminate()
+    else:
+        # Total termination time if the optimizer has not found anything in 5 min:
+        if time.time() - model._time > 3000: 
+            model.terminate()
 
 # Gurobi implementation
 def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = []):
@@ -213,13 +237,23 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = []):
     # --------- set parameters
     # Last updated objective and time (for callback function)
     model._cur_obj = float('inf')
-    model._time = time.time()
+    model._time = time.time() # Processor time
     model.Params.Seed = np.random.randint(0,100)
+    model._data = dict() # To store objective data.
+    for key in ["opt_time", "best_obj", "bound", "node_count", "sol_count"]:
+        model._data[key] = []
+
+    model._data["n_bin_vars"] = model.NumBinVars
+    model._data["n_cont_vars"] = model.NumVars - model.NumBinVars
+    model._data["n_constrs"] = model.NumConstrs
 
     # model.Params.InfUnbdInfo = 1
 
     # optimize
     model.optimize(callback=cb)
+
+    # Store runtime:
+    model._data["runtime"] = model.Runtime
 
     if model.status == 4:
         model.Params.DualReductions = 0
@@ -261,5 +295,10 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = []):
 
     else:
         st()
+    
+    if not os.path.exists("log"):
+        os.makedirs("log")
+    with open('log/opt_data.json', 'w') as fp:
+        json.dump(model._data, fp)
 
     return exit_status, f_vals, d_vals, flow

@@ -4,6 +4,7 @@ Solving the problem for the given graphs - static obstacle implementation.
 import sys
 sys.path.append('../..')
 import time
+import os
 
 from optimization.find_bypass_flow import find_fby
 from optimization.milp_static_gurobipy import solve_max_gurobi
@@ -48,7 +49,6 @@ def solve_problem_w_fuel(virtual, system, b_pi, virtual_sys, callback = True, pr
 def solve_problem(virtual, system, b_pi, virtual_sys, callback = True, print_solution=True, plot_results=True):
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
 
-
     ti = time.time()
     exit_status, ftest, d, flow = solve_max_gurobi(GD, SD, callback=callback)
     tf = time.time()
@@ -68,6 +68,8 @@ def solve_problem(virtual, system, b_pi, virtual_sys, callback = True, print_sol
                 print('Cutting {0} to {1}'.format(GD.node_dict[cut[0]], GD.node_dict[cut[1]]))
 
         if plot_results:
+            if not os.path.exists("imgs"):
+                os.makedirs("imgs")
             highlight_cuts(cuts, GD, SD, virtual, virtual_sys)
             sys_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
             plot_flow_on_maze(system.maze, sys_cuts)
