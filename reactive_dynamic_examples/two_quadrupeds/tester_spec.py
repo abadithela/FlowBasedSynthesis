@@ -141,13 +141,20 @@ def no_collision_grt(maze, z_str, x_str, z, x):
 # dynamics
 def restrictive_dynamics(z_str, x_str):
     dynamics_spec = set()
-    dynamics_spec |= {'('+z_str+' = 6) -> X(('+z_str+' = 6) || ('+z_str+' = 5) || ('+z_str+' = -1))'}
-    dynamics_spec |= {'('+z_str+' = 5) -> X(('+z_str+' = 6) || ('+z_str+' = 5) || ('+z_str+' = 4))'}
-    dynamics_spec |= {'('+z_str+' = 4) -> X(('+z_str+' = 4) || ('+z_str+' = 3) || ('+z_str+' = 5))'}
-    dynamics_spec |= {'('+z_str+' = 3) -> X(('+z_str+' = 4) || ('+z_str+' = 3) || ('+z_str+' = 2))'}
-    dynamics_spec |= {'('+z_str+' = 2) -> X(('+z_str+' = 3) || ('+z_str+' = 2) || ('+z_str+' = 1))'}
-    dynamics_spec |= {'('+z_str+' = 1) -> X(('+z_str+' = 2) || ('+z_str+' = 1) || ('+z_str+' = 0))'}
-    dynamics_spec |= {'('+z_str+' = 0) -> X(('+z_str+' = 0) || ('+z_str+' = 1) || ('+z_str+' = -1))'}
+    dynamics_spec |= {'('+z_str+' = 6) -> X(('+z_str+' = 6) || ('+z_str+' = 5))'}
+    dynamics_spec |= {'('+z_str+' = 5) -> X(('+z_str+' = 5) || ('+z_str+' = 4))'}
+    dynamics_spec |= {'('+z_str+' = 4) -> X(('+z_str+' = 4) || ('+z_str+' = 3))'}
+    dynamics_spec |= {'('+z_str+' = 3) -> X(('+z_str+' = 3) || ('+z_str+' = 2))'}
+    dynamics_spec |= {'('+z_str+' = 2) -> X(('+z_str+' = 2) || ('+z_str+' = 1))'}
+    dynamics_spec |= {'('+z_str+' = 1) -> X(('+z_str+' = 1) || ('+z_str+' = 0))'}
+    dynamics_spec |= {'('+z_str+' = 0) -> X(('+z_str+' = 0) || ('+z_str+' = -1))'}
+    # dynamics_spec |= {'('+z_str+' = 6) -> X(('+z_str+' = 6) || ('+z_str+' = 5) || ('+z_str+' = -1))'}
+    # dynamics_spec |= {'('+z_str+' = 5) -> X(('+z_str+' = 6) || ('+z_str+' = 5) || ('+z_str+' = 4))'}
+    # dynamics_spec |= {'('+z_str+' = 4) -> X(('+z_str+' = 4) || ('+z_str+' = 3) || ('+z_str+' = 5))'}
+    # dynamics_spec |= {'('+z_str+' = 3) -> X(('+z_str+' = 4) || ('+z_str+' = 3) || ('+z_str+' = 2))'}
+    # dynamics_spec |= {'('+z_str+' = 2) -> X(('+z_str+' = 3) || ('+z_str+' = 2) || ('+z_str+' = 1))'}
+    # dynamics_spec |= {'('+z_str+' = 1) -> X(('+z_str+' = 2) || ('+z_str+' = 1) || ('+z_str+' = 0))'}
+    # dynamics_spec |= {'('+z_str+' = 0) -> X(('+z_str+' = 0) || ('+z_str+' = 1) || ('+z_str+' = -1))'}
     # Tester can exit to parking state -1 and must stay there
     dynamics_spec |= {'('+z_str+' = -1) -> X(('+z_str+' = -1))'}
     # Tester x variable is always 2
