@@ -184,6 +184,7 @@ def restrictive_dynamics(z_str, x_str):
     test_dynamics_spec |= {'(Z_t = 3) -> X((Z_t = 2) || (Z_t = 3) ||(Z_t = 4))'}
     test_dynamics_spec |= {'(Z_t = 4) -> X((Z_t = 3) || (Z_t = 4) ||(Z_t = 5))'}
     test_dynamics_spec |= {'(Z_t = 5) -> X((Z_t = 4) || (Z_t = 5) ||(Z_t = -1))'}
+    test_dynamics_spec |= {'(Z_t = -1) -> X(Z_t = -1)'}
     test_dynamics_spec |= {'(X_t = 2) -> X(X_t = 2)'}
     return test_dynamics_spec
 
@@ -221,6 +222,8 @@ def do_not_overconstrain(GD, cuts, sys_z, sys_x, test_z, test_x, q_str, turn):
     '''
     Do not constrain edges that are not cut.
     '''
+    cuts_without_fuel = [((cut[0][0][0], cut[0][-1]),(cut[1][0][0], cut[1][-1])) for cut in cuts]
+
     do_not_overconstrain = set()
     for node in list(GD.nodes):
         out_node = GD.node_dict[node]
@@ -230,10 +233,10 @@ def do_not_overconstrain(GD, cuts, sys_z, sys_x, test_z, test_x, q_str, turn):
         state_str = ''
         edge_list = list(GD.graph.edges(node))
         for edge in edge_list:
-            # st()
             in_node = GD.node_dict[edge[1]]
             in_state = in_node[0][0]
-            if (out_node,in_node) not in cuts:
+            in_q = in_node[-1]
+            if ((out_state, out_q),(in_state, in_q)) not in cuts_without_fuel:
                 state_str = state_str + '('+ test_z + ' = ' + str(in_state[0]) + ' && ' + test_x + ' = ' + str(in_state[1])+') || '
 
         if state_str != '':
@@ -275,12 +278,6 @@ def get_tester_safety(maze, z_str, x_str, z, x, turn, GD, SD, cuts, q):
     safety |= turn_based_grt(z_str, x_str, turn, maze)
     safety |= occupy_cuts(GD, cuts, z, x, z_str, x_str, q, turn)
     safety |= do_not_overconstrain(GD, cuts, z, x, z_str, x_str, q, turn)
-
-    # safety |= transiently_block(z_str, x_str)
-    # st()
-    # progress_states = Tester_Progress_States(GD, SD, tester_nodes, states)
-    # states = progress_states.compute_tester_nodes()
-    # safety |= transiently_block_states(z_str, x_str, states)
     return safety
 
 # TESTER PROGRESS
