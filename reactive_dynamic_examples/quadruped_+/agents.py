@@ -87,7 +87,6 @@ class Tester:
         logging.getLogger('tulip.spec.lexyacc').setLevel(logging.WARNING)
         logging.getLogger('tulip.synth').setLevel(logging.WARNING)
         logging.getLogger('tulip.interfaces.omega').setLevel(logging.WARNING)
-
         specs = get_tester_spec(self.q, self.maze, self.GD, self.SD, self.cuts)
 
         spc = spec.GRSpec(specs.env_vars, specs.vars, specs.env_init, specs.init,

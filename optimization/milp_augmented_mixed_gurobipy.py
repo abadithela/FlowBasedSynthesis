@@ -21,7 +21,7 @@ def new_cb(model, where):
         obj = model.cbGet(GRB.Callback.MIPNODE_OBJBST) # Current best objective
         opt_time = model.cbGet(GRB.Callback.RUNTIME) # Optimizer runtime
         obj_bound = model.cbGet(GRB.Callback.MIPNODE_OBJBND) # Objective bound
-        node_count = model.cbGet(GRB.Callback.MIPNODE_NODCNT) # No. of unexplored nodes 
+        node_count = model.cbGet(GRB.Callback.MIPNODE_NODCNT) # No. of unexplored nodes
         sol_count = model.cbGet(GRB.Callback.MIPNODE_SOLCNT) # No. of feasible solns found.
 
         # Save model and opt data:
@@ -38,7 +38,7 @@ def new_cb(model, where):
             # If so, update incumbent and time
             model._cur_obj = obj
             model._time = time.time()
-            
+
         # Terminate if objective has not improved in 30s
         # Current objective is less than infinity.
         if obj < float(np.inf):
@@ -49,7 +49,7 @@ def new_cb(model, where):
                     model.terminate()
         else:
             # Total termination time if the optimizer has not found anything in 5 min:
-            if time.time() - model._time > 3000: 
+            if time.time() - model._time > 3000:
                 model.terminate()
 
 # Callback function
@@ -181,7 +181,7 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = []):
         out_state = GD.node_dict[i][0]
         in_state = GD.node_dict[j][0]
 
-        if out_state and in_state in static_area:
+        if in_state in static_area:
             for (imap,jmap) in model_edges[count+1:]:
                 if out_state == GD.node_dict[imap][0] and in_state == GD.node_dict[jmap][0]:
                     # st()
@@ -262,7 +262,7 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = []):
     for excluded_sol in excluded_sols:
         model.addConstr(sum(d[i, j] for (i,j) in excluded_sol) <= len(excluded_sol)-1)
     model._data["n_cex"] = len(excluded_sols)
-    
+
     # model.Params.InfUnbdInfo = 1
 
     # optimize

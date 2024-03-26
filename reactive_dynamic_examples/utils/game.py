@@ -30,7 +30,7 @@ class Game:
         # self.setup()
         self.setup_cex()
 
-    def get_optimization_results(self):
+    def get_optimization_results(self, logger = None):
     # read pickle file - if not there save a new one
         try:
             print('Checking for the optimization results')
@@ -38,7 +38,7 @@ class Game:
             print('Optimization results loaded successfully')
         except:
             print('Result file not found, running optimization')
-            cuts, GD, SD = find_cuts()#logger=self.logger)
+            cuts, GD, SD = find_cuts(logger = self.logger)#logger=self.logger)
             opt_dict = {'cuts': cuts, 'GD': GD, 'SD': SD}
             with open('stored_optimization_result.p', 'wb') as pckl_file:
                 pickle.dump(opt_dict, pckl_file)
@@ -56,17 +56,22 @@ class Game:
         self.tester.find_controller()
 
 
-    def setup_cex(self):
+    def setup_cex(self, load_sol = False):
         self.logger = setup_logger("quadruped_plus")
         # Solving optimization with counterexample guided search.
         strategy_found = False
         excluded_sols = []
-        virtual, system, b_pi, virtual_sys = find_graphs(logger = self.logger)
+
+        if not load_sol:
+            virtual, system, b_pi, virtual_sys = find_graphs(logger = self.logger)
 
         while not strategy_found:
             # solve optimization
-            cuts, GD, SD = self.get_optimization_results()
-            # cuts, GD, SD = solve_opt(virtual, system, b_pi, virtual_sys, logger = self.logger, excluded_sols = excluded_sols, load_sol=False)
+            if load_sol:
+                cuts, GD, SD = self.get_optimization_results(logger = self.logger)
+            else:
+                cuts, GD, SD = solve_opt(virtual, system, b_pi, virtual_sys, logger = self.logger, excluded_sols = excluded_sols)
+
             graph_cuts = [(GD.inv_node_dict[cut[0]], GD.inv_node_dict[cut[1]]) for cut in cuts]
 
             # synthesize controller
@@ -78,13 +83,14 @@ class Game:
                 except:
                     print("Issue with maze cuts")
                     st()
-            self.agent.find_controller(self.maze)
+            # self.agent.find_controller(self.maze)
             self.tester.set_optimization_results(cuts, GD, SD)
             try:
                 t0 = time.time()
-                self.tester.find_controller()
+                self.tester.find_controller(load_sol = False)
                 tf = time.time()
                 self.logger.save_runtime("Tester Controller", tf-t0)
+                self.agent.find_controller(self.maze)
                 strategy_found = True
                 print("Test Agent Strategy synthesized!.")
             except:
@@ -92,6 +98,7 @@ class Game:
                 n_exc = len(excluded_sols)
                 print("!! Could not synthesize test agent strategy!!")
                 print(f"Re-solving optimization with {n_exc} solutions excluded.")
+                st()
 
 
     def print_game_state(self):

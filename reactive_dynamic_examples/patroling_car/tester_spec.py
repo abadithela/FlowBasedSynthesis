@@ -23,14 +23,17 @@ def get_tester_spec(init_pos, maze, GD, SD, cuts):
     x = 'x'
     turn = 'turn'
     q = 'q'
+    # tester guarantees
     vars = set_variables(maze, GD)
     init = set_init(init_pos, z_str, x_str, turn, q)
     safety = get_tester_safety(maze, z_str, x_str, z, x, turn, GD, SD, cuts, q)
     progress = get_tester_progress_empty(maze, cuts, z_str, x_str, q)
+    # assumptions on the system
     env_vars = set_sys_variables(maze, GD)
     env_init = set_sys_init(z, x, q, maze)
     env_safety = get_system_safety(maze, GD, z, x, q, z_str, x_str, turn, cuts)
     env_progress = get_system_progress(maze, z, x)
+    # create GR(1) spec
     tester_spec = Spec(vars, init, safety, progress, env_vars, env_init, env_safety, env_progress)
 
     return tester_spec

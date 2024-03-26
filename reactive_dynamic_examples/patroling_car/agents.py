@@ -13,7 +13,7 @@ from ipdb import set_trace as st
 import sys
 from problem_data import *
 sys.path.append('..')
-from tester_spec import get_tester_spec
+from tester_spec_w_fuel import get_tester_spec
 
 class Tester:
     def __init__(self, name, system_init, tester_init, maze):
@@ -76,11 +76,12 @@ class Tester:
         self.update_trace(system_pos)
         sys_x = self.system_position[1]
         sys_z = self.system_position[0]
+        sys_f = self.system_fuel
         try:
             assert system_pos == (sys_z, sys_x)
         except:
             st()
-        output = self.controller.move(sys_x,sys_z, self.qhist)
+        output = self.controller.move(sys_x, sys_z, sys_f, self.qhist)
         self.x = output['X_t']
         self.z = output['Z_t']
         self.turn = output['turn']
@@ -88,7 +89,7 @@ class Tester:
         print(output)
         # interface the tester quadruped here (only when it was the quadruped's turn)
 
-    def find_controller(self, load_sol=False):
+    def find_controller(self, load_sol=True):
         if load_sol:
             try:
                 # load the controller
@@ -105,7 +106,8 @@ class Tester:
         logging.getLogger('tulip.interfaces.omega').setLevel(logging.WARNING)
 
         # TODO: self.static_area has repeated pose states
-        reactive_cuts = [cut for cut in self.cuts if cut[0][0][0] not in self.static_area or cut[1][0][0] not in self.static_area]
+        # reactive_cuts = [cut for cut in self.cuts if cut[0][0][0] not in self.static_area or cut[1][0][0] not in self.static_area]
+        reactive_cuts = [cut for cut in self.cuts if cut[1][0][0] not in self.static_area]
 
         specs = get_tester_spec(self.q, self.maze, self.GD, self.SD, reactive_cuts)
 
