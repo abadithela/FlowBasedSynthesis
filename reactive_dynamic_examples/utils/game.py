@@ -65,7 +65,8 @@ class Game:
 
         while not strategy_found:
             # solve optimization
-            cuts, GD, SD = solve_opt(virtual, system, b_pi, virtual_sys, logger = self.logger, excluded_sols = excluded_sols, load_sol=False)
+            cuts, GD, SD = self.get_optimization_results()
+            # cuts, GD, SD = solve_opt(virtual, system, b_pi, virtual_sys, logger = self.logger, excluded_sols = excluded_sols, load_sol=False)
             graph_cuts = [(GD.inv_node_dict[cut[0]], GD.inv_node_dict[cut[1]]) for cut in cuts]
 
             # synthesize controller

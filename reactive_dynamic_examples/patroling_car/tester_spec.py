@@ -124,6 +124,9 @@ def history_var_dynamics_merged(GD, sys_z, sys_x, q_str, maze, cuts):
                 all_next_state_str = all_next_state_str + ' || ' + next_state
 
         hist_var_dyn |=  {current_state + ' -> X(' + all_next_state_str + ')'}
+    for cut in hist_var_dyn:
+        print(cut)
+    st()
     return hist_var_dyn
 
 def get_system_safety(maze, GD, z, x, q, z_str, x_str, turn, cuts):
@@ -216,13 +219,17 @@ def occupy_cuts(GD, cuts, sys_z, sys_x, test_z, test_x, q_str, turn):
         system_state = '('+ sys_z + ' = ' + str(out_state[0]) + ' && ' + sys_x + ' = ' + str(out_state[1]) + ' && ' +q_str+' = '+str(out_q[1:])+' && '+turn+' = 0)'
         block_state = '('+ test_z + ' = ' + str(in_state[0]) + ' && ' + test_x + ' = ' + str(in_state[1])+')'
         cut_specs |= {system_state + ' -> ' + block_state}
+    print("============== OCCUPY =============")
+    for cut in cut_specs:
+        print(cut)
+    st()
     return cut_specs
 
 def do_not_overconstrain(GD, cuts, sys_z, sys_x, test_z, test_x, q_str, turn):
     '''
     Do not constrain edges that are not cut.
     '''
-    cuts_without_fuel = [((cut[0][0][0], cut[0][-1]),(cut[1][0][0], cut[1][-1])) for cut in cuts]
+    cuts_without_fuel = [((cut[0][0][0], cut[0][-1]),cut[1][0][0]) for cut in cuts]
 
     do_not_overconstrain = set()
     for node in list(GD.nodes):
@@ -236,12 +243,17 @@ def do_not_overconstrain(GD, cuts, sys_z, sys_x, test_z, test_x, q_str, turn):
             in_node = GD.node_dict[edge[1]]
             in_state = in_node[0][0]
             in_q = in_node[-1]
-            if ((out_state, out_q),(in_state, in_q)) not in cuts_without_fuel:
+
+            if ((out_state, out_q),in_state) not in cuts_without_fuel:
                 state_str = state_str + '('+ test_z + ' = ' + str(in_state[0]) + ' && ' + test_x + ' = ' + str(in_state[1])+') || '
 
         if state_str != '':
             state_str = state_str[:-4]
             do_not_overconstrain |=  { current_state + ' -> !(' + state_str + ')'}
+    print("============== NOT OVERCONSTRAIN =============")
+    for cut in do_not_overconstrain:
+        print(cut)
+    st()
     return do_not_overconstrain
 
 # Tester transiently blocks the system, but not forever
