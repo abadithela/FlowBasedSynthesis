@@ -65,8 +65,8 @@ def save_data(logger, system, b_sys, b_test, b_pi, virtual, virtual_sys, runtime
     logger.save_data("Buchi (System)", (len(b_sys.Q), len(b_sys.delta)))
     logger.save_data("Buchi (Test)", (len(b_test.Q), len(b_test.delta)))
     logger.save_data("Buchi (Product)", (len(b_pi.Q), len(b_pi.delta)))
-    logger.save_data("Gsys", (len(virtual_sys.S), len(virtual_sys.E)))
-    logger.save_data("G", (len(virtual.S), len(virtual.E)))
+    logger.save_data("Gsys", (len(virtual_sys.G_initial.nodes), len(virtual_sys.G_initial.edges)))
+    logger.save_data("G", (len(virtual.G_initial.nodes), len(virtual.G_initial.edges)))
 
     # Information about runtimes
     for k, runtime in runtimes.items():
