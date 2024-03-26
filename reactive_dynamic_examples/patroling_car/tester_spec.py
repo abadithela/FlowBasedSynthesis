@@ -29,7 +29,7 @@ def get_tester_spec(init_pos, maze, GD, SD, cuts):
     progress = get_tester_progress_empty(maze, cuts, z_str, x_str, q)
     env_vars = set_sys_variables(maze, GD)
     env_init = set_sys_init(z, x, q, maze)
-    env_safety = get_system_safety(maze, GD, z, x, q, z_str, x_str, turn)
+    env_safety = get_system_safety(maze, GD, z, x, q, z_str, x_str, turn, cuts)
     env_progress = get_system_progress(maze, z, x)
     tester_spec = Spec(vars, init, safety, progress, env_vars, env_init, env_safety, env_progress)
 
@@ -90,15 +90,12 @@ def history_var_dynamics(GD, sys_z, sys_x, q_str, maze):
             hist_var_dyn |=  {current_state + ' -> X(' + current_state + ')'}
     return hist_var_dyn
 
-def history_var_dynamics_merged(GD, sys_z, sys_x, q_str, maze):
+def history_var_dynamics_merged(GD, sys_z, sys_x, q_str, maze, cuts):
     '''
     Determines how the history variable 'q' changes.
     similar to hist_var_dynamics but since we have refueling,
-    we have 
+    we have
     '''
-    # begin debug
-    # track_out_states = set()
-    # end debug
     transition_dict = dict()
     hist_var_dyn = set()
     for node in list(GD.graph.nodes):
@@ -106,24 +103,20 @@ def history_var_dynamics_merged(GD, sys_z, sys_x, q_str, maze):
         out_state = out_node[0][0] # For the extra refueling
         out_q = out_node[-1]
         current_state = '('+sys_z+' = '+str(out_state[0])+' && '+sys_x+' = '+str(out_state[1])+' && '+q_str+' = '+str(out_q[1:])+')'
-        # begin debug
-        # if out_node in track_out_states or current_state == "(z = 5 && x = 4 && q = 0)":
-        #     st()
-        # else:
-        #     track_out_states |= {out_node}
-        # end debug
+
         if current_state not in transition_dict.keys():
             transition_dict[current_state] = {current_state}
 
-        if out_state not in maze.goal: # not at goal
+        if out_state not in maze.goal:
             edge_list = list(GD.graph.edges(node))
+            # edge_list = [edge for edge in edge_list if edge not in cuts]
             for edge in edge_list:
                 in_node = GD.node_dict[edge[1]] # TODO: For the extra refueling. Change fuel to just be a third element in tuple
                 in_state = in_node[0][0]
                 in_q = in_node[-1]
                 next_state_str = '('+sys_z+' = '+str(in_state[0])+' && '+sys_x+' = '+str(in_state[1])+' && '+q_str+' = '+str(in_q[1:])+')'
                 transition_dict[current_state] |= {next_state_str}
-    
+
     for current_state, next_states in transition_dict.items():
         all_next_state_str = current_state
         for next_state in next_states:
@@ -133,10 +126,10 @@ def history_var_dynamics_merged(GD, sys_z, sys_x, q_str, maze):
         hist_var_dyn |=  {current_state + ' -> X(' + all_next_state_str + ')'}
     return hist_var_dyn
 
-def get_system_safety(maze, GD, z, x, q, z_str, x_str, turn):
+def get_system_safety(maze, GD, z, x, q, z_str, x_str, turn, cuts):
     safety = set()
     safety |= no_collision_asm(maze, z_str, x_str, z, x)
-    safety |= history_var_dynamics_merged(GD, z, x, q, maze)
+    safety |= history_var_dynamics_merged(GD, z, x, q, maze, cuts)
     safety |= turn_based_asm(z, x, turn, maze)
     return safety
 

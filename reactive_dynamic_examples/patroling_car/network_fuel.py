@@ -4,6 +4,7 @@ from components.maze_network import MazeNetwork, create_network_from_file
 import networkx as nx
 from ipdb import set_trace as st
 import numpy as np
+from copy import deepcopy
 
 
 class FuelNetwork(MazeNetwork):
@@ -36,13 +37,12 @@ class FuelNetwork(MazeNetwork):
                     if not self.map[(ii,jj)] == '*':
                         if ((ii,jj),ff) in self.next_state_dict_w_fuel.keys():
                             next_steps_string = '('+z_str+' = '+str(ii)+' && '+x_str+' = '+str(jj)+' && '+f_str+'='+str(ff)+')'
-                            # if (ii,jj) not in self.deadends:
                             for item in self.next_state_dict_w_fuel[((ii,jj),ff)]:
                                 if (((ii,jj),ff), item) not in self.active_cuts:
                                     if item != ((ii,jj),ff):
                                         next_steps_string = next_steps_string + ' || ('+z_str+' = '+str(item[0][0])+' && '+x_str+' = '+str(item[0][1])+' && '+f_str+'='+str(item[-1])+')'
                             dynamics_spec |= {'('+z_str+' = '+str(ii)+' && '+x_str+' = '+str(jj)+' && '+f_str+'='+str(ff)+') -> X(('+ next_steps_string +'))'}
-        # st()
+
         return dynamics_spec
 
     def augmented_dynamics_specs(self, x_str, z_str):
@@ -72,13 +72,12 @@ class FuelNetwork(MazeNetwork):
         transitions = []
         # adding system transitions
         next_state_dict = {}
-        for state in states: #tester can move according to
+        for state in states:
             # for fuel_level in range(self.fuelcap):
             next_states = [(state)]
             fuel = state[-1]
             # if state not in self.deadends:
             if fuel > 0:
-                # st()
                 for next_state in self.next_state_dict[(state[0])]:
                     if next_state in self.refuel: # refuel
                         next_states.append(((next_state), self.fuelcap))
@@ -112,19 +111,12 @@ class FuelNetwork(MazeNetwork):
             if i == j:
                 to_remove.append((i,j))
         G.remove_edges_from(to_remove)
-        # st()
 
         self.next_state_dict_w_fuel = next_state_dict
-        self.original_next_state_dict_w_fuel = next_state_dict
-        
         return G
 
     def add_cut_w_fuel(self, cut):
-        # st()
-        self.next_state_dict_w_fuel[cut[0]].remove(cut[1])
         self.active_cuts.append(cut)
 
     def reset_maze(self):
-        self.next_state_dict_w_fuel = self.original_next_state_dict_w_fuel
-        st()
         self.active_cuts = []

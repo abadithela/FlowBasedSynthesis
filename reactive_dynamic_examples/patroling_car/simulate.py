@@ -12,7 +12,7 @@ from utils.game import Game
 import os
 from ipdb import set_trace as st
 from utils.helper import *
-from reactive_dynamic_examples.utils.setup_logger import setup_logger 
+from reactive_dynamic_examples.utils.setup_logger import setup_logger
 
 def new_World(mazefile):
     network = FuelNetwork(mazefile)
@@ -36,7 +36,7 @@ def run_sim(max_timestep, filepath):
     game.print_game_state()
     for t in range(1,max_timestep):
         print('Timestep {}'.format(t))
-        game.agent_take_step_augmented_fuel() # Change this back to something automatic
+        game.agent_take_step_augmented_fuel()
         game.print_game_state()
         game.tester_take_step()
         game.print_game_state()

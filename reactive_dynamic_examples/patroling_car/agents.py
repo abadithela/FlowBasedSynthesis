@@ -46,14 +46,10 @@ class Tester:
         '''
         Determines how the history variable 'q' changes.
         '''
-        # if self.system_position == (1, 5) or self.system_position == (1, 4):
-        #     st()
         node = ((self.system_position, self.system_fuel), 'q'+str(self.qhist)) # Node before system transitions
 
-        # try:
         edge_list = list(self.GD.graph.edges(self.GD.inv_node_dict[node]))
-        # except:
-        #     st()
+
         if system_position in self.maze.refuel:
             self.system_fuel = MAX_FUEL
         elif self.system_position == system_position:
@@ -84,7 +80,6 @@ class Tester:
             assert system_pos == (sys_z, sys_x)
         except:
             st()
-        # st()
         output = self.controller.move(sys_x,sys_z, self.qhist)
         self.x = output['X_t']
         self.z = output['Z_t']
@@ -93,46 +88,49 @@ class Tester:
         print(output)
         # interface the tester quadruped here (only when it was the quadruped's turn)
 
-    def find_controller(self):
-        try:
-            # load the controller
-            from tester_controller import TesterCtrl
-            self.controller = TesterCtrl()
-            print('successfully loaded tester controller')
-        except:
-            print('synthesizing tester controller')
-            logging.basicConfig(level=logging.WARNING)
-            logging.getLogger('tulip.spec.lexyacc').setLevel(logging.WARNING)
-            logging.getLogger('tulip.synth').setLevel(logging.WARNING)
-            logging.getLogger('tulip.interfaces.omega').setLevel(logging.WARNING)
+    def find_controller(self, load_sol=False):
+        if load_sol:
+            try:
+                # load the controller
+                from tester_controller import TesterCtrl
+                self.controller = TesterCtrl()
+                print('successfully loaded tester controller')
+                return
+            except:
+                pass
+        print('synthesizing tester controller')
+        logging.basicConfig(level=logging.WARNING)
+        logging.getLogger('tulip.spec.lexyacc').setLevel(logging.WARNING)
+        logging.getLogger('tulip.synth').setLevel(logging.WARNING)
+        logging.getLogger('tulip.interfaces.omega').setLevel(logging.WARNING)
 
-            # TODO: self.static_area has repeated pose states
-            reactive_cuts = [cut for cut in self.cuts if cut[0][0][0] not in self.static_area or cut[1][0][0] not in self.static_area]
+        # TODO: self.static_area has repeated pose states
+        reactive_cuts = [cut for cut in self.cuts if cut[0][0][0] not in self.static_area or cut[1][0][0] not in self.static_area]
 
-            specs = get_tester_spec(self.q, self.maze, self.GD, self.SD, reactive_cuts)
+        specs = get_tester_spec(self.q, self.maze, self.GD, self.SD, reactive_cuts)
 
-            spc = spec.GRSpec(specs.env_vars, specs.vars, specs.env_init, specs.init,
-                            specs.env_safety, specs.safety, specs.env_progress, specs.progress)
+        spc = spec.GRSpec(specs.env_vars, specs.vars, specs.env_init, specs.init,
+                        specs.env_safety, specs.safety, specs.env_progress, specs.progress)
 
-            print(spc.pretty())
+        print(spc.pretty())
 
-            spc.moore = True # moore machine
-            spc.qinit = r'\A \E'
-            # spc.plus_one = True
+        spc.moore = True # moore machine
+        spc.qinit = r'\A \E'
+        # spc.plus_one = True
 
-            if not synth.is_realizable(spc, solver='omega'):
-                print("Not realizable.")
-                st()
-            else:
-                ctrl = synth.synthesize(spc, solver='omega')
-            # dunp the controller
-            controller_namestr = "tester_controller.py"
-            dumpsmach.write_python_case(controller_namestr, ctrl, classname="TesterCtrl")
+        if not synth.is_realizable(spc, solver='omega'):
+            print("Not realizable.")
+            st()
+        else:
+            ctrl = synth.synthesize(spc, solver='omega')
+        # dump the controller
+        controller_namestr = "tester_controller.py"
+        dumpsmach.write_python_case(controller_namestr, ctrl, classname="TesterCtrl")
 
-            exe_globals = dict()
-            exec(dumpsmach.python_case(ctrl, classname='TesterCtrl'), exe_globals)
-            M = exe_globals['TesterCtrl']()  # previous line creates the class `AgentCtrl`
-            self.controller = M
+        exe_globals = dict()
+        exec(dumpsmach.python_case(ctrl, classname='TesterCtrl'), exe_globals)
+        M = exe_globals['TesterCtrl']()  # previous line creates the class `AgentCtrl`
+        self.controller = M
 
 class Quadruped:
     def __init__(self, name, system_init, goal, maze, tester_init):
@@ -226,7 +224,6 @@ class Quadruped:
             sys_prog |= {'(z = '+str(self.goal[0])+' && x = '+str(self.goal[1])+')'}
             sys_safe = set()
             # add the dynamics for the system
-            # add the dynamics for the system
             dynamics_spec =  self.maze.dynamics_specs_w_fuel('x','z','f')
             sys_safe |= dynamics_spec
             # Safety spec, never run out of fuel
@@ -261,7 +258,6 @@ class Quadruped:
             self.controller = M
 
     def agent_move(self, tester_pos):
-        # st()
         output = self.controller.move()
         self.x = output['x']
         self.z = output['z']
