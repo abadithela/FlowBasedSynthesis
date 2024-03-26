@@ -147,7 +147,7 @@ class MazeNetwork:
         self.next_state_dict[cut[0]].remove(cut[1])
         self.active_cuts.append(cut)
 
-    def remove_all_cuts(self):
+    def reset_maze(self):
         self.next_state_dict = self.original_next_state_dict
         self.active_cuts = []
 

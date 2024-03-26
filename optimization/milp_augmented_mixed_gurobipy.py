@@ -261,7 +261,7 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = []):
     # st()
     for excluded_sol in excluded_sols:
         model.addConstr(sum(d[i, j] for (i,j) in excluded_sol) <= len(excluded_sol)-1)
-
+    model._data["n_cex"] = len(excluded_sols)
     
     # model.Params.InfUnbdInfo = 1
 

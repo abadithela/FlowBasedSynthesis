@@ -1,0 +1,16 @@
+\begin{table}[h!]
+\centering
+\begin{tabular}{l|l}
+\hline
+Process & Runtime (s) \\
+\hline
+b_sys & 0.0004048347473144531 \\
+b_test & 0.0006589889526367188 \\
+b_prod & 0.0012149810791015625 \\
+Gsys & 0.03278493881225586 \\
+G & 15.35477590560913 \\
+\hline
+\end{tabular}
+\caption{Caption here}
+\label{table:label_here}
+\end{table}

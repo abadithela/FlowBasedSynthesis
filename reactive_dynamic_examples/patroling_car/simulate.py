@@ -12,6 +12,7 @@ from utils.game import Game
 import os
 from ipdb import set_trace as st
 from utils.helper import *
+from reactive_dynamic_examples.utils.setup_logger import setup_logger 
 
 def new_World(mazefile):
     network = FuelNetwork(mazefile)
@@ -20,7 +21,8 @@ def new_World(mazefile):
     tester_init = {"z": 5, "x": 2}
     tester = Tester("tester", system_init, tester_init, network)
     sys = Quadruped("sys", system_init, (5,0), network, tester_init)
-    game = Game(network, sys, tester)
+    logger = setup_logger("patrol_car")
+    game = Game(network, sys, tester, logger)
 
     return game, network, sys
 

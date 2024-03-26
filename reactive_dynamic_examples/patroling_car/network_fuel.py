@@ -13,6 +13,7 @@ class FuelNetwork(MazeNetwork):
         self.refuel = []
         self.setup_states()
         self.next_state_dict_w_fuel = None
+        self.original_next_state_dict_w_fuel = None
         self.graph = self.create_graph_with_fuel_level()
 
     def setup_states(self):
@@ -114,9 +115,16 @@ class FuelNetwork(MazeNetwork):
         # st()
 
         self.next_state_dict_w_fuel = next_state_dict
+        self.original_next_state_dict_w_fuel = next_state_dict
+        
         return G
 
     def add_cut_w_fuel(self, cut):
         # st()
         self.next_state_dict_w_fuel[cut[0]].remove(cut[1])
         self.active_cuts.append(cut)
+
+    def reset_maze(self):
+        self.next_state_dict_w_fuel = self.original_next_state_dict_w_fuel
+        st()
+        self.active_cuts = []

@@ -26,18 +26,20 @@ from reactive_dynamic_examples.utils.solve_problem import solve_problem
 from reactive_dynamic_examples.utils.get_graphs import get_graphs
 from components.plotting import make_history_plots
 from problem_data import *
+from reactive_dynamic_examples.utils.setup_logger import setup_logger
 
-def find_cuts():
+def find_cuts(logger=None):
     intstr = ''.join('%s = %s, ' % (val,key) for (key,val) in INTS.items())
     print('S = '+str(INIT)+', '+intstr+' T = '+str(GOALS))
-
-    virtual, system, b_pi, virtual_sys = get_graphs(SYS_FORMULA, TEST_FORMULA, MAZEFILE, INIT, INTS, GOALS)
+    logger = setup_logger("two_quadruped")
+    virtual, system, b_pi, virtual_sys = get_graphs(SYS_FORMULA, TEST_FORMULA, MAZEFILE, INIT, INTS, GOALS, logger)
 
     exit_status, annot_cuts, flow, bypass, GD, SD = solve_problem(virtual, system, b_pi, virtual_sys)
     print('exit status {0}'.format(exit_status))
 
+    logger.print_runtime_latex()
+    logger.print_problem_data_latex()
     make_history_plots(annot_cuts, GD, system.maze)
-
     return annot_cuts, GD, SD
 
 

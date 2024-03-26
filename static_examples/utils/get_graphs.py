@@ -31,6 +31,7 @@ def get_graphs_from_network(sys_formula, test_formula, network, init, ints, goal
     # get system
     # st()
     system = ProductTransys()
+    
     system.construct_sys_from_network(network, init, ints, goals, obs)
 
     # st()

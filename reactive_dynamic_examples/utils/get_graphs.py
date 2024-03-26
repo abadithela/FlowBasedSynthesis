@@ -78,7 +78,7 @@ def get_graphs_from_network(sys_formula, test_formula, network, init, ints, goal
 
     # get system
     system = ProductTransys()
-    system.construct_sys_from_network(mazefile, init, ints, goals, obs)
+    system.construct_sys_from_network(network, init, ints, goals, obs)
 
     # get virtual sys
     t_sys_init = time.time()

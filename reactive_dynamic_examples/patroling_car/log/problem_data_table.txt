@@ -1,0 +1,18 @@
+\begin{table}[h!]
+\centering
+\begin{tabular}{l|l}
+\hline
+patrol_car & 2024-03-25 14:38:41.686678 \\
+\hline
+Object & Value \\
+Transition System & (386, 1153) \\
+Buchi (System) & (3, 6) \\
+Buchi (Test) & (2, 3) \\
+Buchi (Product) & (6, 18) \\
+Gsys & (1158, 3459) \\
+G & (2316, 6918) \\
+\hline
+\end{tabular}
+\caption{Caption here}
+\label{table:label_here}
+\end{table}

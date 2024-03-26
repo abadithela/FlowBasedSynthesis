@@ -1,0 +1,18 @@
+\begin{table}[h!]
+\centering
+\begin{tabular}{l|l}
+\hline
+quadruped_plus & 2024-03-25 15:11:52.656193 \\
+\hline
+Object & Value \\
+Transition System & (21, 66) \\
+Buchi (System) & (2, 3) \\
+Buchi (Test) & (4, 9) \\
+Buchi (Product) & (8, 27) \\
+Gsys & (42, 132) \\
+G & (168, 528) \\
+\hline
+\end{tabular}
+\caption{Caption here}
+\label{table:label_here}
+\end{table}
