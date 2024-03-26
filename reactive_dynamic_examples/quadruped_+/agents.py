@@ -1,10 +1,3 @@
-"""
-Apurva:
-1. Created Jan 17th to debug the script agents.py
-2. Quadruped code works, but quadruped assumptions are not the same as the tester dynamics.
-3. Tester code still needs to work.
-"""
-
 from __future__ import print_function
 import logging
 from tulip import transys, spec, synth
@@ -15,9 +8,6 @@ sys.path.append('..')
 from components.maze_network import MazeNetwork
 from tester_spec import get_tester_spec
 
-# from quadruped_interface import quadruped_move
-# from find_cuts import setup_nodes_and_edges
-# from construct_automata.main import quad_test_sync
 
 class Tester:
     def __init__(self, name, system_init, tester_init, maze):
@@ -74,52 +64,54 @@ class Tester:
             assert system_pos == (sys_z, sys_x)
         except:
             st()
-        # st()
         output = self.controller.move(sys_x,sys_z, self.qhist)
         self.x = output['X_t']
         self.z = output['Z_t']
         self.turn = output['turn']
         self.q = (self.z,self.x)
         print(output)
-        # interface the tester quadruped here (only when it was the quadruped's turn)
 
-    def find_controller(self):
-        try:
-            # load the controller
-            from tester_controller import TesterCtrl
-            self.controller = TesterCtrl()
-            print('successfully loaded tester controller')
-        except:
-            print('synthesizing tester controller')
-            logging.basicConfig(level=logging.WARNING)
-            logging.getLogger('tulip.spec.lexyacc').setLevel(logging.WARNING)
-            logging.getLogger('tulip.synth').setLevel(logging.WARNING)
-            logging.getLogger('tulip.interfaces.omega').setLevel(logging.WARNING)
+    def find_controller(self, load_sol = False):
+        if load_sol:
+            try:
+                # load the controller
+                from tester_controller import TesterCtrl
+                self.controller = TesterCtrl()
+                print('successfully loaded tester controller')
+                return
+            except:
+                pass
 
-            specs = get_tester_spec(self.q, self.maze, self.GD, self.SD, self.cuts)
+        print('synthesizing tester controller')
+        logging.basicConfig(level=logging.WARNING)
+        logging.getLogger('tulip.spec.lexyacc').setLevel(logging.WARNING)
+        logging.getLogger('tulip.synth').setLevel(logging.WARNING)
+        logging.getLogger('tulip.interfaces.omega').setLevel(logging.WARNING)
 
-            spc = spec.GRSpec(specs.env_vars, specs.vars, specs.env_init, specs.init,
-                            specs.env_safety, specs.safety, specs.env_progress, specs.progress)
+        specs = get_tester_spec(self.q, self.maze, self.GD, self.SD, self.cuts)
 
-            print(spc.pretty())
+        spc = spec.GRSpec(specs.env_vars, specs.vars, specs.env_init, specs.init,
+                        specs.env_safety, specs.safety, specs.env_progress, specs.progress)
 
-            spc.moore = True # moore machine
-            spc.qinit = r'\A \E'
-            # spc.plus_one = True
+        print(spc.pretty())
 
-            if not synth.is_realizable(spc, solver='omega'):
-                print("Not realizable.")
-                # st()
-            else:
-                ctrl = synth.synthesize(spc, solver='omega')
-            # dunp the controller
-            controller_namestr = "tester_controller.py"
-            dumpsmach.write_python_case(controller_namestr, ctrl, classname="TesterCtrl")
+        spc.moore = True # moore machine
+        spc.qinit = r'\A \E'
+        # spc.plus_one = True
 
-            exe_globals = dict()
-            exec(dumpsmach.python_case(ctrl, classname='TesterCtrl'), exe_globals)
-            M = exe_globals['TesterCtrl']()  # previous line creates the class `AgentCtrl`
-            self.controller = M
+        if not synth.is_realizable(spc, solver='omega'):
+            print("Not realizable.")
+            # st()
+        else:
+            ctrl = synth.synthesize(spc, solver='omega')
+        # dump the controller
+        controller_namestr = "tester_controller.py"
+        dumpsmach.write_python_case(controller_namestr, ctrl, classname="TesterCtrl")
+
+        exe_globals = dict()
+        exec(dumpsmach.python_case(ctrl, classname='TesterCtrl'), exe_globals)
+        M = exe_globals['TesterCtrl']()  # previous line creates the class `AgentCtrl`
+        self.controller = M
 
 class Quadruped:
     def __init__(self, name, system_init, goal, maze, tester_init):

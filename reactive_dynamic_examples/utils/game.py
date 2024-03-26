@@ -1,16 +1,18 @@
 from ipdb import set_trace as st
 from copy import deepcopy
-from find_cuts import find_cuts
+from find_cuts import find_cuts, find_graphs, solve_opt
 import random
 import time
 import _pickle as pickle
 from reactive_dynamic_examples.utils.helper import load_opt_from_pkl_file
 from reactive_dynamic_examples.utils.quadruped_interface import quadruped_move
 from reactive_dynamic_examples.utils.parse_cuts import Map_Reactive_Cuts
+from reactive_dynamic_examples.utils.setup_logger import setup_logger
+
 from problem_data import *
 
 class Game:
-    def __init__(self, maze, sys, tester, logger):
+    def __init__(self, maze, sys, tester, logger=None):
         self.maze = deepcopy(maze)
         self.orig_maze = maze
         self.agent = sys
@@ -25,8 +27,9 @@ class Game:
         self.inv_node_dict = None
         self.turn = 'sys'
         # self.state_in_G, self.G, self.node_dict = self.setup()
+        # self.setup()
         self.setup_cex()
-        
+
     def get_optimization_results(self):
     # read pickle file - if not there save a new one
         try:
@@ -35,7 +38,7 @@ class Game:
             print('Optimization results loaded successfully')
         except:
             print('Result file not found, running optimization')
-            cuts, GD, SD = find_cuts(logger=self.logger)
+            cuts, GD, SD = find_cuts()#logger=self.logger)
             opt_dict = {'cuts': cuts, 'GD': GD, 'SD': SD}
             with open('stored_optimization_result.p', 'wb') as pckl_file:
                 pickle.dump(opt_dict, pckl_file)
@@ -43,7 +46,6 @@ class Game:
 
     def setup(self):
         cuts, GD, SD = self.get_optimization_results()
-        # st()
         static_cuts = list(set([(cut[0][0], cut[1][0]) for cut in cuts if cut[0][0] in STATIC_AREA and cut[1][0] in STATIC_AREA]))
 
         for cut in static_cuts:
@@ -52,44 +54,43 @@ class Game:
         self.agent.find_controller(self.maze)
         self.tester.set_optimization_results(cuts, GD, SD)
         self.tester.find_controller()
-        
-    
+
+
     def setup_cex(self):
+        self.logger = setup_logger("quadruped_plus")
         # Solving optimization with counterexample guided search.
         strategy_found = False
-        cuts, GD, SD = self.get_optimization_results()
         excluded_sols = []
+        virtual, system, b_pi, virtual_sys = find_graphs(logger = self.logger)
 
         while not strategy_found:
-            self.maze.reset_maze()
+            # solve optimization
+            cuts, GD, SD = solve_opt(virtual, system, b_pi, virtual_sys, logger = self.logger, excluded_sols = excluded_sols, load_sol=False)
+            graph_cuts = [(GD.inv_node_dict[cut[0]], GD.inv_node_dict[cut[1]]) for cut in cuts]
+
+            # synthesize controller
             static_cuts = list(set([(cut[0][0], cut[1][0]) for cut in cuts if cut[0][0] in STATIC_AREA and cut[1][0] in STATIC_AREA]))
-            
+            self.maze.reset_maze()
             for cut in static_cuts:
                 try:
                     self.maze.add_cut_w_fuel(cut)
                 except:
                     print("Issue with maze cuts")
                     st()
-
-            try: 
-                self.agent.find_controller(self.maze)
-                self.tester.set_optimization_results(cuts, GD, SD)
+            self.agent.find_controller(self.maze)
+            self.tester.set_optimization_results(cuts, GD, SD)
+            try:
                 t0 = time.time()
                 self.tester.find_controller()
                 tf = time.time()
-                logger.save_runtime("Tester Controller", tf-t0)
+                self.logger.save_runtime("Tester Controller", tf-t0)
                 strategy_found = True
                 print("Test Agent Strategy synthesized!.")
             except:
+                excluded_sols.append(graph_cuts)
                 n_exc = len(excluded_sols)
                 print("!! Could not synthesize test agent strategy!!")
                 print(f"Re-solving optimization with {n_exc} solutions excluded.")
-                graph_cuts = [(GD.inv_node_dict[cut[0]], GD.inv_node_dict[cut[1]]) for cut in cuts]
-                excluded_sols.append(graph_cuts)
-                cuts, GD, SD = find_cuts(logger = self.logger, excluded_sols = excluded_sols, load_sol=False)
-                opt_dict = {'cuts': cuts, 'GD': GD, 'SD': SD}
-                with open('stored_optimization_result.p', 'wb') as pckl_file:
-                    pickle.dump(opt_dict, pckl_file)
 
 
     def print_game_state(self):

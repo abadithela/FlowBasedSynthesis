@@ -4,10 +4,12 @@ Finding the graphs for the given problem data.
 import sys
 sys.path.append('../..')
 import os
+import _pickle as pickle
 
 from components.parse_specification_product import *
 from components.transition_system import ProductTransys
 from components.tools import synchronous_product
+from utils.helper import load_graphs_from_pkl_file
 import time
 
 def get_graphs(sys_formula, test_formula, mazefile, init, ints, goals, logger, obs=[], save_figures = True):
@@ -45,7 +47,8 @@ def get_graphs(sys_formula, test_formula, mazefile, init, ints, goals, logger, o
     runtimes["G"] = t_graph_fin - t_graph_init
 
     # Saving data:
-    save_data(logger, system, b_sys, b_test, b_pi, virtual, virtual_sys, runtimes)
+    if logger:
+        save_data(logger, system, b_sys, b_test, b_pi, virtual, virtual_sys, runtimes)
 
     if save_figures:
         if not os.path.exists('imgs'):
@@ -93,7 +96,8 @@ def get_graphs_from_network(sys_formula, test_formula, network, init, ints, goal
     runtimes["G"] = t_graph_fin - t_graph_init
 
     # Saving data:
-    save_data(logger, system, b_sys, b_test, b_pi, virtual, virtual_sys, runtimes)
+    if logger:
+        save_data(logger, system, b_sys, b_test, b_pi, virtual, virtual_sys, runtimes)
 
     if save_figures:
         if not os.path.exists('imgs'):

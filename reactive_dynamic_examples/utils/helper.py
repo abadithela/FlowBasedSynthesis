@@ -57,3 +57,15 @@ def load_opt_from_pkl_file():
     GD = opt['GD']
     SD = opt['SD']
     return cuts, GD, SD
+
+def load_graphs_from_pkl_file():
+    opt_file = os.getcwd()+'/stored_graphs.p'
+    with open(opt_file, 'rb') as pckl_file:
+        sol = pickle.load(pckl_file)
+    virtual = sol['virtual']
+    b_test = sol['b_test']
+    b_sys = sol['b_sys']
+    b_pi = sol['b_pi']
+    virtual_sys = sol['virtual_sys']
+
+    return virtual, b_test, b_sys, b_pi, virtual_sys
