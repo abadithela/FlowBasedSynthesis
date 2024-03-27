@@ -68,7 +68,7 @@ class Product(ProductTransys):
             self.L[s] = s[1]
 
     def identify_SIT(self):
-        self.src = [s for s in self.S if s[1] == self.automaton.qinit]
+        self.src = [s for s in self.I]
         try:
             self.int = [s for s in self.S if s[1] in self.automaton.Acc["test"]]
         except:
@@ -90,12 +90,17 @@ class Product(ProductTransys):
                 if node_st not in self.plt_sink_int:
                     self.plt_sink_int.append(node_st)
 
+            if node in self.src:
+                self.plt_src.append(node_st)
+
+
     def to_graph(self):
         self.G = nx.DiGraph()
         self.G.add_nodes_from(list(self.Sdict.values()))
         self.plt_sink_only = [] # Finding relevant nodes connected to graph with edges
         self.plt_int_only= []
         self.plt_sink_int = []
+        self.plt_src = []
         edges = []
         edge_attr = dict()
         node_attr = dict()
@@ -108,8 +113,6 @@ class Product(ProductTransys):
             self.process_nodes([out_node, in_node])
         self.G.add_edges_from(edges)
         nx.set_edge_attributes(self.G, edge_attr)
-        # from ipdb import set_trace as st
-        # st()
 
 
     def plot_graph(self, fn):
@@ -135,7 +138,6 @@ class Product(ProductTransys):
         G_agr.draw(fn+".pdf",prog='dot')
 
     def plot_with_highlighted_edges(self, cuts, fn):
-        # st()
         self.identify_SIT()
         self.to_graph()
         # prune unreachable nodes
@@ -234,13 +236,16 @@ class Product(ProductTransys):
             node = self.reverse_Sdict[n]
             n.attr['shape'] = 'circle'
             if n in self.plt_sink_only:
-                n.attr['fillcolor'] = 'yellow'
+                n.attr['fillcolor'] = '#ffb000'
             elif n in self.plt_int_only:
-                n.attr['fillcolor'] = 'blue'
+                n.attr['fillcolor'] = '#648fff'
             elif n in self.plt_sink_int:
-                n.attr['fillcolor'] = 'magenta'
+                n.attr['fillcolor'] = '#ffb000'
+            elif n in self.plt_src:
+                n.attr['fillcolor'] = '#dc267f'
             else:
-                n.attr['fillcolor'] = 'gray'
+                n.attr['fillcolor'] = '#ffffff'
+            n.attr['label']= ''
         return G_agr
 
     def plot_product_dot(self, fn):
@@ -252,7 +257,6 @@ class Product(ProductTransys):
         for color, state_list in state_color_dict.items():
             if not isinstance(state_list, list):
                 state_list = [state_list]
-            # pdb.set_trace()
 
             for node in state_list:
                 if not isinstance(node, str):
@@ -270,7 +274,6 @@ class Product(ProductTransys):
     def save_plot(self, fn):
         self.identify_SIT()
         self.to_graph()
-        # self.plot_product(fn)
         self.plot_product_dot(fn)
 
 
