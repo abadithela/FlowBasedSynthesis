@@ -3,6 +3,7 @@ from copy import deepcopy
 from find_cuts import find_cuts
 import sys
 sys.path.append('..')
+# from helpers.helper import load_opt_from_pkl_file
 import _pickle as pickle
 from utils.quadruped_interface import quadruped_move
 from problem_data import *
@@ -29,14 +30,16 @@ class Game:
 
     def agent_take_step(self):
         cur_s = self.agent.s
+        output = self.agent.controller.move()
+        next_s = self.maze.map[output['s']]
 
-        if cur_s == 'int_goal':
-            next_s = 'p2'
-            self.agent.s = next_s
-            self.agent.find_controller(self.agent.s)
-        else:
-            output = self.agent.controller.move()
-            next_s = self.maze.map[output['s']]
+        # if cur_s == 'int_goal':
+        #     next_s = 'p2'
+        #     self.agent.s = next_s
+        #     self.agent.find_controller(self.agent.s)
+        # else:
+        #     output = self.agent.controller.move()
+        #     next_s = self.maze.map[output['s']]
 
         # update the tracking in G
         succs = self.GD.graph[self.agent_in_state_x]

@@ -13,7 +13,7 @@ class Agent:
     def __init__(self, name, init, goals, maze):
         self.name = name
         self.init = init
-        self.goals = goals
+        self.goals = list(set(goals))
         self.index = 0
         self.s = init
         self.maze = maze
@@ -62,5 +62,7 @@ class Agent:
         exec(dumpsmach.python_case(ctrl, classname='AgentCtrl'), exe_globals)
         M = exe_globals['AgentCtrl']()  # previous line creates the class `AgentCtrl`
         print('------- Controller available -------')
+        # controller_namestr = "system_controller"+str(self.index)+".py"
+        # dumpsmach.write_python_case(controller_namestr, ctrl, classname="AgentCtrl")
         self.controller = M
         return M

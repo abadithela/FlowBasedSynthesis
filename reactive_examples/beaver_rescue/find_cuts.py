@@ -13,7 +13,7 @@ from reactive_examples.utils.get_graphs import get_graphs_from_network
 from problem_data import *
 from reactive_examples.utils.plotting_utils import make_history_plots
 from reactive_examples.utils.setup_logger import setup_logger
-from beaver_rescue_network import BeaverRescueNetwork
+from reactive_examples.utils.custom_network import CustomNetwork
 
 def find_cuts(network):
 
@@ -37,5 +37,5 @@ if __name__ == '__main__':
     ('int_goal', 'p1'), ('int_goal', 'p2'),
     ('p1', 'goal'), ('p2', 'goal'),]
 
-    network = BeaverRescueNetwork(states, transitions)
+    network = CustomNetwork(states, transitions)
     find_cuts(network)
