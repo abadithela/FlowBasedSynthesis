@@ -71,24 +71,13 @@ class MazeNetwork:
             for z_s in range(self.len_z):
                 if self.map[(z_s,x_s)] != '*':
                     states.append((z_s,x_s))
-
-        transitions = []
-        # adding system actions
-        next_state_dict = {}
-        for state in states: #tester can move according to
-            next_states = [(state)]
-            for sys_state in self.next_state_dict[(state)]:
-                next_states.append((sys_state))
-            next_state_dict.update({state: next_states})
-
-        nodes = []
         nodes = states
 
         edges = []
         for state in states:
             if state not in self.goal: # collision states have no next state and when test done then done
                 out_node = state
-                in_nodes = [next_state for next_state in next_state_dict[state]]
+                in_nodes = [next_state for next_state in self.next_state_dict[state]]
                 for in_node in in_nodes:
                     actions = []
                     if in_node in states:
