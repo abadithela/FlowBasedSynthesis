@@ -14,11 +14,11 @@ from optimization.milp_augmented_mixed_gurobipy_w_fuel import solve_max_gurobi a
 from components.setup_graphs import setup_nodes_and_edges
 from components.plotting import highlight_cuts, plot_flow_on_maze, make_history_plots
 
-def solve_problem(virtual, system, b_pi, virtual_sys, print_solution=True, plot_results=True):
+def solve_problem(virtual, system, b_pi, virtual_sys, print_solution=True, plot_results=True, excluded_sols = []):
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
 
     ti = time.time()
-    exit_status, ftest, d, flow = solve_max_gurobi(GD, SD)
+    exit_status, ftest, d, flow = solve_max_gurobi(GD, SD, excluded_sols=excluded_sols)
     tf = time.time()
     del_t = tf-ti
 
@@ -66,10 +66,6 @@ def solve_problem_augmented(virtual, system, b_pi, virtual_sys, static_area, exc
                 print('Cutting {0} to {1}'.format(GD.node_dict[cut[0]], GD.node_dict[cut[1]]))
 
         annot_cuts = [(GD.node_dict[cut[0]], GD.node_dict[cut[1]]) for cut in cuts]
-
-        # opt_dict = {'cuts': annot_cuts, 'GD': GD}
-        # with open('stored_optimization_result.p', 'wb') as pckl_file:
-        #     pickle.dump(opt_dict, pckl_file)
 
         return exit_status, annot_cuts, flow, bypass_flow, GD, SD
     else:
