@@ -32,12 +32,12 @@ def solve_problem(virtual, system, b_pi, virtual_sys, print_solution=True, plot_
                 print('Cutting {0} to {1}'.format(GD.node_dict[cut[0]], GD.node_dict[cut[1]]))
 
         if plot_results:
-            highlight_cuts(cuts, GD, SD, virtual, virtual_sys)
+            # highlight_cuts(cuts, GD, SD, virtual, virtual_sys)
             highlight_history_cuts(cuts, GD, SD, virtual, virtual_sys)
             sys_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
-            plot_flow_on_maze(system.maze, [])
+            # plot_flow_on_maze(system.maze, [])
             # plot_flow_on_maze(system.maze, sys_cuts)
-            
+
         # from ipdb import set_trace as st
         # st()
         annot_cuts = [(GD.node_dict[cut[0]], GD.node_dict[cut[1]]) for cut in cuts]

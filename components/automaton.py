@@ -70,31 +70,32 @@ class Automaton:
         for i in G_agr.nodes():
             n = G_agr.get_node(i)
             n.attr['shape'] = 'circle'
-            n.attr['fillcolor'] = 'gray' # default color
+            n.attr['fillcolor'] = '#ffffff' # default color white
+            # n.attr['label'] = ''
             try:
                 if n in list(self.Acc["sys"]) and n not in list(self.Acc["test"]):
-                    n.attr['fillcolor'] = 'yellow'
+                    n.attr['fillcolor'] = '#ffb000' #yellow
             except:
                 pass
             try:
                 if n in list(self.Acc["sys"]):
-                    n.attr['fillcolor'] = 'yellow'
+                    n.attr['fillcolor'] = '#ffb000' #yellow
             except:
                 pass
 
             try:
                 if n in list(self.Acc["test"]) and n not in list(self.Acc["sys"]):
-                    n.attr['fillcolor'] = 'blue'
+                    n.attr['fillcolor'] = '#648fff' # blue
             except:
                 pass
             try:
                 if n in list(self.Acc["test"]):
-                    n.attr['fillcolor'] = 'blue'
+                    n.attr['fillcolor'] = '#648fff' # blue
             except:
                 pass
             try:
                 if n in list(self.Acc["test"]) and n in list(self.Acc["sys"]):
-                    n.attr['fillcolor'] = 'magenta'
+                    n.attr['fillcolor'] = '#ffb000' #yellow
             except:
                 pass
 

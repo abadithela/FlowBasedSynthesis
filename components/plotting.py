@@ -21,6 +21,7 @@ def highlight_cuts(cuts, GD, SD, virtual, virtual_sys):
     virtual_sys.plot_with_highlighted_edges(sys_cuts_annot, "imgs/virtual_sys_with_cuts")
 
 def plot_flow_on_maze(maze, cuts, num_int=1):
+    plt.rcParams.update({"text.usetex": True,"font.family": "Helvetica"})
     # get the max flow for the cuts
     # remove redundant cuts
     cuts = list(set(cuts))
@@ -55,19 +56,17 @@ def plot_flow_on_maze(maze, cuts, num_int=1):
                 if maze.map[j,i]=='*':
                     ax.add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.5))
                 elif (j,i) in maze.int:
-                    ax.add_patch(Rectangle((x, y), w, h, fill=True, color='blue', alpha=.3))
-                    ax.text(x+tilesize/2, y+tilesize/2, maze.int[(j,i)])
+                    ax.add_patch(Rectangle((x, y), w, h, fill=True, color='#648fff', alpha=.3))
+                    ax.text(x+tilesize*0.45, y+tilesize*0.65, r'$'+maze.int[(j,i)]+'$', fontsize = 25)
                 elif (j,i) in maze.goal:
-                    ax.add_patch(Rectangle((x, y), w, h, fill=True, color='yellow', alpha=.3))
-                    ax.text(x+tilesize/2, y+tilesize/2, 'T')
-                elif i % 2 == j % 2:
-                    ax.add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.1))
-                    if (j,i) in maze.init:
-                        ax.text(x+tilesize/2, y+tilesize/2, 'S')
+                    ax.add_patch(Rectangle((x, y), w, h, fill=True, color='#ffb000', alpha=.3))
+                    ax.text(x+tilesize*0.4, y+tilesize*0.65, r'$T$', fontsize = 25)
+                elif (j,i) in maze.init:
+                    ax.text(x+tilesize*0.4, y+tilesize*0.65, r'$S$', fontsize = 25)
                 elif maze.map[j,i]==' ':
-                    ax.add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.2))
-                    if (j,i) in maze.init:
-                        ax.text(x+tilesize/2, y+tilesize/2, 'S')
+                    ax.add_patch(Rectangle((x, y), w, h, fill=True, color='#ffffff'))
+                    # if (j,i) in maze.init:
+                    #     ax.text(x+tilesize*0.4, y+tilesize*0.65, r'$S$', fontsize = 25)
             elif num_int==2:
                 if maze.map[j,i]=='*':
                     ax.add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.5))
@@ -90,9 +89,9 @@ def plot_flow_on_maze(maze, cuts, num_int=1):
                         ax.text(x+tilesize/2, y+tilesize/2, 'S')
     # grid lines
     for x in xs:
-        ax.plot([x, x], [ys[0], ys[-1]], color='black', alpha=.33, linestyle=':')
+        ax.plot([x, x], [ys[0], ys[-1]], color='black', alpha=.33)
     for y in ys:
-        ax.plot([xs[0], xs[-1]], [y, y], color='black', alpha=.33, linestyle=':')
+        ax.plot([xs[0], xs[-1]], [y, y], color='black', alpha=.33)
 
     width = tilesize/20
     for cut in cuts:
@@ -375,19 +374,19 @@ def make_history_plots(cuts, GD, maze):
                     if maze.map[j,i]=='*':
                         axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.5))
                     elif (j,i) in maze.int:
-                        axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='blue', alpha=.3))
-                        axs[k].text(x+tilesize/2, y+tilesize/2, maze.int[(j,i)])
+                        axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='#648fff', alpha=.3))
+                        axs[k].text(x+tilesize*0.45, y+tilesize*0.65, maze.int[(j,i)], fontsize = 25)
                     elif (j,i) in maze.goal:
-                        axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='yellow', alpha=.3))
-                        axs[k].text(x+tilesize/2, y+tilesize/2, 'T')
-                    elif i % 2 == j % 2:
-                        axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.1))
-                        if (j,i) in maze.init:
-                            axs[k].text(x+tilesize/2, y+tilesize/2, 'S')
+                        axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='#ffb000', alpha=.3))
+                        axs[k].text(x+tilesize*0.4, y+tilesize*0.65, 'T', fontsize = 25)
+                    # elif i % 2 == j % 2:
+                    #     axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.1))
+                    #     if (j,i) in maze.init:
+                    #         axs[k].text(x+tilesize/2, y+tilesize/2, 'S')
                     elif maze.map[j,i]==' ':
-                        axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.2))
+                        axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='#ffffff', alpha=.2))
                         if (j,i) in maze.init:
-                            axs[k].text(x+tilesize/2, y+tilesize/2, 'S')
+                            axs[k].text(x+tilesize*0.4, y+tilesize*0.65, 'S', fontsize = 25)
             # grid lines
             for x in xs:
                 axs[k].plot([x, x], [ys[0], ys[-1]], color='black', alpha=.33, linestyle=':')

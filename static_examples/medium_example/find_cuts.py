@@ -20,14 +20,14 @@ from static_examples.utils.setup_logger import setup_logger
 
 def find_cuts():
     print('S: {0}, I: {1}, T: {2}'.format(INIT, INTS, GOALS))
-    
+
     # Logger to save runtimes
-    logger = setup_logger("medium_example") 
-    virtual, system, b_pi, virtual_sys = get_graphs(SYS_FORMULA, TEST_FORMULA, MAZEFILE, INIT, INTS, GOALS, logger)
+    logger = setup_logger("medium_example")
+    virtual, system, b_pi, virtual_sys = get_graphs(SYS_FORMULA, TEST_FORMULA, MAZEFILE, INIT, INTS, GOALS, logger, save_figures = True)
 
     exit_status, annot_cuts, flow, bypass = solve_problem(virtual, system, b_pi, virtual_sys)
     print('exit status {0}'.format(exit_status))
-    
+
     logger.print_runtime_latex()
     logger.print_problem_data_latex()
     return annot_cuts
