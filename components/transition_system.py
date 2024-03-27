@@ -45,9 +45,9 @@ class ProductTransys(Transys):
         self.maze.set_goal(goals)
         self.maze.setup_maze()
 
-    def get_maze_from_network(self, network, int, goals, obs):
+    def get_maze_from_network(self, network, inter, goals, obs):
         self.maze = network
-        self.maze.set_int(int)
+        self.maze.set_int(inter)
         self.maze.set_goal(goals)
         self.maze.setup_maze()
 
@@ -109,6 +109,15 @@ class ProductTransys(Transys):
                 print("Incorrect transition function")
                 pdb.set_trace()
 
+    def construct_transition_function_custom(self):
+        # arbitrary actions
+        self.E = dict()
+
+        for s in self.maze.states:
+            for i, ns in enumerate(self.maze.next_state_dict[s]):
+                self.E[(s, self.A[i])] = ns
+
+
     def construct_labels(self):
         self.L = od()
         for s in self.S:
@@ -120,13 +129,11 @@ class ProductTransys(Transys):
     def construct_initial_conditions(self, init):
         self.I = init
         self.maze.init = self.I
-        # for s in self.S:
-        #     if s == self.maze.init:
-        #         self.I.append(s)
+
 
     def construct_sys(self, mazefile, init, ints, goals, obs=[]):
         self.get_maze(mazefile, ints, goals, obs)
-        self.S = list(self.maze.G_single.nodes()) # All system and tester nodes
+        self.S = list(self.maze.G_single.nodes())
         self.A = ['sys_n','sys_s','sys_e','sys_w', 'sys_o']
         self.construct_transition_function()
         self.get_APs()
@@ -135,12 +142,23 @@ class ProductTransys(Transys):
 
     def construct_sys_from_network(self, network, init, ints, goals, obs=[]):
         self.get_maze_from_network(network, ints, goals, obs)
-        self.S = list(self.maze.graph.nodes()) # All system and tester nodes
+        self.S = list(self.maze.graph.nodes())
         self.A = ['sys_n','sys_s','sys_e','sys_w', 'sys_o']
         self.construct_transition_function_fuel()
         self.get_APs()
         self.construct_initial_conditions(init)
         self.construct_labels()
+
+    def construct_sys_from_custom_network(self, custom_network, init, ints, goals, obs=[]):
+        self.get_maze_from_network(custom_network, ints, goals, obs)
+        self.S = list(self.maze.G.nodes())
+        self.A = ['a','b','c','d', 'e'] # placeholders, don't care
+        self.construct_transition_function_custom()
+        # st()
+        self.get_APs()
+        self.construct_initial_conditions(init)
+        self.construct_labels()
+        # st()
 
     def add_set_intermediate_nodes(self, node_dict):
         for node, formula in node_dict.items():

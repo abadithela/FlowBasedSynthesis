@@ -11,7 +11,7 @@ from components.setup_graphs import setup_nodes_and_edges
 from components.plotting import highlight_cuts, plot_flow_on_maze, plot_maze
 from utils.plotting_utils import make_history_plots, highlight_history_cuts
 
-def solve_problem(virtual, system, b_pi, virtual_sys, print_solution=True, plot_results=True):
+def solve_problem(virtual, system, b_pi, virtual_sys, print_solution=True, plot_results=False):
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
 
     ti = time.time()
