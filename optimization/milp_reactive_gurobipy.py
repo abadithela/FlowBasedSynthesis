@@ -24,7 +24,7 @@ def new_cb(model, where):
         obj = model.cbGet(GRB.Callback.MIPNODE_OBJBST) # Current best objective
         opt_time = model.cbGet(GRB.Callback.RUNTIME) # Optimizer runtime
         obj_bound = model.cbGet(GRB.Callback.MIPNODE_OBJBND) # Objective bound
-        node_count = model.cbGet(GRB.Callback.MIPNODE_NODCNT) # No. of unexplored nodes 
+        node_count = model.cbGet(GRB.Callback.MIPNODE_NODCNT) # No. of unexplored nodes
         sol_count = model.cbGet(GRB.Callback.MIPNODE_SOLCNT) # No. of feasible solns found.
 
         # Save model and opt data:
@@ -41,7 +41,7 @@ def new_cb(model, where):
             # If so, update incumbent and time
             model._cur_obj = obj
             model._time = time.time()
-            
+
         # Terminate if objective has not improved in 30s
         # Current objective is less than infinity.
         if obj < float(np.inf):
@@ -52,9 +52,9 @@ def new_cb(model, where):
                     model.terminate()
         else:
             # Total termination time if the optimizer has not found anything in 5 min:
-            if time.time() - model._time > 3000: 
+            if time.time() - model._time > 3000:
                 model.terminate()
-            
+
 # Callback function
 def cb(model, where):
     if where == GRB.Callback.MIPNODE:
@@ -72,7 +72,7 @@ def cb(model, where):
         model.terminate()
 
 # Gurobi implementation
-def solve_max_gurobi(GD, SD):
+def solve_max_gurobi(GD, SD, excluded_sols = []):
     cleaned_intermed = [x for x in GD.acc_test if x not in GD.acc_sys]
     # create G and remove self-loops
     G = GD.graph
@@ -236,6 +236,12 @@ def solve_max_gurobi(GD, SD):
                     imap = map_G_to_S[i]
                     jmap = map_G_to_S[j]
                     model.addConstr(f_s[k][imap, jmap] + d[i, j] <= 1)
+
+    # --- Exclude specific solutions that cannot be realized
+    # st()
+    for excluded_sol in excluded_sols:
+        model.addConstr(sum(d[i, j] for (i,j) in excluded_sol) <= len(excluded_sol)-1)
+    model._data["n_cex"] = len(excluded_sols)
 
     # Problem data of feasibility constraints:
     model._data["Feasibility"] = len(s_data)
