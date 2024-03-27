@@ -12,10 +12,7 @@ import time
 import itertools
 import matplotlib.pyplot as plt
 
-from b_sys import get_B_sys
-from b_product_1_intermed import get_B_product
-
-from optimization.milp_static_obstacles import solve_min
+# from optimization.milp_static_obstacles import solve_min
 from optimization.find_bypass_flow import find_fby
 from optimization.milp_static_gurobipy import solve_max_gurobi
 
@@ -23,6 +20,7 @@ from components.transition_system import ProductTransys
 from components.setup_graphs import GraphData, setup_nodes_and_edges
 from components.plotting import plot_maze, plot_flow_on_maze, highlight_cuts
 from components.tools import synchronous_product
+from components.parse_specification_product import *
 
 plot_results = False
 print_solution = False
@@ -91,8 +89,8 @@ def plot_runtimes(runtimes):
 
 if __name__ == '__main__':
 
-    number_of_runs = 25
-    obstacle_coverage = 15 # percentage of the grid that shall be covered by obstacles
+    number_of_runs = 1
+    obstacle_coverage = 0 # percentage of the grid that shall be covered by obstacles
 
     # mazefile = 'mazes/3x3.txt'
 
@@ -105,9 +103,13 @@ if __name__ == '__main__':
 
     runtimes = {}
 
-    # foci = [0,1,2,3] # default is 0
-    # cuts = [0,1,2,3] # default is -1 (whatever that may mean)
-    # presolves = [-1,0,1,2]
+    sys_formula = '<>goal'
+    test_formula = '<>int'
+
+    # get automata
+    b_sys = get_system_automaton(sys_formula)
+    b_test = get_tester_automaton(test_formula)
+    b_pi = get_prod_automaton(sys_formula, test_formula)
 
     for gridsize in mazefiles.keys():
         del_ts = []
@@ -130,18 +132,15 @@ if __name__ == '__main__':
             obs = [all_states[idx[3+int(n)]] for n in np.arange(0,obsnum)]
             ints = {inter: 'int'}
 
+            # get graphs
             # get system
             system = ProductTransys()
             system.construct_sys(mazefile, init, ints, goals, obs)
-
-            # get Buchi automata
-            b_sys = get_B_sys(system.AP)
-            b_pi = get_B_product()
-
             # get virtual sys
             virtual_sys = synchronous_product(system, b_sys)
             # get virtual product
             virtual = synchronous_product(system, b_pi)
+
 
             exit_status, del_t, annot_cuts, flow, bypass_flow = solve_instance(virtual, system, b_pi, virtual_sys)#, focus, cuts, presolve)
             print("{0}: S = {1}, I = {2}, T = {3}".format(gridsize, init, ints, goals))
@@ -160,4 +159,4 @@ if __name__ == '__main__':
         print('{0}: Solved {1} out of {2} feasible grids'.format(gridsize, number_of_runs-not_solved, number_of_runs-num_infeas))
 
 
-    plot_runtimes(runtimes)
+    # plot_runtimes(runtimes)
