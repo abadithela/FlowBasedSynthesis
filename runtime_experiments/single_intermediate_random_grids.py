@@ -59,7 +59,6 @@ def solve_instance(virtual, system, b_pi, virtual_sys):#, focus, cuts, presolve)
         return exit_status, 0, [], [], None
 
 def plot_runtimes(runtimes):
-
     gridsizes = list(runtimes.keys())
     gridsizes.sort()
 
@@ -158,6 +157,5 @@ if __name__ == '__main__':
 
         runtimes.update({gridsize: del_ts})
         print('{0}: Solved {1} out of {2} feasible grids'.format(gridsize, number_of_runs-not_solved, number_of_runs-num_infeas))
-
 
     plot_runtimes(runtimes)
