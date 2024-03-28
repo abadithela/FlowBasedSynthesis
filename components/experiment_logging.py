@@ -6,26 +6,33 @@ import json
 import csv
 
 class ExpLogger:
-    def __init__(self, exp_name, exp_time, problem_data_file=None, runtime_data_file=None):
+    def __init__(self, exp_name, exp_time, setup_files=True, problem_data_file=None, runtime_data_file=None, folder_name="log"):
         self.exp_name = exp_name
         self.exp_time = exp_time
-        if problem_data_file is not None:
-            self.problem_data_file = problem_data_file
-        else:
-            self.problem_data_file = "log/problem_data.csv"
-        if runtime_data_file is not None:
-            self.runtime_data_file = runtime_data_file
-        else:
-            self.runtime_data_file = "log/runtime_data.csv"
-        self.setup_log_folder()
+        self.folder_name = folder_name
+        if not os.path.exists(self.folder_name):
+            os.makedirs(self.folder_name)
+
+        if setup_files:
+            if problem_data_file is not None:
+                self.problem_data_file = problem_data_file
+            else:
+                self.problem_data_file = f"{self.folder_name}/problem_data.csv"
+            if runtime_data_file is not None:
+                self.runtime_data_file = runtime_data_file
+            else:
+                self.runtime_data_file = f"{self.folder_name}/runtime_data.csv"
+            self.setup_files()
   
-    def setup_log_folder(self):
-        if not os.path.exists("log"):
-            os.makedirs("log")
+    def setup_files(self):
         self.write_to_csv_file(self.problem_data_file, self.exp_name, self.exp_time)
         self.append_to_csv_file(self.problem_data_file, "Object", "Value")
         self.write_to_csv_file(self.runtime_data_file, "Process", "Runtime (s)")
     
+    def save_optimization_data(self, data):
+        with open(f'{self.folder_name}/opt_data.json', 'w') as fp:
+            json.dump(data, fp)
+
     def write_to_csv_file(self, filepath, name, value):
         with open(filepath, 'w', newline='') as csv_file:
             csv_file_append = csv.writer(csv_file)
@@ -49,7 +56,7 @@ class ExpLogger:
             reader = csv.reader(csv_file)
             headers = next(reader)
             num_columns = len(headers)
-            latex_code += '|'.join(['l'] * num_columns) + "}\n\\hline\n"
+            latex_code += '|'.join(['c'] * num_columns) + "}\n\\hline\n"
 
             # Add headers
             latex_code += " & ".join(headers) + " \\\\\n\\hline\n"
@@ -72,7 +79,7 @@ class ExpLogger:
             reader = csv.reader(csv_file)
             headers = next(reader)
             num_columns = len(headers)
-            latex_code += '|'.join(['l'] * num_columns) + "}\n\\hline\n"
+            latex_code += '|'.join(['c'] * num_columns) + "}\n\\hline\n"
 
             # Add headers
             latex_code += " & ".join(headers) + " \\\\\n\\hline\n"

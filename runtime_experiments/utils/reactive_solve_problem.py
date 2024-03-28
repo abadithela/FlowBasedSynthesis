@@ -11,11 +11,11 @@ from components.setup_graphs import setup_nodes_and_edges
 from components.plotting import highlight_cuts, plot_flow_on_maze, plot_maze
 from utils.plotting_utils import make_history_plots, highlight_history_cuts
 
-def solve_problem(virtual, system, b_pi, virtual_sys, print_solution=True, plot_results=False):
+def solve_problem(virtual, system, b_pi, virtual_sys, print_solution=True, plot_results=True, instance_logger=None, logger_runtime_dict=None):
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
 
     ti = time.time()
-    exit_status, ftest, d, flow = solve_max_gurobi(GD, SD)
+    exit_status, ftest, d, flow = solve_max_gurobi(GD, SD, logger = instance_logger, logger_runtime_dict=logger_runtime_dict)
     tf = time.time()
     del_t = tf-ti
 
@@ -42,6 +42,6 @@ def solve_problem(virtual, system, b_pi, virtual_sys, print_solution=True, plot_
         # st()
         annot_cuts = [(GD.node_dict[cut[0]], GD.node_dict[cut[1]]) for cut in cuts]
         # st()
-        return exit_status, annot_cuts, flow, bypass_flow, GD, SD
+        return exit_status, annot_cuts, flow, bypass_flow
     else:
         return exit_status, [], [], None, GD, SD

@@ -72,7 +72,7 @@ def cb(model, where):
         model.terminate()
 
 # Gurobi implementation
-def solve_max_gurobi(GD, SD, excluded_sols = []):
+def solve_max_gurobi(GD, SD, excluded_sols = [],logger=None, logger_runtime_dict=None):
     cleaned_intermed = [x for x in GD.acc_test if x not in GD.acc_sys]
     # create G and remove self-loops
     G = GD.graph
@@ -299,7 +299,11 @@ def solve_max_gurobi(GD, SD, excluded_sols = []):
 
     if not os.path.exists("log"):
         os.makedirs("log")
-    with open('log/opt_data.json', 'w') as fp:
-        json.dump(model._data, fp)
+    if logger is None:
+        with open('log/opt_data.json', 'w') as fp:
+            json.dump(model._data, fp)
+    else:
+        logger.save_optimization_data(model._data)
+        logger_runtime_dict["opt_runtimes"].append(model._data["runtime"])
 
     return exit_status, f_vals, d_vals, flow
