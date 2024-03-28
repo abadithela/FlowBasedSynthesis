@@ -15,6 +15,7 @@ from reactive_examples.utils.plotting_utils import make_history_plots
 from reactive_examples.utils.setup_logger import setup_logger
 from reactive_examples.utils.custom_network import CustomNetwork
 
+
 def find_cuts(network):
 
     intstr = ''.join('%s = %s, ' % (val,key) for (key,val) in INTS.items())

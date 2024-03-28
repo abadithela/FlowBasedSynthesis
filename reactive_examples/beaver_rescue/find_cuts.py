@@ -7,6 +7,7 @@ MILP for reactive obstacles.
 
 import sys
 sys.path.append('../..')
+from ipdb import set_trace as st
 
 from reactive_examples.utils.solve_problem import solve_problem
 from reactive_examples.utils.get_graphs import get_graphs_from_network
@@ -26,7 +27,6 @@ def find_cuts(network):
     print('exit status {0}'.format(exit_status))
 
     return annot_cuts, GD, SD
-
 
 if __name__ == '__main__':
     states = ['init', 'd1', 'd2', 'int_goal', 'p1', 'p2', 'goal']
