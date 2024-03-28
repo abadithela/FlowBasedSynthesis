@@ -19,6 +19,8 @@ class Agent:
         self.maze = maze
         self.controller = self.find_controller(self.init)
 
+    def set_maze(self, maze):
+        self.maze = maze
 
     def find_controller(self, init):
         print('------- (Re-)synthesizing the agent\'s controller -------')
@@ -60,9 +62,5 @@ class Agent:
         exec(dumpsmach.python_case(ctrl, classname='AgentCtrl'), exe_globals)
         M = exe_globals['AgentCtrl']()  # previous line creates the class `AgentCtrl`
         print('------- Controller available -------')
+        self.controller = M
         return M
-
-    # def agent_move(self):
-    #     output = self.controller.move()
-    #     print('Agent moving to {}'.format(self.maze.map[output['s']]))
-    #     self.s = self.maze.map[output['s']]

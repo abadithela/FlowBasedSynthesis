@@ -256,6 +256,8 @@ def solve_max_gurobi(GD, SD, excluded_sols = [],logger=None, logger_runtime_dict
     model._data["n_constrs"] = model.NumConstrs
     # model.Params.InfUnbdInfo = 1
 
+    print('Runtime {}'.format(model.Runtime))
+
     if model.status == 4:
         model.Params.DualReductions = 0
         model.optimize(callback=cb)
@@ -263,20 +265,12 @@ def solve_max_gurobi(GD, SD, excluded_sols = [],logger=None, logger_runtime_dict
         exit_status = 'inf'
 
         return exit_status, [], [], None
-    # elif model.status == 11:
-    #     if model.SolCount <= 1:
-    #
-    #         model.optimize(callback=cb_max)
-    #         if model.SolCount <= 1:
-    #             exit_status = 'not solved'
-    #             return exit_status, [], [], None
 
     elif model.status == 2 or model.status == 11:
         if model.status == 11 and model.SolCount < 1:
-            # model.optimize(callback=cb)
-            # if model.SolCount <= 1:
             exit_status = 'not solved'
             return exit_status, [], [], None
+            
         # --------- parse output
         d_vals = dict()
         f_vals = dict()

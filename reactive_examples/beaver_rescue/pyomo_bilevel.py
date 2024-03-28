@@ -1,3 +1,6 @@
+'''
+Bilevel optimization from ICRA2023 paper, only for comparison purposes.
+'''
 import sys
 sys.path.append('..')
 import numpy as np
@@ -6,15 +9,35 @@ from collections import OrderedDict as od
 import _pickle as pickle
 import os
 import networkx as nx
-import gurobipy as gp
-from gurobipy import GRB
-import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
 from pao.pyomo import *
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
+import time
+from ipdb import set_trace as st
 
-def solve_bilevel(nodes, edges, init, intermed, goal):
+def find_map_G_to_S(GD,SD):
+    G_truncated = {}
+    S_annot = {}
+    map_G_to_S = {}
+    for node in GD.node_dict:
+        G_truncated.update({node: GD.node_dict[node][0]})
+    for node in SD.node_dict:
+        S_annot.update({node: SD.node_dict[node][0]})
+    for node in G_truncated:
+        for sys_node in S_annot:
+            if G_truncated[node]  == S_annot[sys_node]:
+                map_G_to_S.update({node: sys_node})
+
+    return map_G_to_S
+
+def solve_bilevel(GD, SD):
+    nodes = GD.nodes
+    edges = GD.edges
+    init = GD.init
+    intermed = [int for int in GD.int if int not in GD.sink]
+    goal = GD.sink
+
+    # map_G_to_S = find_map_G_to_S(GD,SD)
     G = nx.DiGraph()
     G.add_nodes_from(nodes)
     G.add_edges_from(edges)
@@ -31,7 +54,6 @@ def solve_bilevel(nodes, edges, init, intermed, goal):
     src = init # list
     sink = goal # list
     int = intermed # list
-    # st()
     vars = ['f1_e', 'f2_e', 'd_e', 'F']
     model.y = pyo.Var(vars, model.edges, within=pyo.NonNegativeReals)
     model.t = pyo.Var(within=pyo.NonNegativeReals)
@@ -41,7 +63,7 @@ def solve_bilevel(nodes, edges, init, intermed, goal):
     fixed_variables = [model.y['d_e',i,j] for i,j in model.edges] # Cut edges
     fixed_variables.extend([model.y['f1_e',i,j] for i,j in model.edges]) # Flow 1
     fixed_variables.extend([model.y['f2_e',i,j] for i,j in model.edges]) # Flow 2
-    fixed_variables.extend([model.y['F',i,j] for i,j in model.edges]) # total flow through i
+    # fixed_variables.extend([model.y['F',i,j] for i,j in model.edges]) # total flow through i
     fixed_variables.extend([model.t]) # 1/F
     # Submodel - variables defined by the system under test
     model.L = SubModel(fixed=fixed_variables)
@@ -54,7 +76,7 @@ def solve_bilevel(nodes, edges, init, intermed, goal):
     # Objective - minimize 1/F + lambda*f_3/F
     def mcf_flow(model):
         lam = 1000
-        flow_3 = sum(model.L.f3[i,j] for (i, j) in model.L.edges if i in src)
+        flow_3 = sum(model.L.f3[i,j] for (i, j) in model.L.edges if j in sink)
         return (model.t + lam * flow_3)
     model.o = pyo.Objective(rule=mcf_flow, sense=pyo.minimize)
 
@@ -131,13 +153,6 @@ def solve_bilevel(nodes, edges, init, intermed, goal):
         return model.y['f2_e',i,j] + model.y['d_e',i,j]<= model.t
     model.cut_cons2 = pyo.Constraint(model.edges, rule=cut_cons2)
 
-    # set F = 1
-    def auxiliary(model ,i, j):
-        return model.y['F',i,j] == 1
-    # Adding other auxiliary constraints to make t finite:
-    model.aux_constr = pyo.Constraint(model.edges, rule=auxiliary)
-
-
     # SUBMODEL
     # Objective - Maximize the flow into the sink
     def flow_sink(model):
@@ -194,38 +209,108 @@ def solve_bilevel(nodes, edges, init, intermed, goal):
         return mdl.f3[i,j] + model.y['d_e',i,j]<= model.t
     model.L.cut_cons = pyo.Constraint(model.L.edges, rule=cut_cons)
 
+    # Add constraints that system will always have a path
+    model = add_feasibility_constraints(model, GD, SD)
+
     print(" ==== Successfully added objective and constraints! ==== ")
-    # if debug:
-    # model.pprint()
-    # st()
 
     solver = Solver('pao.pyomo.REG')
-    results = solver.solve(model, tee=True)
+    ti = time.time()
+    results = solver.solve(model, tee=False)
+    tf = time.time()
 
-    # with Solver('pao.pyomo.REG') as solver:
-    #     solver.solve(model, tee=True)
+    bilevel_runtime = tf-ti
 
-    # model.pprint()
-    # st()
     f1_e = dict()
     f2_e = dict()
     f3_e = dict()
     d_e = dict()
-    F = 0
+
     for (i,j) in model.edges:
-        F = (model.y['F', i,j].value)/(model.t.value)
+        F = 1/model.t.value
         f1_e.update({((i,j)): model.y['f1_e', i,j].value*F})
         f2_e.update({((i,j)): model.y['f2_e', i,j].value*F})
         d_e.update({((i,j)): model.y['d_e', i,j].value*F})
     for (i,j)in model.L.edges:
         f3_e.update({((i,j)): model.L.f3[i,j].value*F})
 
-    # st()
-    # for key in d_e.items():
-    #     if d_e[key][-1] >= 0.5:
-    #         print('Edge {} cut'.format(key))
-    print(d_e)
-    print(F)
-    # st()
-    # plot_mcf(maze, f1_e, f2_e, f3_e, d_e)
-    return f1_e, f2_e, f3_e, d_e, F
+    for key in d_e.keys():
+        if d_e[key] > 0.9:
+            print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],d_e[key]))
+
+
+    return f1_e, f2_e, f3_e, d_e, F, bilevel_runtime
+
+
+def add_feasibility_constraints(model, GD, SD):
+    '''
+    Remember the history variable and check all cuts for that q.
+    '''
+    S = nx.DiGraph()
+    S.add_nodes_from(SD.nodes)
+    S.add_edges_from(SD.edges)
+    # remove self loops
+    for i,j in SD.edges:
+        if i == j:
+            S.remove_edge(i,j)
+
+    map_G_to_S = find_map_G_to_S(GD,SD)
+
+    node_list = []
+    for node in GD.nodes:
+        node_list.append(GD.node_dict[node])
+
+    qs = list(set([node[-1] for node in node_list]))
+    vars = ['fS_'+ str(q) for q in qs]
+
+    src = SD.init
+    sink = SD.acc_sys
+
+    model.s_edges = S.edges
+    model.s_nodes = S.nodes
+    model.s_var = pyo.Var(vars, model.s_edges, within=pyo.NonNegativeReals)
+
+    # feasibility constraint list
+    model.feasibility = pyo.ConstraintList()
+
+
+    for q in qs:
+        # Match the edge cuts from G to S
+        for (i,j) in model.edges:
+            if GD.node_dict[i][-1] == q:
+                imap = map_G_to_S[i]
+                jmap = map_G_to_S[j]
+                expression =  model.s_var['fS_'+ str(q), imap, jmap] + model.y['d_e', i, j] <= model.t
+                model.feasibility.add(expr = expression)
+
+        # Normal flow constraints
+        # Preserve flow of 1 in S
+        expression =  model.t <= sum(model.s_var['fS_'+ str(q), i,j] for (i, j) in model.s_edges if i in src)
+        model.feasibility.add(expr = expression)
+
+        # Capacity constraint on flow
+        for (i,j) in model.s_edges:
+            expression =  model.s_var['fS_'+ str(q),  i, j] <= model.t
+            model.feasibility.add(expr = expression)
+
+        # Conservation constraints:
+        for k in model.s_nodes:
+            if k not in src and k not in sink:
+                incoming  = sum(model.s_var['fS_'+ str(q),i,j] for (i,j) in model.s_edges if (j == k))
+                outgoing = sum(model.s_var['fS_'+ str(q), i,j] for (i,j) in model.s_edges if (i == k))
+                expression = incoming == outgoing
+                model.feasibility.add(expr = expression)
+
+        # no flow into sources and out of sinks
+        for (i,j) in model.s_edges:
+            if j in src:
+                expression = model.s_var['fS_'+ str(q),i,j] == 0
+                model.feasibility.add(expr = expression)
+
+        # nothing leaves sink
+        for (i,j) in model.s_edges:
+            if i in sink:
+                expression = model.s_var['fS_'+ str(q),i,k] == 0
+                model.feasibility.add(expr = expression)
+
+    return model

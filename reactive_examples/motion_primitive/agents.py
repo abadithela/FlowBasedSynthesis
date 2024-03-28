@@ -1,4 +1,8 @@
-from __future__ import print_function
+'''
+System under test (quadruped) controller for reactive beaver rescue example.
+'''
+from utils.quadruped_interface import quadruped_move
+
 import logging
 from tulip import transys, spec, synth
 from tulip import dumpsmach
@@ -6,16 +10,19 @@ import tulip.gridworld as gw
 from ipdb import set_trace as st
 
 class Agent:
-    def __init__(self, name, init, goals, network):
+    def __init__(self, name, init, goals, maze):
         self.name = name
         self.init = init
-        self.goals = goals
+        self.goals = list(set(goals))
         self.index = 0
-        self.controller = self.find_controller(network, self.init)
         self.s = init
-        self.network = network
+        self.maze = maze
+        self.controller = self.find_controller(self.init)
 
-    def find_controller(self,maze, init):
+    def set_maze(self, maze):
+        self.maze = maze
+
+    def find_controller(self, init):
         print('------- (Re-)synthesizing the agent\'s controller -------')
         logging.basicConfig(level=logging.WARNING)
         logging.getLogger('tulip.spec.lexyacc').setLevel(logging.WARNING)
@@ -23,15 +30,15 @@ class Agent:
         logging.getLogger('tulip.interfaces.omega').setLevel(logging.WARNING)
 
         sys_vars = {}
-        sys_vars['s'] = (0, len(maze.states))
-        sys_init = {'s = '+str(maze.inv_map[init])}
+        sys_vars['s'] = (0, len(self.maze.states))
+        sys_init = {'s = '+str(self.maze.inv_map[init])}
         sys_prog = set()
-        goalstr = '(s = '+str(maze.inv_map[self.goals[0]])+')'
+        goalstr = '(s = '+str(self.maze.inv_map[self.goals[0]])+')'
         for goal in self.goals[1:]:
-            goalstr += ' || (s = '+str(maze.inv_map[goal])+')'
+            goalstr += ' || (s = '+str(self.maze.inv_map[goal])+')'
         sys_prog = goalstr
         sys_safe = set()
-        sys_safe |= maze.transition_specs('s') # add the dynamics for the system
+        sys_safe |= self.maze.transition_specs('s') # add the dynamics for the system
 
         env_vars = {}
         env_safe = set()
@@ -49,23 +56,13 @@ class Agent:
             st()
         else:
             ctrl = synth.synthesize(spc, solver='omega')
-        # dunp the controller
-        # controller_namestr = "robot_controller"+str(self.index)+".py"
-        # dumpsmach.write_python_case(controller_namestr, ctrl, classname="AgentCtrl")
-        # # load the controller
-        # from controller_namestr import AgentCtrl
-        # M = AgentCtrl()
         self.index += 1
 
-        # print(dumpsmach.python_case(g, classname='AgentCtrl', start=))
         exe_globals = dict()
         exec(dumpsmach.python_case(ctrl, classname='AgentCtrl'), exe_globals)
         M = exe_globals['AgentCtrl']()  # previous line creates the class `AgentCtrl`
         print('------- Controller available -------')
+        # controller_namestr = "system_controller"+str(self.index)+".py"
+        # dumpsmach.write_python_case(controller_namestr, ctrl, classname="AgentCtrl")
+        self.controller = M
         return M
-
-    def agent_move(self):
-        # st()
-        output = self.controller.move()
-        print('Agent moving to {}'.format(self.network.map[output['s']]))
-        self.s = self.network.map[output['s']]

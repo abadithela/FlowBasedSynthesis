@@ -4,7 +4,7 @@ import sys
 sys.path.append('../..')
 import os
 
-from beaver_rescue_network import BeaverRescueNetwork
+from reactive_examples.utils.custom_network import CustomNetwork
 from agents import Agent
 from game import Game
 from reactive_examples.utils.helper import *
@@ -19,7 +19,7 @@ def new_World():
     ('int_goal', 'p1'), ('int_goal', 'p2'),
     ('p1', 'goal'), ('p2', 'goal'),]
 
-    network = BeaverRescueNetwork(states, transitions)
+    network = CustomNetwork(states, transitions)
 
     sys = Agent('sys', INIT[0], GOALS, network)
     game = Game(network, sys)
@@ -29,17 +29,12 @@ def new_World():
 def run_sim(max_timestep, filepath):
     trace=[]
     game, network, sys = new_World()
-    # trace = save_scene(game,trace)
-    # game.print_game_state()
     for t in range(1,max_timestep):
         print('Timestep {}'.format(t))
         game.agent_take_step()
         game.test_strategy()
-        # save the trace
-        # trace = save_scene(game,trace)
         if game.is_terminal():
             break
-    # save_trace(filepath, game.trace)
 
 
 if __name__ == '__main__':

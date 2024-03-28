@@ -5,7 +5,7 @@ import networkx as nx
 from collections import OrderedDict as od
 from problem_data import *
 
-class BeaverRescueNetwork:
+class CustomNetwork:
     def __init__(self, states, transitions, obs = []):
         self.init = None
         self.goal = []
@@ -93,11 +93,13 @@ class BeaverRescueNetwork:
 
 
     def transition_specs(self, state_str):
+        # st()
         dynamics_spec = set()
         for state_nr in self.map.keys():
             next_steps_string = '('+state_str+' = '+str(state_nr)+')'
             for item in self.next_state_dict[self.map[state_nr]][1:]:
-                next_steps_string += '|| ('+state_str+' = '+str(self.inv_map[item])+')'
+                if not (self.map[state_nr],item) in self.active_cuts:
+                    next_steps_string += '|| ('+state_str+' = '+str(self.inv_map[item])+')'
             dynamics_spec |= {'('+state_str+' = '+str(state_nr)+') -> X('+ next_steps_string +')'}
         return dynamics_spec
 
