@@ -32,9 +32,9 @@ def find_cuts():
     logger = setup_logger("quadruped_empty_static")
     virtual, system, b_pi, virtual_sys = get_graphs(SYS_FORMULA, TEST_FORMULA, MAZEFILE, INIT, INTS, GOALS, logger)
 
-    exit_status, annot_cuts, flow, bypass = solve_problem(virtual, system, b_pi, virtual_sys)
+    exit_status, annot_cuts, flow, bypass = solve_problem(virtual, system, b_pi, virtual_sys, callback = True)
     print('exit status {0}'.format(exit_status))
-    
+
     return annot_cuts
 
 

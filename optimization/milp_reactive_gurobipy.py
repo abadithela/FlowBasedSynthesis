@@ -44,7 +44,8 @@ def new_cb(model, where):
 
         # Terminate if objective has not improved in 30s
         # Current objective is less than infinity.
-        if obj < float(np.inf):
+        # if obj < float(np.inf):
+        if sol_count > 1:
             # if time.time() - model._time > 30:# and model.SolCount >= 1:
             if len(model._data["best_obj"]) > 5:
                 last_five = model._data["best_obj"][-5:]
@@ -193,11 +194,15 @@ def solve_max_gurobi(GD, SD, excluded_sols = [],logger=None, logger_runtime_dict
             in_edge = GD.node_dict[edge[1]]
             if in_edge[-1] == q and out_edge[-1] != q:
                 node = edge[1]
-                s_node = map_G_to_S[node]
-                transition_nodes.append(s_node)
+                s_nodes = map_G_to_S[node]
+                for target in s_sink:
+                    for s_node in s_nodes:
+                        if nx.has_path(S,s_node,target):
+                            transition_nodes.append(s_node)
         clean_transition_nodes = list(set(transition_nodes))
         s_srcs.update({q: clean_transition_nodes})
     s_srcs.update({'q0': SD.init})
+
 
     s_data = []
     for q in qs:
@@ -233,9 +238,17 @@ def solve_max_gurobi(GD, SD, excluded_sols = [],logger=None, logger_runtime_dict
             # Match the edge cuts from G to S
             for (i,j) in model_edges_without_I:
                 if GD.node_dict[i][-1] == curr_q:
-                    imap = map_G_to_S[i]
-                    jmap = map_G_to_S[j]
-                    model.addConstr(f_s[k][imap, jmap] + d[i, j] <= 1)
+                    imaps = map_G_to_S[i]
+                    jmaps = map_G_to_S[j]
+
+                    for imap in imaps:
+                        for jmap in jmaps:
+                            if (imap,jmap) in SD.edges:
+                                model.addConstr(f_s[k][imap, jmap] + d[i, j] <= 1)
+                    # try:
+                    #     model.addConstr(f_s[k][imap, jmap] + d[i, j] <= 1)
+                    # except:
+                    #     st()
 
     # --- Exclude specific solutions that cannot be realized
     # st()
@@ -270,7 +283,7 @@ def solve_max_gurobi(GD, SD, excluded_sols = [],logger=None, logger_runtime_dict
         if model.status == 11 and model.SolCount < 1:
             exit_status = 'not solved'
             return exit_status, [], [], None
-            
+
         # --------- parse output
         d_vals = dict()
         f_vals = dict()

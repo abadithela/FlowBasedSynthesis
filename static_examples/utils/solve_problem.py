@@ -15,7 +15,7 @@ from components.plotting import highlight_cuts, plot_flow_on_maze, plot_flow_on_
 
 def solve_problem_w_fuel(virtual, system, b_pi, virtual_sys, callback = True, print_solution=True, plot_results=True):
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
-    
+
     ti = time.time()
     exit_status, ftest, d, flow = solve_max_gurobi_w_fuel(GD, SD, callback=callback)
     tf = time.time()

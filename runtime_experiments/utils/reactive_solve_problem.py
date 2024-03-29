@@ -44,4 +44,4 @@ def solve_problem(virtual, system, b_pi, virtual_sys, print_solution=True, plot_
         # st()
         return exit_status, annot_cuts, flow, bypass_flow
     else:
-        return exit_status, [], [], None, GD, SD
+        return exit_status, [], [], None

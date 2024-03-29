@@ -9,7 +9,7 @@ import itertools
 
 from static_examples.utils.solve_problem import solve_problem
 from static_examples.utils.get_graphs import get_graphs
-from static_examples.utils.setup_logger import logger
+# from static_examples.utils.setup_logger import logger
 from ipdb import set_trace as st
 
 FIXED = True
@@ -23,7 +23,7 @@ def find_cuts(number_intermediates, problem_data = []):
         init = problem_data['init']
         int_locs = problem_data['int_locs']
         goals = problem_data['goals']
-        ints = {int_locs[k]: 'int_'+str(k+1) for k in range(len(int_locs))}
+        ints = {int_locs[k]: 'I_'+str(k+1) for k in range(len(int_locs))}
         obs = []
     else:
         # get random S, I, T location
@@ -35,7 +35,7 @@ def find_cuts(number_intermediates, problem_data = []):
 
         init = [all_states[idx[0]]]
         goals = [all_states[idx[1]]]
-        ints = {all_states[idx[k+2]]: 'int_'+str(k+1) for k in range(number_intermediates)}
+        ints = {all_states[idx[k+2]]: 'I_'+str(k+1) for k in range(number_intermediates)}
 
         obs = [all_states[idx[2+number_intermediates+int(n)]] for n in np.arange(0,obsnum)]
 
@@ -45,16 +45,16 @@ def find_cuts(number_intermediates, problem_data = []):
     sys_formula = 'F(goal)'
     test_formula = ''
     for k in range(number_intermediates):
-        test_formula += 'F(int_'+str(k+1)+' & '
+        test_formula += 'F(I_'+str(k+1)+' & '
     test_formula = test_formula[:-3]
     for k in range(number_intermediates):
         test_formula += ')'
     print(test_formula)
 
 
-    virtual, system, b_pi, virtual_sys = get_graphs(sys_formula, test_formula, mazefile, init, ints, goals, obs, log)
+    virtual, system, b_pi, virtual_sys = get_graphs(sys_formula, test_formula, mazefile, init, ints, goals, obs)
 
-    exit_status, annot_cuts, flow, bypass  = solve_problem(virtual, system, b_pi, virtual_sys, log, callback = False)
+    exit_status, annot_cuts, flow, bypass  = solve_problem(virtual, system, b_pi, virtual_sys, callback = False)
     print('exit status {0}'.format(exit_status))
 
     return annot_cuts

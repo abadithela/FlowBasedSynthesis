@@ -16,36 +16,22 @@ from utils.static_get_graphs import get_graphs as static_get_graphs
 from utils.reactive_solve_problem import solve_problem as reactive_solve_problem
 from utils.reactive_get_graphs import get_graphs as reactive_get_graphs
 from utils.setup_logger import setup_logger
+from utils.generate_problem_data import generate_specs_and_propositions, generate_random_grid
 
-def generate_random_grid(gridsize, obstacle_coverage, nint=1):
-    '''
-    Generate random grid depending on number of intermediates
-    '''
-    # get random S, I, T location
-    nspecial_nodes = nint + 2 # One for source and goal, and the intermediates.
-    all_states = list(itertools.product(np.arange(0,gridsize), np.arange(0,gridsize)))
-    number_of_states = len(all_states)
-    obsnum = np.ceil(number_of_states * obstacle_coverage/100)
-    choose = int(nspecial_nodes+obsnum)
-    idx = np.random.choice(len(all_states),choose,replace=False)
-    # set S,I,T locations
-    init = [all_states[idx[0]]]
-    goals = [all_states[idx[2]]]
-    inter = all_states[idx[1]]
-    # set the obstacles
-    obs = [all_states[idx[3+int(n)]] for n in np.arange(0,obsnum)]
-    ints = {inter: 'int'}
-    return init, ints, goals, obs
+NUM_INTS = 1 # numer of satefy specs
 
-def generate_problem_data():
-    sys_formula = 'F(goal)'
-    test_formula = 'F(int)'
-    return sys_formula, test_formula
+def set_up_reachability_problem(gridsize, num):
+    obstacle_coverage = 0
+    type = 'safety'
+    sys_formula, test_formula, props = generate_specs_and_propositions(type, num)
+    init, ints, goals, obs = generate_random_grid(gridsize, obstacle_coverage, props)
+    return sys_formula, test_formula, init, ints, goals, obs
 
 def run_static_instance(mazefile, logger, instance_logger, gridsize, obstacle_coverage=0):
     logger_runtime_dict = logger.log[f"maze_{gridsize}"]
-    sys_formula, test_formula = generate_problem_data()
-    init, ints, goals, obs = generate_random_grid(gridsize, obstacle_coverage)
+
+    sys_formula, test_formula, init, ints, goals, obs = set_up_reachability_problem(gridsize, NUM_INTS)
+
     print('S: {0}, I: {1}, T: {2}'.format(init, ints, goals))
 
     virtual, system, b_pi, virtual_sys = static_get_graphs(sys_formula, test_formula, mazefile, init, ints, goals, instance_logger, logger_runtime_dict)
@@ -58,8 +44,8 @@ def run_static_instance(mazefile, logger, instance_logger, gridsize, obstacle_co
 
 def run_reactive_instance(mazefile, logger, instance_logger, gridsize, obstacle_coverage=0):
     logger_runtime_dict = logger.log[f"maze_{gridsize}"]
-    sys_formula, test_formula = generate_problem_data()
-    init, ints, goals, obs = generate_random_grid(gridsize, obstacle_coverage)
+    sys_formula, test_formula, init, ints, goals, obs = set_up_reachability_problem(gridsize, NUM_INTS)
+
     print('S: {0}, I: {1}, T: {2}'.format(init, ints, goals))
 
     virtual, system, b_pi, virtual_sys = reactive_get_graphs(sys_formula, test_formula, mazefile, init, ints, goals, instance_logger, logger_runtime_dict)
@@ -68,9 +54,10 @@ def run_reactive_instance(mazefile, logger, instance_logger, gridsize, obstacle_
     return exit_status, init, ints, goals
 
 def static_random_experiments(mazefiles, nruns, obs_coverage=0):
-    sys_formula, test_formula = generate_problem_data()
 
-    logger = setup_logger("single_reachability", maze_dims=list(mazefiles.keys()), test_type="static", nruns=nruns, obs_coverage=obs_coverage)
+    sys_formula, test_formula, props = generate_specs_and_propositions('safety', NUM_INTS)
+
+    logger = setup_logger("safety_"+str(NUM_INTS), maze_dims=list(mazefiles.keys()), test_type="static", nruns=nruns, obs_coverage=obs_coverage)
     logger.set_formulas(sys_formula, test_formula)
 
     for gridsize, mazefile in mazefiles.items():
@@ -98,8 +85,8 @@ def static_random_experiments(mazefiles, nruns, obs_coverage=0):
     logger.save_experiment_data()
 
 def reactive_random_experiments(mazefiles, nruns, obs_coverage=0):
-    sys_formula, test_formula = generate_problem_data()
-    logger = setup_logger("single_reachability", maze_dims=list(mazefiles.keys()), test_type="reactive", nruns=nruns, obs_coverage=obs_coverage)
+    sys_formula, test_formula, props = generate_specs_and_propositions('safety', NUM_INTS)
+    logger = setup_logger("safety_"+str(NUM_INTS), maze_dims=list(mazefiles.keys()), test_type="reactive", nruns=nruns, obs_coverage=obs_coverage)
     logger.set_formulas(sys_formula, test_formula)
 
     for gridsize, mazefile in mazefiles.items():
