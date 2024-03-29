@@ -95,6 +95,70 @@ class Random_RT_Logger:
         with open(f'{self.folder_name}/runtime_data.json', 'w') as fp:
             json.dump(self.log, fp)
 
+    def print_to_table(self):
+        print_runtime_in_latex_table(self.folder_name, self.log)
+
 def setup_logger(exp_name, maze_dims=[], test_type="static", nruns=25, obs_coverage=15):
     logger = Random_RT_Logger(exp_name, maze_dims = maze_dims, nruns=nruns, obs_coverage = obs_coverage, test_type=test_type)
     return logger
+
+# \begin{tabular}{lSSSS}
+# \toprule
+# & \multicolumn{2}{c}{A} & \multicolumn{2}{c}{Most Mon} \\
+# \cmidrule(r){2-3}\cmidrule(l){4-5}
+# Methods & {Time [\si{\second}]} & {RunCount}  & {Time [\si{\second}]} & {RunCount} \\
+# \midrule
+# C & 12.3 & 5 & 34.6 & 7 \\
+# D & 1.35 & 5 & 4.93 & 7 \\
+# \bottomrule
+# \end{tabular}
+
+def print_runtime_in_latex_table(folder_name, runtime_data):
+    runtime_data_file = f"{folder_name}/runtime_data.json"
+    runtime_latex_output_file = f"{folder_name}/runtime_table.txt"
+    with open(runtime_data_file, 'r') as f:
+        runtime_data = json.load(f)
+    columns = list(runtime_data.keys())
+    num_columns = len(columns)*3 # One for each element (no.solved, graph runtimes, opt runtimes)
+    
+    latex_code = ""
+    top_column_code = ""
+    for maze in columns:
+        top_column_code += "& \\multicolumn{"+"3}{c" +"}{"+maze[-1]+"$\\times$ "+maze[-1]+"}"
+    top_column_code += " \\\\\hline\n"
+    latex_code += top_column_code
+
+    # for k in range(1, len(columns)+1):
+    #     kmin = 
+    #     \cmidrule(lr){2-4}
+    #     \cmidrule(lr){5-7}
+    #     \cmidrule(lr){8-10}
+    
+    latex_code += "&"
+    headers = ["{Solved}", "{G}", "{Opt}"]
+    latex_code += '&'.join(headers * len(columns)) + "\n\\\\\hline\n"
+    
+    # Add headers
+    # latex_code += " & ".join(headers) + " \\\\\n\\hline\n"
+    # Add rows
+    row = []
+    for key, data in runtime_data.items():
+        num_not_solved = str(data["num_not_solved"]) 
+        graph_rt =  str(format(data["avg_graph_rt"], '.4f')) + "$\,\pm\,$ " + str(format(data["std_graph_rt"], '.4f')) 
+        opt_rt =  str(format(data["avg_opt_rt"], '.4f')) + "$\,\pm\,$" + str(format(data["std_opt_rt"], '.4f'))
+        row.extend([num_not_solved, graph_rt, opt_rt])
+    latex_code += "&"
+    latex_code += " & ".join(row) + " \\\\\n"
+    latex_code += "\\hline\n"
+    # latex_code += "\\end{tabular}\n\\caption{Caption here}\n\\label{table:label_here}\n\\end{table}"
+    with open(runtime_latex_output_file, "w") as fp:
+        fp.write(latex_code)
+    return latex_code
+    
+
+def print_runtime_table(log_folder):
+    with open(f'{log_folder}/runtime_data.json', 'r') as fp:
+        runtime_data = json.load(fp)
+    print_runtime_in_latex_table(log_folder, runtime_data)
+
+

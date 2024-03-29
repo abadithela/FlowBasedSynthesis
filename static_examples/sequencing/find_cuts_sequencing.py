@@ -51,7 +51,6 @@ def find_cuts(number_intermediates, problem_data = []):
         test_formula += ')'
     print(test_formula)
 
-
     virtual, system, b_pi, virtual_sys = get_graphs(sys_formula, test_formula, mazefile, init, ints, goals, obs, log)
 
     exit_status, annot_cuts, flow, bypass  = solve_problem(virtual, system, b_pi, virtual_sys, log, callback = False)
