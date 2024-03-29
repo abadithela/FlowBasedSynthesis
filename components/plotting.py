@@ -118,6 +118,7 @@ def plot_flow_on_maze(maze, cuts, num_int=1):
     fig.savefig('imgs/maze_implementation'+ now +'.pdf')
 
 def plot_flow_on_maze_w_fuel(maze, cuts, num_int=1):
+    plt.rcParams.update({"text.usetex": True,"font.family": "Helvetica"})
     # get the max flow for the cuts
     # remove redundant cuts
     cuts = list(set(cuts))
@@ -137,33 +138,22 @@ def plot_flow_on_maze_w_fuel(maze, cuts, num_int=1):
         for j, y in enumerate(ys[:-1]):
             if maze.map[j,i]=='*':
                 ax.add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.5))
-            # elif ((j,i), ) in maze.int:
-            # elif ((j,i), ) in maze.goal:
             elif list(filter(lambda x:(j,i) in x, maze.goal)):
-                ax.add_patch(Rectangle((x, y), w, h, fill=True, color='yellow', alpha=.3))
-                ax.text(x+tilesize/2, y+tilesize/2, 'T')
-            # elif list(filter(lambda x:(j,i) in x, maze.int)):
-            #     ax.add_patch(Rectangle((x, y), w, h, fill=True, color='blue', alpha=.3))
-            #     ax.text(x+tilesize/2, y+tilesize/2, 'I')
+                ax.add_patch(Rectangle((x, y), w, h, fill=True, color='#ffb000', alpha=.3))
+                ax.text(x+tilesize*0.4, y+tilesize*0.65, r'$T$', fontsize = 25)
             elif (j,i) in maze.refuel:
-                ax.add_patch(Rectangle((x, y), w, h, fill=True, color='lightsteelblue', alpha=.3))
-                ax.text(x+tilesize/2, y+tilesize/2, 'R')
-            elif i % 2 == j % 2:
-                ax.add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.1))
-                # if (j,i) in maze.init:
-                if list(filter(lambda x:(j,i) in x, maze.init)):
-                    ax.text(x+tilesize/2, y+tilesize/2, 'S')
+                ax.add_patch(Rectangle((x, y), w, h, fill=True, color='#785ef2', alpha=.3))
+                ax.text(x+tilesize*0.4, y+tilesize*0.65, r'$R$', fontsize = 25)
+            elif list(filter(lambda x:(j,i) in x, maze.init)):
+                ax.text(x+tilesize*0.4, y+tilesize*0.65, r'$S$', fontsize = 25)
             elif maze.map[j,i]==' ':
-                ax.add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.2))
-                # if (j,i) in maze.init:
-                if list(filter(lambda x:(j,i) in x, maze.init)):
-                    ax.text(x+tilesize/2, y+tilesize/2, 'S')
+                ax.add_patch(Rectangle((x, y), w, h, fill=True, color='#ffffff'))
 
     # grid lines
     for x in xs:
-        ax.plot([x, x], [ys[0], ys[-1]], color='black', alpha=.33, linestyle=':')
+        ax.plot([x, x], [ys[0], ys[-1]], color='black', alpha=.33)
     for y in ys:
-        ax.plot([xs[0], xs[-1]], [y, y], color='black', alpha=.33, linestyle=':')
+        ax.plot([xs[0], xs[-1]], [y, y], color='black', alpha=.33)
 
     width = tilesize/20
     for cut in cuts:

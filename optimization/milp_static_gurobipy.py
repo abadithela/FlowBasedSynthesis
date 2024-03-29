@@ -22,7 +22,7 @@ def new_cb(model, where):
         obj = model.cbGet(GRB.Callback.MIPNODE_OBJBST) # Current best objective
         opt_time = model.cbGet(GRB.Callback.RUNTIME) # Optimizer time
         obj_bound = model.cbGet(GRB.Callback.MIPNODE_OBJBND) # Objective bound
-        node_count = model.cbGet(GRB.Callback.MIPNODE_NODCNT) # No. of unexplored nodes 
+        node_count = model.cbGet(GRB.Callback.MIPNODE_NODCNT) # No. of unexplored nodes
         sol_count = model.cbGet(GRB.Callback.MIPNODE_SOLCNT) # No. of feasible solns found.
 
         # Save model and opt data:
@@ -39,10 +39,12 @@ def new_cb(model, where):
             # If so, update incumbent and time
             model._cur_obj = obj
             model._time = time.time()
-            
+
         # Terminate if objective has not improved in 30s
         # Current objective is less than infinity.
-        if obj < float(np.inf):
+
+        # if obj < float(np.inf):
+        if sol_count > 1:
             # if time.time() - model._time > 30:# and model.SolCount >= 1:
             if len(model._data["best_obj"]) > 5:
                 last_five = model._data["best_obj"][-5:]
@@ -50,7 +52,7 @@ def new_cb(model, where):
                     model.terminate()
         else:
             # Total termination time if the optimizer has not found anything in 5 min:
-            if time.time() - model._time > 3000: 
+            if time.time() - model._time > 3000:
                 model.terminate()
 
 # Callback function
@@ -214,7 +216,7 @@ def solve_max_gurobi(GD, SD, callback=True, logger=None, logger_runtime_dict=Non
     for key in ["opt_time", "best_obj", "bound", "node_count", "sol_count"]:
         model._data[key] = []
 
-    
+
     # model.Params.InfUnbdInfo = 1
 
     # optimize
@@ -223,12 +225,12 @@ def solve_max_gurobi(GD, SD, callback=True, logger=None, logger_runtime_dict=Non
     else:
         model.optimize()
     model._data["runtime"] = model.Runtime
-    
+
     # Storing problem variables:
     model._data["n_bin_vars"] = model.NumBinVars
     model._data["n_cont_vars"] = model.NumVars - model.NumBinVars
     model._data["n_constrs"] = model.NumConstrs
-    
+
     # model.Params.InfUnbdInfo = 1
 
     if model.status == 4:

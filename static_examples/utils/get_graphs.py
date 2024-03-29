@@ -31,7 +31,7 @@ def get_graphs_from_network(sys_formula, test_formula, network, init, ints, goal
     # get system
     # st()
     system = ProductTransys()
-    
+
     system.construct_sys_from_network(network, init, ints, goals, obs)
 
     # st()
@@ -97,9 +97,9 @@ def get_graphs(sys_formula, test_formula, mazefile, init, ints, goals, logger=No
     runtimes["G"] = t_graph_fin - t_graph_init
 
     # Saving data:
-    if logger is not None:
+    if logger:
         save_data(logger, system, b_sys, b_test, b_pi, virtual, virtual_sys, runtimes)
-    
+
     if save_figures:
         if not os.path.exists('imgs'):
             os.makedirs('imgs')
@@ -119,8 +119,7 @@ def save_data(logger, system, b_sys, b_test, b_pi, virtual, virtual_sys, runtime
     logger.save_data("Buchi (Product)", (len(b_pi.Q), len(b_pi.delta)))
     logger.save_data("Gsys", (len(virtual_sys.G_initial.nodes), len(virtual_sys.G_initial.edges)))
     logger.save_data("G", (len(virtual.G_initial.nodes), len(virtual.G_initial.edges)))
-    
+
     # Information about runtimes
     for k, runtime in runtimes.items():
         logger.save_runtime(k, runtime)
-

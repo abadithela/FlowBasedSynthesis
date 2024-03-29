@@ -200,7 +200,6 @@ class Product(ProductTransys):
         self.identify_SIT()
         self.to_graph()
         self.G_initial = nx.DiGraph()
-        # st()
         s_init = [self.Sdict[i] for i in self.I]
         init_dfs_tree = [nx.dfs_tree(self.G, source=src) for src in s_init]
         init_dfs_tree_nodes = []

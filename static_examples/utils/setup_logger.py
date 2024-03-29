@@ -1,8 +1,8 @@
 '''
-Script to experiment data including runtimes. 
+Script to experiment data including runtimes.
 '''
 
-from problem_data import * 
+# from problem_data import * 
 from pdb import set_trace as st
 from components.experiment_logging import ExpLogger
 import os
