@@ -226,7 +226,6 @@ def solve_max_gurobi(GD, SD, callback=True):
     model._data["n_bin_vars"] = model.NumBinVars
     model._data["n_cont_vars"] = model.NumVars - model.NumBinVars
     model._data["n_constrs"] = model.NumConstrs
-    
 
     if model.status == 4:
         model.Params.DualReductions = 0

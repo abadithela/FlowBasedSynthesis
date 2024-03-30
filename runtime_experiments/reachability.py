@@ -15,7 +15,7 @@ from utils.static_solve_problem import solve_problem as static_solve_problem
 from utils.static_get_graphs import get_graphs as static_get_graphs
 from utils.reactive_solve_problem import solve_problem as reactive_solve_problem
 from utils.reactive_get_graphs import get_graphs as reactive_get_graphs
-from utils.setup_logger import setup_logger
+from utils.setup_logger import *
 
 def generate_random_grid(gridsize, obstacle_coverage, nint=1):
     '''
@@ -99,7 +99,7 @@ def static_random_experiments(mazefiles, nruns, obs_coverage=0):
 
 def reactive_random_experiments(mazefiles, nruns, obs_coverage=0):
     sys_formula, test_formula = generate_problem_data()
-    logger = setup_logger("single_reachability", maze_dims=list(mazefiles.keys()), test_type="reactive", nruns=nruns, obs_coverage=obs_coverage)
+    logger = setup_logger("reachability", maze_dims=list(mazefiles.keys()), test_type="reactive", nruns=nruns, obs_coverage=obs_coverage)
     logger.set_formulas(sys_formula, test_formula)
 
     for gridsize, mazefile in mazefiles.items():
@@ -128,8 +128,9 @@ def reactive_random_experiments(mazefiles, nruns, obs_coverage=0):
     logger.save_experiment_data()
 
 if __name__ == "__main__":
-    mazefiles = {3: 'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt'}
-    nruns = 3
+    mazefiles = {3: 'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt', 6: 'mazes/6x6.txt', 7: 'mazes/7x7.txt',8: 'mazes/8x8.txt', 9: 'mazes/9x9.txt',10: 'mazes/10x10.txt', 25:'mazes/25x25.txt', 50:'mazes/50x50.txt'}
+    nruns = 5
     obs_coverage = 0
-    static_random_experiments(mazefiles, nruns)
-    reactive_random_experiments(mazefiles, nruns)
+    # static_random_experiments(mazefiles, nruns)
+    # reactive_random_experiments(mazefiles, nruns)
+    print_runtime_table("single_reachability_static_log")

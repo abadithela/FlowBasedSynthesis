@@ -10,7 +10,7 @@ from components.parse_specification_product import *
 from components.transition_system import ProductTransys
 from components.tools import synchronous_product
 
-def get_graphs_from_network(sys_formula, test_formula, network, init, ints, goals, logger, obs=[], save_figures = False):
+def get_graphs_from_network(sys_formula, test_formula, network, init, ints, goals, logger=None, obs=[], save_figures = False):
     runtimes = dict()
 
     t0 = time.time()
@@ -48,7 +48,8 @@ def get_graphs_from_network(sys_formula, test_formula, network, init, ints, goal
     runtimes["G"] = t_graph_fin - t_graph_init
 
     # Save data:
-    save_data(logger, system, b_sys, b_test, b_pi, virtual, virtual_sys, runtimes)
+    if logger is not None:  
+        save_data(logger, system, b_sys, b_test, b_pi, virtual, virtual_sys, runtimes)
 
     if save_figures:
         if not os.path.exists('imgs'):
@@ -61,7 +62,7 @@ def get_graphs_from_network(sys_formula, test_formula, network, init, ints, goal
 
     return virtual, system, b_pi, virtual_sys
 
-def get_graphs(sys_formula, test_formula, mazefile, init, ints, goals, logger, obs=[], save_figures = False):
+def get_graphs(sys_formula, test_formula, mazefile, init, ints, goals, logger=None, obs=[], save_figures = False):
     runtimes = dict()
 
     t0 = time.time()
