@@ -15,5 +15,10 @@ SYS_FORMULA = 'F(goal)'
 TEST_FORMULA = 'F(door_1) & F(door_2)'
 
 # map for simulation trace
-MAP = {'init': (0,1), 'd1': (1,0), 'd2': (1,1), 'd3': (1,2), 'int_goal': (3,1), \
-        'p1': (2,0), 'p2': (2,1), 'p3': (2,2), 'goal': (0,1)}
+MAP = {'init': (0,1), 'd1': (1,0), 'd2': (1,1), 'int_goal': (3,1), \
+        'p1': (2,0), 'p2': (2,1), 'goal': (0,1)}
+# init: in the lab
+# d1, d2: at door 1 or 2 inside lab
+# p1, p2: at door 1 and 2 in hallway
+# int_goal: in hallway with beaver
+# goal: in lab with beaver
