@@ -8,10 +8,11 @@ int_1 = ('d1')
 int_2 = ('d2')
 int_3 = ('p1')
 int_4 = ('p2')
+int_5 = ('int_goal')
 
-INTS = {int_1: 'door_1', int_2: 'door_2', int_3: 'door_1', int_4: 'door_2'}
+INTS = {int_1: 'door_1', int_2: 'door_2', int_3: 'door_1', int_4: 'door_2', int_5: 'beaver'}
 
-SYS_FORMULA = 'F(goal)'
+SYS_FORMULA = 'F(beaver & F(goal))'
 TEST_FORMULA = 'F(door_1) & F(door_2)'
 
 # map for simulation trace
