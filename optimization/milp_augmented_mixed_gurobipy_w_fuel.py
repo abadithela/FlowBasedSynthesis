@@ -214,10 +214,11 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = []):
             in_edge = GD.node_dict[edge[1]]
             if in_edge[-1] == q and out_edge[-1] != q:
                 node = edge[1]
-                s_node = map_G_to_S[node]
+                s_nodes = map_G_to_S[node]
                 for target in s_sink:
-                    if nx.has_path(S,s_node,target):
-                        transition_nodes.append(s_node)
+                    for s_node in s_nodes:
+                        if nx.has_path(S,s_node,target):
+                            transition_nodes.append(s_node)
         clean_transition_nodes = list(set(transition_nodes))
         s_srcs.update({q: clean_transition_nodes})
     s_srcs.update({'q0': SD.init})
