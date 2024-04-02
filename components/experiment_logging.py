@@ -143,7 +143,10 @@ class ExpLogger:
 
         for k in opt_columns:
             self.runtime_dict[k] = None
-        latex_code +=  " & ".join(list(self.runtime_dict.keys())) + " \\\\\n"
+        try:
+            latex_code +=  " & ".join(list(self.runtime_dict.keys())) + " \\\\\n"
+        except:
+            st()
 
         self.read_data_from_csv_file(self.problem_data_file, prob_data_columns)
         self.read_data_from_csv_file(self.runtime_data_file, graph_runtime_columns)
