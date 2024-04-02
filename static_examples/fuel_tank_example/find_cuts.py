@@ -3,7 +3,7 @@ Solving a grid layout with two intermediate nodes (1 and 2) using the
 MILP for static obstacles for the following grid:
 
 -------------
-|T| | | | | |
+|T| | | | |R|
 +-+-+-+-+-+-+
 | | | | | | |
 +-+-+-+-+-+-+
@@ -24,9 +24,6 @@ from network_fuel import FuelNetwork
 from static_examples.utils.setup_logger import setup_logger
 
 def find_cuts(network):
-    # intstr = ''.join('%s = %s, ' % (val,key) for (key,val) in INTS.items())
-    # print('S = '+str(INIT)+', '+intstr+' T = '+str(GOALS))
-    # network = FuelNetwork(mazefile)
     logger = setup_logger("fuel_tank_static")
     virtual, system, b_pi, virtual_sys = get_graphs_from_network(SYS_FORMULA, TEST_FORMULA, network, INIT, INTS, GOALS, logger, save_figures=True)
 

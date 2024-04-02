@@ -9,8 +9,10 @@ from static_examples.utils.agents_w_fuel import Quadruped
 from static_examples.utils.game_static_w_fuel import Game
 from static_examples.utils.helper import *
 from problem_data import *
+from ipdb import set_trace as st
 
 def new_World(mazefile):
+    # st()
     # rewriting the [](sample -> <>dropoff) as GR1 spec to synthesize the system controller
     reduced_ICE = list(set([(ice[0]) for ice in ICE]))
     ICE_str = ''

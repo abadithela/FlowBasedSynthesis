@@ -25,8 +25,7 @@ from problem_data import *
 from network_fuel import FuelNetwork
 from static_examples.utils.setup_logger import setup_logger
 
-def find_cuts(mazefile):
-    network = FuelNetwork(mazefile)
+def find_cuts(network):
     logger = setup_logger("mars_exploration")
     virtual, system, b_pi, virtual_sys = get_graphs_from_network(SYS_FORMULA, TEST_FORMULA, network, INIT, INTS, GOALS, logger,save_figures = True)
 
@@ -36,7 +35,7 @@ def find_cuts(mazefile):
     opt_dict = {'cuts': annot_cuts}
     with open('stored_optimization_result.p', 'wb') as pckl_file:
         pickle.dump(opt_dict, pckl_file)
-        
+
     logger.print_runtime_latex()
     logger.print_problem_data_latex()
     logger.print_table()
@@ -46,4 +45,5 @@ def find_cuts(mazefile):
 
 if __name__ == '__main__':
     mazefile = 'maze.txt'
-    find_cuts(mazefile)
+    network = FuelNetwork(mazefile)
+    find_cuts(network)
