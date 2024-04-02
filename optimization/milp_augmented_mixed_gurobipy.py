@@ -207,8 +207,13 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = []):
             in_edge = GD.node_dict[edge[1]]
             if in_edge[-1] == q and out_edge[-1] != q:
                 node = edge[1]
-                s_node = map_G_to_S[node]
-                transition_nodes.append(s_node)
+                # s_node = map_G_to_S[node]
+                # transition_nodes.append(s_node)
+                s_nodes = map_G_to_S[node]
+                for target in s_sink:
+                    for s_node in s_nodes:
+                        if nx.has_path(S,s_node,target):
+                            transition_nodes.append(s_node)
         clean_transition_nodes = list(set(transition_nodes))
         s_srcs.update({q: clean_transition_nodes})
     s_srcs.update({'q0': SD.init})
@@ -249,13 +254,16 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = []):
                 out_state = GD.node_dict[i][0]
                 in_state = GD.node_dict[j][0]
 
-                imap = map_G_to_S[i]
-                jmap = map_G_to_S[j]
+                imaps = map_G_to_S[i]
+                jmaps = map_G_to_S[j]
 
-                if out_state and in_state in static_area:
-                    model.addConstr(f_s[k][imap, jmap] + d[i, j] <= 1)
-                elif GD.node_dict[i][-1] == curr_q:
-                    model.addConstr(f_s[k][imap, jmap] + d[i, j] <= 1)
+                for imap in imaps:
+                    for jmap in jmaps:
+                        if (imap,jmap) in SD.edges:
+                            if out_state and in_state in static_area:
+                                model.addConstr(f_s[k][imap, jmap] + d[i, j] <= 1)
+                            elif GD.node_dict[i][-1] == curr_q:
+                                model.addConstr(f_s[k][imap, jmap] + d[i, j] <= 1)
 
     # --- Exclude specific solutions that cannot be realized
     # st()
