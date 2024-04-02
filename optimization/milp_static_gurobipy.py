@@ -230,6 +230,8 @@ def solve_max_gurobi(GD, SD, callback=True, logger=None, logger_runtime_dict=Non
     else:
         model.optimize()
     model._data["runtime"] = model.Runtime
+    model._data["flow"] = None
+    model._data["ncuts"] = None
 
     # Storing problem variables:
     model._data["n_bin_vars"] = model.NumBinVars
@@ -282,11 +284,13 @@ def solve_max_gurobi(GD, SD, callback=True, logger=None, logger_runtime_dict=Non
             d_vals.update({(i,j): d[i,j].X})
 
         flow = sum(f[i,j].X for (i,j) in model_edges if i in src)
-
+        model._data["flow"] = flow
+        ncuts = 0
         for key in d_vals.keys():
             if d_vals[key] > 0.9:
+                ncuts+=1
                 print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],d_vals[key]))
-
+        model._data["ncuts"] = ncuts
         exit_status = 'opt'
         model._data["exit_status"] = exit_status
 
