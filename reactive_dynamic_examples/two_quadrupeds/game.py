@@ -80,6 +80,9 @@ class Game:
                 print("!! Could not synthesize test agent strategy!!")
                 print(f"Re-solving optimization with {n_exc} solutions excluded.")
                 # st()
+            self.logger.print_runtime_latex()
+            self.logger.print_problem_data_latex()
+            self.logger.print_table(dynamic=True)
 
     def print_game_state(self):
         z_old = []

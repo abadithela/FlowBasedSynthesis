@@ -120,11 +120,20 @@ class ExpLogger:
                     if k == key:
                         self.runtime_dict[k] = str(val)
 
-    def print_table(self, save=True):
+    def print_table(self, save=True, dynamic=False):
+        '''
+        For dynamic examples, we save a few extra variables
+        '''
         latex_code = ""
         prob_data_columns = ["Buchi (Product)", "Transition System", "Gsys", "G"]
-        graph_runtime_columns = ["b_prod", "Gsys", "G"]
-        opt_columns = ["runtime", "n_bin_vars", "n_cont_vars", "n_constrs"]
+        if dynamic:
+            graph_runtime_columns = ["b_prod", "Gsys", "G","Tester Controller"]
+        else:
+            graph_runtime_columns = ["b_prod", "Gsys", "G"]
+        if dynamic:
+            opt_columns = ["runtime", "n_bin_vars", "n_cont_vars", "n_constrs","n_cex", "flow", "ncuts"]
+        else:
+            opt_columns = ["runtime", "n_bin_vars", "n_cont_vars", "n_constrs","flow", "ncuts"]
         self.runtime_dict = dict()
         for k in prob_data_columns:
             self.runtime_dict[k] = None

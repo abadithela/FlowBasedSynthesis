@@ -101,9 +101,9 @@ class Game:
                 print(f"Re-solving optimization with {n_exc} solutions excluded.")
                 st()
         # Writing to file:
-        logger.print_runtime_latex()
-        logger.print_problem_data_latex()
-        logger.print_table(dynamic=True)
+        self.logger.print_runtime_latex()
+        self.logger.print_problem_data_latex()
+        self.logger.print_table(dynamic=True)
 
     def print_game_state(self):
         z_old = []
