@@ -43,7 +43,8 @@ def new_cb(model, where):
 
         # Terminate if objective has not improved in 30s
         # Current objective is less than infinity.
-        if obj < float(np.inf):
+        if sol_count > 1:
+        # if obj < float(np.inf):
             # if time.time() - model._time > 30:# and model.SolCount >= 1:
             if len(model._data["best_obj"]) > 5:
                 last_five = model._data["best_obj"][-5:]
@@ -164,29 +165,29 @@ def solve_max_gurobi(GD, SD, callback=True):
 
 
     # --------- add feasibility constraints to preserve flow f_s on S
-    f_s = model.addVars(model_s_edges, name="flow_on_S")
-
-    # nonnegativitiy for f_s (lower bound)
-    model.addConstrs((f_s[i, j] >= 0 for (i,j) in model_s_edges), name='f_s_nonneg')
-
-    # capacity on S (upper bound on f_s)
-    model.addConstrs((f_s[i, j] <= 1 for (i,j) in model_s_edges), name='capacity_f_S')
-
-    # Match the edge cuts from G to S
-    for (i,j) in model_edges:
-        imap = map_G_to_S[i]
-        jmap = map_G_to_S[j]
-        if (imap,jmap) in model_s_edges:
-            model.addConstr(f_s[imap, jmap] + d[i, j] <= 1)
-
-    # Preserve flow of 1 in S
-    model.addConstr((1 <= sum(f_s[i,j] for (i, j) in model_s_edges if i == s_src)), name='conserve_F_on_S')
-
-    # conservation on S
-    model.addConstrs((sum(f_s[i,j] for (i,j) in model_s_edges if j == l) == sum(f_s[i,j] for (i,j) in model_s_edges if i == l) for l in model_s_nodes if l != s_src and l not in s_sink), name='conservation_f_S')
-
-    # no flow into sources and out of sinks on S
-    model.addConstrs((f_s[i,j] == 0 for (i,j) in model_s_edges if j == s_src or i in s_sink), name="no_out_sink_in_src_on_S")
+    # f_s = model.addVars(model_s_edges, name="flow_on_S")
+    #
+    # # nonnegativitiy for f_s (lower bound)
+    # model.addConstrs((f_s[i, j] >= 0 for (i,j) in model_s_edges), name='f_s_nonneg')
+    #
+    # # capacity on S (upper bound on f_s)
+    # model.addConstrs((f_s[i, j] <= 1 for (i,j) in model_s_edges), name='capacity_f_S')
+    #
+    # # Match the edge cuts from G to S
+    # for (i,j) in model_edges:
+    #     imap = map_G_to_S[i]
+    #     jmap = map_G_to_S[j]
+    #     if (imap,jmap) in model_s_edges:
+    #         model.addConstr(f_s[imap, jmap] + d[i, j] <= 1)
+    #
+    # # Preserve flow of 1 in S
+    # model.addConstr((1 <= sum(f_s[i,j] for (i, j) in model_s_edges if i == s_src)), name='conserve_F_on_S')
+    #
+    # # conservation on S
+    # model.addConstrs((sum(f_s[i,j] for (i,j) in model_s_edges if j == l) == sum(f_s[i,j] for (i,j) in model_s_edges if i == l) for l in model_s_nodes if l != s_src and l not in s_sink), name='conservation_f_S')
+    #
+    # # no flow into sources and out of sinks on S
+    # model.addConstrs((f_s[i,j] == 0 for (i,j) in model_s_edges if j == s_src or i in s_sink), name="no_out_sink_in_src_on_S")
 
     # --------- map static obstacles to other edges in G
     for count, (i,j) in enumerate(model_edges):
@@ -198,12 +199,12 @@ def solve_max_gurobi(GD, SD, callback=True):
 
 
     # ---------  add bidirectional cuts on G
-    for count, (i,j) in enumerate(model_edges):
-        out_state = GD.node_dict[i][0][0]
-        in_state = GD.node_dict[j][0][0]
-        for (imap,jmap) in model_edges[count+1:]:
-            if in_state == GD.node_dict[imap][0][0] and out_state == GD.node_dict[jmap][0][0]:
-                model.addConstr(d[i, j] == d[imap, jmap])
+    # for count, (i,j) in enumerate(model_edges):
+    #     out_state = GD.node_dict[i][0][0]
+    #     in_state = GD.node_dict[j][0][0]
+    #     for (imap,jmap) in model_edges[count+1:]:
+    #         if in_state == GD.node_dict[imap][0][0] and out_state == GD.node_dict[jmap][0][0]:
+    #             model.addConstr(d[i, j] == d[imap, jmap])
 
 
     # --------- set parameters
@@ -220,7 +221,7 @@ def solve_max_gurobi(GD, SD, callback=True):
 
     # optimize
     if callback:
-        model.optimize(callback=new_cb)
+        model.optimize(callback=cb)
     else:
         model.optimize()
 
