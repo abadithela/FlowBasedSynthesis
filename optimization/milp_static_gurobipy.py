@@ -15,7 +15,7 @@ import os
 import json
 
 # Callback with storage:
-CB_OBJ_CONST = 100
+CB_OBJ_CONST = 5
 # Callback function
 def new_cb(model, where):
     if where == GRB.Callback.MIPNODE:

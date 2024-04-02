@@ -14,10 +14,12 @@ from copy import deepcopy
 import os
 import json
 
-# New callback:
+# Callback with storage:
+CB_OBJ_CONST = 5000
+
 # Callback with storage:
 # Callback function
-def new_cb(model, where):
+def rand_cb(model, where):
     if where == GRB.Callback.MIPNODE:
         # Get model objective
         obj = model.cbGet(GRB.Callback.MIPNODE_OBJBST) # Current best objective
@@ -36,43 +38,49 @@ def new_cb(model, where):
         # 5 iterations.
         # cur_obj to float(np.inf)
         # Has objective changed?
-        if abs(obj - model._cur_obj) > 1e-8:
+        if abs(obj - model._last_obj) > 1e-8:
             # If so, update incumbent and time
-            model._cur_obj = obj
+            model._last_obj = obj
             model._time = time.time()
 
-        # Terminate if objective has not improved in 30s
+        # Terminate if objective has not improved
         # Current objective is less than infinity.
         if sol_count > 1:
         # if obj < float(np.inf):
             # if time.time() - model._time > 30:# and model.SolCount >= 1:
-            if len(model._data["best_obj"]) > 5:
-                last_five = model._data["best_obj"][-5:]
-                if last_five.count(last_five[0]) == len(last_five): # If the objective has not changed in 5 iterations, terminate
-                    model.terminate()
+            if time.time() - model._time > 120:
+                model._data["term_condition"] = "Obj not changing"
+                model.terminate()
+
+            # if len(model._data["best_obj"]) > CB_OBJ_CONST:
+            #     last_few_objs = model._data["best_obj"][-CB_OBJ_CONST:]
+            #     if last_few_objs.count(last_few_objs[0]) == len(last_few_objs): # If the objective has not changed in 5 iterations, terminate
+            #         model._data["term_condition"] = "Obj not changing"
+            #         model.terminate()
         else:
             # Total termination time if the optimizer has not found anything in 5 min:
-            if time.time() - model._time > 3000:
+            if time.time() - model._time > 600:
+                model._data["term_condition"] = "Timeout"
                 model.terminate()
 
 # Callback function
-def cb(model, where):
+def exp_cb(model, where):
     if where == GRB.Callback.MIPNODE:
         # Get model objective
         obj = model.cbGet(GRB.Callback.MIPNODE_OBJBST)
-
+        model._data["best_obj"].append(obj)
         # Has objective changed?
         if abs(obj - model._cur_obj) > 1e-8:
             # If so, update incumbent and time
             model._cur_obj = obj
             model._time = time.time()
 
-    # Terminate if objective has not improved in 30s
-    if time.time() - model._time > 30:# and model.SolCount >= 1:
+    # Terminate if objective has not improved in 10 min, then timeout
+    if time.time() - model._time > 600:# and model.SolCount >= 1:
         model.terminate()
 
 # Gurobi implementation
-def solve_max_gurobi(GD, SD, callback=True):
+def solve_max_gurobi(GD, SD, callback="exp_cb"):
     cleaned_intermed = [x for x in GD.acc_test if x not in GD.acc_sys]
     # create G and remove self-loops
     G = GD.graph
@@ -220,8 +228,10 @@ def solve_max_gurobi(GD, SD, callback=True):
     # model.Params.InfUnbdInfo = 1
 
     # optimize
-    if callback:
-        model.optimize(callback=cb)
+    if callback=="exp_cb":
+        model.optimize(callback=exp_cb)
+    if callback=="rand_cb":
+        model.optimize(callback=rand_cb)
     else:
         model.optimize()
 
@@ -229,22 +239,30 @@ def solve_max_gurobi(GD, SD, callback=True):
     model._data["n_bin_vars"] = model.NumBinVars
     model._data["n_cont_vars"] = model.NumVars - model.NumBinVars
     model._data["n_constrs"] = model.NumConstrs
-
+    
     if model.status == 4:
         model.Params.DualReductions = 0
         model.optimize(callback=cb)
 
         exit_status = 'inf'
-
-        return exit_status, [], [], None
+        model._data["status"] = "inf/unbounded"
+        fvals = []
+        dvals = []
+        flow = None
 
     elif model.status == 2 or model.status == 11:
         if model.status == 11 and model.SolCount < 1:
             # model.optimize(callback=cb)
             # if model.SolCount <= 1:
             exit_status = 'not solved'
+            fvals = []
+            dvals = []
+            flow = None
+            model._data["status"] = "not_solved"
             return exit_status, [], [], None
+
         # --------- parse output
+        model._data["status"] = "optimal"
         d_vals = dict()
         f_vals = dict()
 
@@ -262,11 +280,15 @@ def solve_max_gurobi(GD, SD, callback=True):
                 print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],d_vals[key]))
         model._data["ncuts"] = ncuts
         exit_status = 'opt'
+        print("No. of cuts: ", ncuts)
 
     elif model.status == 3:
         exit_status = 'inf'
-
-        return exit_status, [], [], None
+        model._data["status"] = "inf"
+        fvals = []
+        dvals = []
+        flow = None
+        return exit_status, fvals, dvals, flow
     else:
         st()
 
