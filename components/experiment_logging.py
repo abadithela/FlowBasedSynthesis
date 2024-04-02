@@ -4,7 +4,7 @@ Script to create a logger that saves data at various points of the experiment
 import os
 import json
 import csv
-
+from pdb import set_trace as st
 class ExpLogger:
     def __init__(self, exp_name, exp_time, setup_files=True, problem_data_file=None, runtime_data_file=None, folder_name="log"):
         self.exp_name = exp_name
@@ -22,6 +22,7 @@ class ExpLogger:
                 self.runtime_data_file = runtime_data_file
             else:
                 self.runtime_data_file = f"{self.folder_name}/runtime_data.csv"
+            self.opt_data_file = f"{self.folder_name}/opt_data.json"
             self.setup_files()
   
     def setup_files(self):
@@ -29,9 +30,14 @@ class ExpLogger:
         self.append_to_csv_file(self.problem_data_file, "Object", "Value")
         self.write_to_csv_file(self.runtime_data_file, "Process", "Runtime (s)")
     
-    def save_optimization_data(self, data):
-        with open(f'{self.folder_name}/opt_data.json', 'w') as fp:
-            json.dump(data, fp)
+    def save_optimization_data(self, data, fn=None):
+        
+        if fn:
+            with open(f'{self.folder_name}/{fn}.json', 'w') as fp:
+                json.dump(data, fp)
+        else:
+            with open(f'{self.folder_name}/opt_data.json', 'w') as fp:
+                json.dump(data, fp)
 
     def write_to_csv_file(self, filepath, name, value):
         with open(filepath, 'w', newline='') as csv_file:
@@ -93,6 +99,52 @@ class ExpLogger:
         # print(latex_code)
         if save:
             with open("log/problem_data_table.txt", "w") as fp:
+                fp.write(latex_code)
+        return latex_code
+    
+    def read_data_from_csv_file(self, file, data):
+        with open(file, 'r') as csv_file:
+            reader = csv.reader(csv_file)
+            # Add rows
+            for row in reader:
+                for k in data:
+                    if k in row:
+                        self.runtime_dict[k] = str(row[-1])
+    
+    def read_data_from_json_file(self, file, data):
+        with open(file, 'r') as f:
+            content = json.load(f)
+            # Add rows
+            for key, val in content.items():
+                for k in data:
+                    if k == key:
+                        self.runtime_dict[k] = str(val)
+
+    def print_table(self, save=True):
+        latex_code = ""
+        prob_data_columns = ["Buchi (Product)", "Transition System", "Gsys", "G"]
+        graph_runtime_columns = ["b_prod", "Gsys", "G"]
+        opt_columns = ["runtime", "n_bin_vars", "n_cont_vars", "n_constrs"]
+        self.runtime_dict = dict()
+        for k in prob_data_columns:
+            self.runtime_dict[k] = None
+            
+        for k in graph_runtime_columns:
+            self.runtime_dict[k] = None
+
+        for k in opt_columns:
+            self.runtime_dict[k] = None
+        latex_code +=  " & ".join(list(self.runtime_dict.keys())) + " \\\\\n"
+
+        self.read_data_from_csv_file(self.problem_data_file, prob_data_columns)
+        self.read_data_from_csv_file(self.runtime_data_file, graph_runtime_columns)
+        self.read_data_from_json_file(self.opt_data_file, opt_columns)
+        
+        latex_code += " & ".join(list(self.runtime_dict.values())) + " \\\\\n"
+        latex_code += "\\hline\n"
+
+        if save:
+            with open(f"{self.folder_name}/experiment_table.txt", "w") as fp:
                 fp.write(latex_code)
         return latex_code
 

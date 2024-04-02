@@ -10,9 +10,11 @@ sys.path.append('..')
 import numpy as np
 from ipdb import set_trace as st
 import itertools
+import datetime
 
 from utils.static_solve_problem import solve_problem as static_solve_problem
 from utils.static_get_graphs import get_graphs as static_get_graphs
+from utils.get_graphs import get_graphs 
 from utils.reactive_solve_problem import solve_problem as reactive_solve_problem
 from utils.reactive_get_graphs import get_graphs as reactive_get_graphs
 from utils.setup_logger import *
@@ -42,6 +44,17 @@ def generate_problem_data():
     test_formula = 'F(int)'
     return sys_formula, test_formula
 
+def setup_instance(mazefile, logger, instance_logger, gridsize, obstacle_coverage=0):
+    logger_runtime_dict = logger.log[f"maze_{gridsize}"]
+    sys_formula, test_formula = generate_problem_data()
+    init, ints, goals, obs = generate_random_grid(gridsize, obstacle_coverage)
+    print('S: {0}, I: {1}, T: {2}'.format(init, ints, goals))
+    virtual, system, b_pi, virtual_sys = static_get_graphs(sys_formula, test_formula, mazefile, init, ints, goals, instance_logger, logger_runtime_dict)
+    return virtual, system, b_pi, virtual_sys
+
+def random_experiments():
+    pass
+
 def run_static_instance(mazefile, logger, instance_logger, gridsize, obstacle_coverage=0):
     logger_runtime_dict = logger.log[f"maze_{gridsize}"]
     sys_formula, test_formula = generate_problem_data()
@@ -70,7 +83,7 @@ def run_reactive_instance(mazefile, logger, instance_logger, gridsize, obstacle_
 def static_random_experiments(mazefiles, nruns, obs_coverage=0):
     sys_formula, test_formula = generate_problem_data()
 
-    logger = setup_logger("single_reachability", maze_dims=list(mazefiles.keys()), test_type="static", nruns=nruns, obs_coverage=obs_coverage)
+    logger = setup_logger("run2_reachability", maze_dims=list(mazefiles.keys()), test_type="static", nruns=nruns, obs_coverage=obs_coverage)
     logger.set_formulas(sys_formula, test_formula)
 
     for gridsize, mazefile in mazefiles.items():
@@ -81,6 +94,7 @@ def static_random_experiments(mazefiles, nruns, obs_coverage=0):
             static_attempts = 0
 
             while not feasible_static_grid and static_attempts<50:
+
                 exit_status, init, ints, goals = run_static_instance(mazefile, logger, static_instance_logger, gridsize)
                 grid = (init, ints, goals)
                 static_attempts += 1
@@ -99,7 +113,7 @@ def static_random_experiments(mazefiles, nruns, obs_coverage=0):
 
 def reactive_random_experiments(mazefiles, nruns, obs_coverage=0):
     sys_formula, test_formula = generate_problem_data()
-    logger = setup_logger("reachability", maze_dims=list(mazefiles.keys()), test_type="reactive", nruns=nruns, obs_coverage=obs_coverage)
+    logger = setup_logger("run2_reachability", maze_dims=list(mazefiles.keys()), test_type="reactive", nruns=nruns, obs_coverage=obs_coverage)
     logger.set_formulas(sys_formula, test_formula)
 
     for gridsize, mazefile in mazefiles.items():
@@ -127,10 +141,28 @@ def reactive_random_experiments(mazefiles, nruns, obs_coverage=0):
 
     logger.save_experiment_data()
 
+
+
 if __name__ == "__main__":
     mazefiles = {3: 'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt', 6: 'mazes/6x6.txt', 7: 'mazes/7x7.txt',8: 'mazes/8x8.txt', 9: 'mazes/9x9.txt',10: 'mazes/10x10.txt', 25:'mazes/25x25.txt', 50:'mazes/50x50.txt'}
-    nruns = 5
+    # mazefiles = {3: 'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt'}
+    mazefiles = {3: 'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt', 6: 'mazes/6x6.txt', 7: 'mazes/7x7.txt',8: 'mazes/8x8.txt', 9: 'mazes/9x9.txt',10: 'mazes/10x10.txt', 25:'mazes/25x25.txt'}
+    mazefiles = {3:'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt',10: 'mazes/10x10.txt', 15: 'mazes/15x15.txt', 20: 'mazes/20x20.txt', 25:'mazes/25x25.txt', 30: 'mazes/30x30.txt'}
+
+    # mazefiles = {}
+    nruns = 20
     obs_coverage = 0
-    # static_random_experiments(mazefiles, nruns)
-    # reactive_random_experiments(mazefiles, nruns)
-    print_runtime_table("single_reachability_static_log")
+    static_random_experiments(mazefiles, nruns)
+    with open("runtimes.txt", "a") as f:
+        time = datetime.date.today()
+        f.write("Static reachability  experiments completed at: \n")
+        f.write(time, "\n")
+
+    reactive_random_experiments(mazefiles, nruns)
+    with open("runtimes.txt", "a") as f:
+        time = datetime.date.today()
+        f.write("Reactive reachability experiments completed at: \n")
+        f.write(time, "\n")
+
+    # print_runtime_table("single_reachability_static_log")
+    # print_runtime_table("single_reachability_reactive_log")

@@ -28,9 +28,9 @@ from static_examples.utils.setup_logger import setup_logger
 def find_cuts(mazefile):
     network = FuelNetwork(mazefile)
     logger = setup_logger("mars_exploration")
-    virtual, system, b_pi, virtual_sys = get_graphs_from_network(SYS_FORMULA, TEST_FORMULA, network, INIT, INTS, GOALS, logger)
+    virtual, system, b_pi, virtual_sys = get_graphs_from_network(SYS_FORMULA, TEST_FORMULA, network, INIT, INTS, GOALS, logger,save_figures = True)
 
-    exit_status, annot_cuts, flow, bypass = solve_problem_w_fuel(virtual, system, b_pi, virtual_sys, callback=False)
+    exit_status, annot_cuts, flow, bypass = solve_problem_w_fuel(virtual, system, b_pi, virtual_sys, callback=True)
     print('exit status {0}'.format(exit_status))
 
     opt_dict = {'cuts': annot_cuts}
@@ -39,6 +39,7 @@ def find_cuts(mazefile):
         
     logger.print_runtime_latex()
     logger.print_problem_data_latex()
+    logger.print_table()
 
     return annot_cuts
 

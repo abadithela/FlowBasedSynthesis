@@ -10,6 +10,7 @@ sys.path.append('..')
 import numpy as np
 from ipdb import set_trace as st
 import itertools
+from datetime import datetime
 
 from utils.static_solve_problem import solve_problem as static_solve_problem
 from utils.static_get_graphs import get_graphs as static_get_graphs
@@ -111,12 +112,25 @@ def reactive_random_experiments(mazefiles, nruns, obs_coverage=0):
 
             if reactive_attempts == 50:
                 raise ValueError("Cannot run as many instances; increase grid size or decrease instances")
-
+    
     logger.save_experiment_data()
 
 if __name__ == "__main__":
-    mazefiles = {3: 'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt'}
-    nruns = 3
+    mazefiles = {3: 'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt', 6: 'mazes/6x6.txt', 7: 'mazes/7x7.txt',8: 'mazes/8x8.txt', 9: 'mazes/9x9.txt',10: 'mazes/10x10.txt', 25:'mazes/25x25.txt', 50:'mazes/50x50.txt'}
+    mazefiles = {3:'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt',10: 'mazes/10x10.txt', 15: 'mazes/15x15.txt', 20: 'mazes/20x20.txt'}
+    mazefiles = {3: 'mazes/3x3.txt'}
+    nruns = 20
     obs_coverage = 0
-    static_random_experiments(mazefiles, nruns)
+    # static_random_experiments(mazefiles, nruns)
+    # with open("runtimes.txt", "a") as f:
+    #     time = datetime.now()
+    #     f.write("Static runtime safety experiments completed: \n")
+    #     f.write(time + " \n")
+
     reactive_random_experiments(mazefiles, nruns)
+    # with open("runtimes.txt", "a") as f:
+    #     time = datetime.now()
+    #     f.write("Reactive runtime safety experiments completed at: \n")
+    #     f.write(time + " \n")
+    time = datetime.now()
+    

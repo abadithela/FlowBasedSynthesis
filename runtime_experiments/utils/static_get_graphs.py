@@ -63,6 +63,10 @@ def get_graphs_from_network(sys_formula, test_formula, network, init, ints, goal
     return virtual, system, b_pi, virtual_sys
 
 def get_graphs(sys_formula, test_formula, mazefile, init, ints, goals, instance_logger, logger_runtime_dict, obs=[], save_figures = False):
+    instance_logger.save_data("Init", init)
+    instance_logger.save_data("Ints", ints)
+    instance_logger.save_data("Goal", goals)
+
     runtimes = dict()
 
     t0 = time.time()

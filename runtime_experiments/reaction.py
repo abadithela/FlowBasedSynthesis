@@ -10,12 +10,12 @@ sys.path.append('..')
 import numpy as np
 from ipdb import set_trace as st
 import itertools
-
+from datetime import datetime
 from utils.static_solve_problem import solve_problem as static_solve_problem
 from utils.static_get_graphs import get_graphs as static_get_graphs
 from utils.reactive_solve_problem import solve_problem as reactive_solve_problem
 from utils.reactive_get_graphs import get_graphs as reactive_get_graphs
-from utils.setup_logger import setup_logger
+from utils.setup_logger import setup_logger, get_runtime_dict_from_log
 from utils.generate_problem_data import generate_specs_and_propositions, generate_random_grid
 
 NUM_INTS = 1 # numer of reaction specs
@@ -109,14 +109,28 @@ def reactive_random_experiments(mazefiles, nruns, obs_coverage=0):
                     reactive_grids_evaluated.append(grid)
                     feasible_reactive_grid = True
 
-            if reactive_attempts == 50:
+            if reactive_attempts >= 50:
+                st()
                 raise ValueError("Cannot run as many instances; increase grid size or decrease instances")
 
     logger.save_experiment_data()
 
+
 if __name__ == "__main__":
-    mazefiles = {3: 'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt'}
-    nruns = 3
+    mazefiles = {3:'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt',10: 'mazes/10x10.txt', 15: 'mazes/15x15.txt', 20: 'mazes/20x20.txt'}
+    # mazefiles = {6:'mazes/4x4.txt', 7: 'mazes/5x5.txt',8: 'mazes/8x8.txt', 9: 'mazes/9x9.txt'}
+    # mazefiles = {3: 'mazes/3x3.txt'}
+    nruns = 20
     obs_coverage = 0
     static_random_experiments(mazefiles, nruns)
+    with open("runtimes.txt", "a") as f:
+        time = datetime.date.today()
+        f.write("Static runtime reaction experiments completed at: \n")
+        f.write(time, "\n")
+
     reactive_random_experiments(mazefiles, nruns)
+    with open("runtimes.txt", "a") as f:
+        time = datetime.date.today()
+        f.write("Reactive reaction runtime experiments completed at: \n")
+        f.write(time, "\n")
+    

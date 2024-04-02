@@ -30,6 +30,7 @@ def find_cuts():
 
     logger.print_runtime_latex()
     logger.print_problem_data_latex()
+    logger.print_table()
     return annot_cuts
 
 

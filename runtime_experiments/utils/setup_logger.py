@@ -7,6 +7,7 @@ from components.experiment_logging import ExpLogger
 import os
 import datetime
 import numpy as np
+import csv
 import json
 
 class Random_RT_Logger:
@@ -92,7 +93,7 @@ class Random_RT_Logger:
         for size in self.maze_dims:
             self.compute_runtime_metrics(size)
 
-        with open(f'{self.folder_name}/runtime_data.json', 'w') as fp:
+        with open(f'{self.folder_name}/runtime_data.json', 'a') as fp:
             json.dump(self.log, fp)
 
     def print_to_table(self):
@@ -101,17 +102,6 @@ class Random_RT_Logger:
 def setup_logger(exp_name, maze_dims=[], test_type="static", nruns=25, obs_coverage=15):
     logger = Random_RT_Logger(exp_name, maze_dims = maze_dims, nruns=nruns, obs_coverage = obs_coverage, test_type=test_type)
     return logger
-
-# \begin{tabular}{lSSSS}
-# \toprule
-# & \multicolumn{2}{c}{A} & \multicolumn{2}{c}{Most Mon} \\
-# \cmidrule(r){2-3}\cmidrule(l){4-5}
-# Methods & {Time [\si{\second}]} & {RunCount}  & {Time [\si{\second}]} & {RunCount} \\
-# \midrule
-# C & 12.3 & 5 & 34.6 & 7 \\
-# D & 1.35 & 5 & 4.93 & 7 \\
-# \bottomrule
-# \end{tabular}
 
 def print_runtime_in_latex_table(folder_name, runtime_data):
     runtime_data_file = f"{folder_name}/runtime_data.json"
@@ -122,21 +112,21 @@ def print_runtime_in_latex_table(folder_name, runtime_data):
     num_columns = len(columns)*3 # One for each element (no.solved, graph runtimes, opt runtimes)
     
     latex_code = ""
-    top_column_code = ""
-    for maze in columns:
-        top_column_code += "& \\multicolumn{"+"3}{c" +"}{"+maze[-1]+"$\\times$ "+maze[-1]+"}"
-    top_column_code += " \\\\\hline\n"
-    latex_code += top_column_code
+    # top_column_code = ""
+    # for maze in columns:
+    #     top_column_code += "& \\multicolumn{"+"3}{c" +"}{"+maze[-1]+"$\\times$ "+maze[-1]+"}"
+    # top_column_code += " \\\\\hline\n"
+    # latex_code += top_column_code
 
-    # for k in range(1, len(columns)+1):
-    #     kmin = 
-    #     \cmidrule(lr){2-4}
-    #     \cmidrule(lr){5-7}
-    #     \cmidrule(lr){8-10}
+    # # for k in range(1, len(columns)+1):
+    # #     kmin = 
+    # #     \cmidrule(lr){2-4}
+    # #     \cmidrule(lr){5-7}
+    # #     \cmidrule(lr){8-10}
     
-    latex_code += "&"
-    headers = ["{Solved}", "{G}", "{Opt}"]
-    latex_code += '&'.join(headers * len(columns)) + "\n\\\\\hline\n"
+    # latex_code += "&"
+    # headers = ["{Solved}", "{G}", "{Opt}"]
+    # latex_code += '&'.join(headers * len(columns)) + "\n\\\\\hline\n"
     
     # Add headers
     # latex_code += " & ".join(headers) + " \\\\\n\\hline\n"
@@ -146,10 +136,9 @@ def print_runtime_in_latex_table(folder_name, runtime_data):
         num_not_solved = str(data["num_not_solved"]) 
         graph_rt =  str(format(data["avg_graph_rt"], '.4f')) + "$\,\pm\,$ " + str(format(data["std_graph_rt"], '.4f')) 
         opt_rt =  str(format(data["avg_opt_rt"], '.4f')) + "$\,\pm\,$" + str(format(data["std_opt_rt"], '.4f'))
-        row.extend([num_not_solved, graph_rt, opt_rt])
+        row.extend([graph_rt, opt_rt, num_not_solved])
     latex_code += "&"
     latex_code += " & ".join(row) + " \\\\\n"
-    latex_code += "\\hline\n"
     # latex_code += "\\end{tabular}\n\\caption{Caption here}\n\\label{table:label_here}\n\\end{table}"
     with open(runtime_latex_output_file, "w") as fp:
         fp.write(latex_code)
@@ -161,4 +150,51 @@ def print_runtime_table(log_folder):
         runtime_data = json.load(fp)
     print_runtime_in_latex_table(log_folder, runtime_data)
 
+# Write function to read runtime dictionary and save 
+def get_runtime_dict_from_log(log_folder, gridsizes):
+    runtime_dict = {}
+    for size in gridsizes:
+        runtime_dict["maze_"+str(size)] = dict()
+        runtime_dict["maze_"+str(size)]["num_not_solved"] = 0
+        runtime_dict["maze_"+str(size)]["graph_data"] = []
+        runtime_dict["maze_"+str(size)]["graph_runtimes"] = []
+        runtime_dict["maze_"+str(size)]["opt_runtimes"] = []
 
+        for inst_no in range(1, 21):
+            inst_log = "instance_"+str(inst_no) + "_log"
+            opt_data_file = f"{log_folder}/gridsize_{size}/{inst_log}/opt_data.json"
+            prob_data_file = f"{log_folder}/gridsize_{size}/{inst_log}/problem_data.csv"
+            prob_runtime_data_file = f"{log_folder}/gridsize_{size}/{inst_log}/runtime_data.csv"
+
+            if os.path.exists(opt_data_file):
+                with open(opt_data_file, "r") as f:
+                    opt_data = json.load(f)
+                runtime_dict["maze_"+str(size)]["opt_runtimes"].append(opt_data["runtime"])
+
+                with open(problem_data_file) as csv_file:
+                    csv_reader = csv.reader(csv_file)
+                    rows = list(csv_reader)    
+                runtime_dict["maze_"+str(size)]["graph_data"].append(rows[-1][1]) # Graph data size
+
+                with open(prob_runtime_data_file) as csv_file:
+                    csv_reader = csv.reader(csv_file)
+                    rows = list(csv_reader)  
+                runtime_dict["maze_"+str(size)]["graph_runtimes"].append(float(rows[-1][1]))
+
+            else:
+                runtime_dict["maze_"+str(size)]["num_not_solved"] += 1
+                runtime_dict["maze_"+str(size)]["opt_runtimes"].append(600) # Timed out
+                print("Instance ", inst_no, " of gridsize ", size, " in log folder ", log_folder, " does not exist. Counting as not solved (double-check).")
+
+        runtime_dict[f"maze_{gridsize}"]["avg_opt_rt"] = np.mean(self.log[f"maze_{gridsize}"]['opt_runtimes'])
+        runtime_dict[f"maze_{gridsize}"]["std_opt_rt"] = np.std(self.log[f"maze_{gridsize}"]['opt_runtimes'])
+        runtime_dict[f"maze_{gridsize}"]["avg_graph_rt"] = np.mean(self.log[f"maze_{gridsize}"]['graph_runtimes'])
+        runtime_dict[f"maze_{gridsize}"]["std_graph_rt"] = np.std(self.log[f"maze_{gridsize}"]['graph_runtimes'])
+        # runtime_dict[f"maze_{gridsize}"]["avg_graph_size"] = np.mean(self.log[f"maze_{gridsize}"]['graph_runtimes'])
+        # runtime_dict[f"maze_{gridsize}"]["std_graph_size"] = np.std(self.log[f"maze_{gridsize}"]['graph_runtimes'])
+        with open(f'{self.folder_name}/runtime_data.json', 'a') as fp:
+            json.dump(self.log, fp)
+        print_runtime_table(log_folder)
+    return runtime_dict
+
+        

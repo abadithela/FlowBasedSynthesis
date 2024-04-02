@@ -28,11 +28,13 @@ def find_cuts(network):
     # print('S = '+str(INIT)+', '+intstr+' T = '+str(GOALS))
     # network = FuelNetwork(mazefile)
     logger = setup_logger("fuel_tank_static")
-    virtual, system, b_pi, virtual_sys = get_graphs_from_network(SYS_FORMULA, TEST_FORMULA, network, INIT, INTS, GOALS, logger)
+    virtual, system, b_pi, virtual_sys = get_graphs_from_network(SYS_FORMULA, TEST_FORMULA, network, INIT, INTS, GOALS, logger, save_figures=True)
 
-    exit_status, annot_cuts, flow, bypass = solve_problem_w_fuel(virtual, system, b_pi, virtual_sys)
+    exit_status, annot_cuts, flow, bypass = solve_problem_w_fuel(virtual, system, b_pi, virtual_sys, callback=True)
     print('exit status {0}'.format(exit_status))
-
+    logger.print_runtime_latex()
+    logger.print_problem_data_latex()
+    logger.print_table()
     return annot_cuts
 
 

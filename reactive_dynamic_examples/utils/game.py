@@ -90,6 +90,7 @@ class Game:
                 self.tester.find_controller(load_sol = False)
                 tf = time.time()
                 self.logger.save_runtime("Tester Controller", tf-t0)
+                self.logger.save_data("Times resynthesized by CEx search: ", len(excluded_sols))
                 self.agent.find_controller(self.maze)
                 strategy_found = True
                 print("Test Agent Strategy synthesized!.")
@@ -99,7 +100,10 @@ class Game:
                 print("!! Could not synthesize test agent strategy!!")
                 print(f"Re-solving optimization with {n_exc} solutions excluded.")
                 st()
-
+        # Writing to file:
+        logger.print_runtime_latex()
+        logger.print_problem_data_latex()
+        logger.print_table(dynamic=True)
 
     def print_game_state(self):
         z_old = []

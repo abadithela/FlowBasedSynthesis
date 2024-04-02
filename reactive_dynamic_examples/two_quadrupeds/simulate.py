@@ -19,11 +19,7 @@ from utils.helper import *
 def new_World(mazefile):
     network = MazeNetwork(mazefile)
     network.set_int(INTS)
-    # network.set_int_1_and_2((3,4), (1,0))
-    # network.goal = (0,4)
-
-    # Added by Apurva (1/17):
-    # cuts = [(((4, 2), 'q0'), ((3, 2), 'q0')), (((2, 2), 'q3'), ((1, 2), 'q3'))]
+    
     system_init = {"z": 6, "x": 0}
     tester_init = {"z": 6, "x": 2}
     tester = Tester("tester", system_init, tester_init, network)
