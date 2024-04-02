@@ -51,7 +51,7 @@ def new_cb(model, where):
                 if last_five.count(last_five[0]) == len(last_five): # If the objective has not changed in 5 iterations, terminate
                     model._data["term_condition"] = "Obj not changing"
                     model.terminate()
-                    
+
         else:
             # Total termination time if the optimizer has not found anything in 5 min:
             if time.time() - model._time > 600:
@@ -131,7 +131,8 @@ def solve_max_gurobi(GD, SD, callback=True, logger=None, logger_runtime_dict=Non
     # Define Objective
     term = sum(f[i,j] for (i, j) in model_edges if i in src)
     ncuts = sum(d[i,j] for (i, j) in model_edges)
-    model.setObjective(term - 10e-3*ncuts, GRB.MAXIMIZE)
+    reg = 1/len(model_edges)
+    model.setObjective(term - reg*ncuts, GRB.MAXIMIZE)
 
     # Nonnegativity - lower bounds
     model.addConstrs((d[i, j] >= 0 for (i,j) in model_edges), name='d_nonneg')
