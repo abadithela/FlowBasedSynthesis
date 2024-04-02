@@ -35,6 +35,7 @@ def solve_opt(virtual, system, b_pi, virtual_sys, logger = None, excluded_sols =
     print('exit status {0}'.format(exit_status))
     logger.print_runtime_latex()
     logger.print_problem_data_latex()
+    make_history_plots(annot_cuts, GD, system.maze)
     return annot_cuts, GD, SD
 
 def find_cuts(logger = None, excluded_sols=[], load_sol=True):
