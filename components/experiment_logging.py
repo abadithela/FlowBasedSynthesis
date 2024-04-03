@@ -102,22 +102,28 @@ class ExpLogger:
                 fp.write(latex_code)
         return latex_code
     
-    def read_data_from_csv_file(self, file, data):
+    def read_data_from_csv_file(self, file, data, round=False):
         with open(file, 'r') as csv_file:
             reader = csv.reader(csv_file)
             # Add rows
             for row in reader:
                 for k in data:
                     if k in row:
-                        self.runtime_dict[k] = str(row[-1])
+                        if round:
+                            val = "{:.4f}".format(float(row[-1]))
+                        else:
+                            val = str(row[-1])
+                        self.runtime_dict[k] = val
     
-    def read_data_from_json_file(self, file, data):
+    def read_data_from_json_file(self, file, data, round=True):
         with open(file, 'r') as f:
             content = json.load(f)
             # Add rows
             for key, val in content.items():
                 for k in data:
                     if k == key:
+                        if round:
+                            val = "{:.4f}".format(float(val))
                         self.runtime_dict[k] = str(val)
 
     def print_table(self, save=True, dynamic=False):
@@ -127,9 +133,9 @@ class ExpLogger:
         latex_code = ""
         prob_data_columns = ["Buchi (Product)", "Transition System", "Gsys", "G"]
         if dynamic:
-            graph_runtime_columns = ["b_prod", "Gsys", "G","Tester Controller"]
+            graph_runtime_columns = ["Buchi (Product) RT", "Gsys RT", "G RT","Tester Controller RT"]
         else:
-            graph_runtime_columns = ["b_prod", "Gsys", "G"]
+            graph_runtime_columns = ["Buchi (Product) RT", "Gsys RT", "G RT"]
         if dynamic:
             opt_columns = ["runtime", "n_bin_vars", "n_cont_vars", "n_constrs","n_cex", "flow", "ncuts"]
         else:
@@ -143,16 +149,26 @@ class ExpLogger:
 
         for k in opt_columns:
             self.runtime_dict[k] = None
+
+        if dynamic:
+            item_order = ["Buchi (Product)", "Transition System", "Gsys", "G", "G RT", "n_bin_vars", "n_cont_vars", "n_constrs", "runtime","flow", "ncuts","n_cex", "Tester Controller RT"]
+        else:
+            item_order = ["Buchi (Product)", "Transition System", "G", "G RT", "n_bin_vars", "n_cont_vars", "n_constrs", "runtime","flow", "ncuts"]
+        
         try:
-            latex_code +=  " & ".join(list(self.runtime_dict.keys())) + " \\\\\n"
+            latex_code +=  " & ".join(item_order) + " \\\\\n"
         except:
             st()
-
-        self.read_data_from_csv_file(self.problem_data_file, prob_data_columns)
-        self.read_data_from_csv_file(self.runtime_data_file, graph_runtime_columns)
-        self.read_data_from_json_file(self.opt_data_file, opt_columns)
         
-        latex_code += " & ".join(list(self.runtime_dict.values())) + " \\\\\n"
+        self.read_data_from_csv_file(self.problem_data_file, prob_data_columns)
+        self.read_data_from_csv_file(self.runtime_data_file, graph_runtime_columns, round=True)
+        self.read_data_from_json_file(self.opt_data_file, opt_columns, round=True)
+        
+        try:
+            values = [self.runtime_dict[key] for key in item_order]
+            latex_code += " & ".join(values) + " \\\\\n"
+        except:
+            st()
         latex_code += "\\hline\n"
 
         if save:
