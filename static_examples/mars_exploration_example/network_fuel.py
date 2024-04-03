@@ -110,12 +110,6 @@ class FuelNetwork(MazeNetwork):
         G.add_nodes_from(nodes)
         G.add_edges_from(edges)
 
-        to_remove = []
-        for i, j in G.edges:
-            if i == j:
-                to_remove.append((i,j))
-        G.remove_edges_from(to_remove)
-
         self.next_state_dict_w_fuel = next_state_dict
         # st()
         return G

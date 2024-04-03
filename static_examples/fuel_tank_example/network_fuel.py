@@ -15,6 +15,7 @@ class FuelNetwork(MazeNetwork):
         self.setup_states()
         self.next_state_dict_w_fuel = None
         self.graph = self.create_graph_with_fuel_level()
+        st()
 
     def setup_states(self):
         for z in range(0,self.len_z):
@@ -106,13 +107,6 @@ class FuelNetwork(MazeNetwork):
         G = nx.DiGraph()
         G.add_nodes_from(nodes)
         G.add_edges_from(edges)
-
-        to_remove = []
-        for i, j in G.edges:
-            if i == j:
-                to_remove.append((i,j))
-        G.remove_edges_from(to_remove)
-        # st()
 
         self.next_state_dict_w_fuel = next_state_dict
         return G
