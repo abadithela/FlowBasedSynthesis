@@ -15,6 +15,7 @@ import os
 import json
 
 # Callback with storage:
+CB_OBJ_CONST = 5
 # Callback function
 def new_cb(model, where):
     if where == GRB.Callback.MIPNODE:
@@ -46,9 +47,9 @@ def new_cb(model, where):
         # if obj < float(np.inf):
         if sol_count > 1:
             # if time.time() - model._time > 30:# and model.SolCount >= 1:
-            if len(model._extra_data["best_obj"]) > 5:
-                last_five = model._extra_data["best_obj"][-5:]
-                if last_five.count(last_five[0]) == len(last_five): # If the objective has not changed in 5 iterations, terminate
+            if len(model._extra_data["best_obj"]) > CB_OBJ_CONST:
+                last_few_objs = model._extra_data["best_obj"][-CB_OBJ_CONST:]
+                if last_few.count(last_few_objs[0]) == len(last_few_objs): # If the objective has not changed in 5 iterations, terminate
                     model._data["term_condition"] = "Obj not changing"
                     model.terminate()
 

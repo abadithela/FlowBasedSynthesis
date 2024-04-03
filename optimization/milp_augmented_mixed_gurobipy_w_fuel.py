@@ -50,7 +50,7 @@ def new_cb(model, where):
                     model.terminate()
         else:
             # Total termination time if the optimizer has not found anything in 5 min:
-            if time.time() - model._time > 3000:
+            if time.time() - model._time > 600:
                 model.terminate()
 
 # Callback function
@@ -119,7 +119,7 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = []):
 
     # --------- set parameters
     # Last updated objective and time (for callback function)
-    model.Params.NumericFocus=2
+    # model.Params.NumericFocus=2
     model._cur_obj = float('inf')
     model._time = time.time()
     model.Params.Seed = np.random.randint(0,100)
