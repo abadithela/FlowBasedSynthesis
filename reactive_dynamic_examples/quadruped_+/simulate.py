@@ -47,6 +47,30 @@ def run_sim(max_timestep, filepath):
             break
     save_trace(filepath, game.trace)
 
+def run_alternative_manual_sim(max_timestep, filepath):
+    manual_trace = [(4,0), (4,0), (4,1), (4,2), (4,3), (4,4), (3,4), (4,4), (4,3), (4,2), (3,2), (4,2), (4,1), (4,0), (3,0), (2,0), (1,0), (0,0), (0,1), (0,2), (0,3), (0,4)]
+    trace=[]
+    mazefile = 'maze.txt'
+    game, network, sys = new_World(mazefile)
+    game.set_manual_trace(manual_trace)
+    print('sys in '+str(game.agent.s)+' and tester in '+str(game.tester.q))
+    trace = save_scene(game,trace)
+    game.print_game_state()
+    for t in range(1,max_timestep):
+        print('Timestep {}'.format(t))
+        game.agent_take_step_alternative_manual_controller() # Change this back to something automatic
+        game.print_game_state()
+        game.tester_take_step()
+        game.print_game_state()
+        # save the trace
+        trace = save_scene(game,trace)
+
+        print('sys in '+str(game.agent.s)+' and tester in '+str(game.tester.q))
+        if game.is_terminal():
+            break
+    save_trace(filepath, game.trace)
+
+
 
 if __name__ == '__main__':
     max_timestep = 40
@@ -55,4 +79,4 @@ if __name__ == '__main__':
         os.makedirs(output_dir)
     filename = 'sim_trace.p'
     filepath = output_dir + filename
-    run_sim(max_timestep, filepath)
+    run_alternative_manual_sim(max_timestep, filepath)
