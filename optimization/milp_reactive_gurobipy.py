@@ -301,7 +301,7 @@ def solve_max_gurobi(GD, SD, excluded_sols = [],callback="exp_cb",logger=None, l
         model._data["status"] = "not_solved"
         model._data["exit_status"] = exit_status
 
-    elif model.status == 2 or (model.status == 11 and model.SolCount > 1):
+    elif model.status == 2 or (model.status == 11 and model.SolCount >= 1):
         if model.status == 2:
             model._data["status"] = "optimal"
             model._data["term_condition"] = "optimal found"
