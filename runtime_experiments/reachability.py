@@ -19,6 +19,8 @@ from utils.reactive_solve_problem import solve_problem as reactive_solve_problem
 from utils.reactive_get_graphs import get_graphs as reactive_get_graphs
 from utils.setup_logger import *
 
+NUM_INTS = 1 # numer of satefy specs
+
 def generate_random_grid(gridsize, obstacle_coverage, nint=1):
     '''
     Generate random grid depending on number of intermediates
@@ -52,8 +54,6 @@ def setup_instance(mazefile, logger, instance_logger, gridsize, obstacle_coverag
     virtual, system, b_pi, virtual_sys = static_get_graphs(sys_formula, test_formula, mazefile, init, ints, goals, instance_logger, logger_runtime_dict)
     return virtual, system, b_pi, virtual_sys
 
-def random_experiments():
-    pass
 
 def run_static_instance(mazefile, logger, instance_logger, gridsize, obstacle_coverage=0):
     logger_runtime_dict = logger.log[f"maze_{gridsize}"]
@@ -83,7 +83,7 @@ def run_reactive_instance(mazefile, logger, instance_logger, gridsize, obstacle_
 def static_random_experiments(mazefiles, nruns, obs_coverage=0):
     sys_formula, test_formula = generate_problem_data()
 
-    logger = setup_logger("run_60s_reachability", maze_dims=list(mazefiles.keys()), test_type="static", nruns=nruns, obs_coverage=obs_coverage)
+    logger = setup_logger("run_60s_reachability_"+str(NUM_INTS), maze_dims=list(mazefiles.keys()), test_type="static", nruns=nruns, obs_coverage=obs_coverage)
     logger.set_formulas(sys_formula, test_formula)
     with open("runtimes.txt", "a") as f:
         f.write(f"Starting static experiments. \n")
@@ -117,7 +117,7 @@ def static_random_experiments(mazefiles, nruns, obs_coverage=0):
 
 def reactive_random_experiments(mazefiles, nruns, obs_coverage=0):
     sys_formula, test_formula = generate_problem_data()
-    logger = setup_logger("run_60s_reachability", maze_dims=list(mazefiles.keys()), test_type="reactive", nruns=nruns, obs_coverage=obs_coverage)
+    logger = setup_logger("run_60s_reachability_"+str(NUM_INTS), maze_dims=list(mazefiles.keys()), test_type="reactive", nruns=nruns, obs_coverage=obs_coverage)
     logger.set_formulas(sys_formula, test_formula)
     with open("runtimes.txt", "a") as f:
         f.write("Starting reactive experiments. \n")
@@ -154,7 +154,7 @@ def reactive_random_experiments(mazefiles, nruns, obs_coverage=0):
 if __name__ == "__main__":
     # mazefiles = {3: 'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt', 6: 'mazes/6x6.txt', 7: 'mazes/7x7.txt',8: 'mazes/8x8.txt', 9: 'mazes/9x9.txt',10: 'mazes/10x10.txt', 25:'mazes/25x25.txt', 50:'mazes/50x50.txt'}
     # mazefiles = {3: 'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt'}
-    mazefiles = {3:'mazes/3x3.txt', 4: 'mazes/4x4.txt'}
+    # mazefiles = {3:'mazes/3x3.txt', 4: 'mazes/4x4.txt'}
     mazefiles= {3:'mazes/3x3.txt', 4: 'mazes/4x4.txt', 5: 'mazes/5x5.txt',10: 'mazes/10x10.txt', 15: 'mazes/15x15.txt',20: 'mazes/20x20.txt'}
     # mazefiles= {20: 'mazes/20x20.txt', 25:'mazes/25x25.txt', 30: 'mazes/30x30.txt'}
 
