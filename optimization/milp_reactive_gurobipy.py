@@ -275,16 +275,30 @@ def solve_max_gurobi(GD, SD, excluded_sols = [],callback="exp_cb",logger=None, l
     model._data["ncuts"] = None
     # optimize
     if callback=="exp_cb":
+        t0 = time.time()
         model.optimize(callback=exp_cb)
+        tf = time.time()
+        delt = tf - t0
     if callback=="rand_cb":
+        t0 = time.time()
         model.optimize(callback=rand_cb)
+        tf = time.time()
+        delt = tf - t0
     else:
+        t0 = time.time()
         model.optimize()
+        tf = time.time()
+        delt = tf - t0
+
     model._data["runtime"] = model.Runtime
     model._data["n_bin_vars"] = model.NumBinVars
     model._data["n_cont_vars"] = model.NumVars - model.NumBinVars
     model._data["n_constrs"] = model.NumConstrs
     # model.Params.InfUnbdInfo = 1
+
+    print('timed opt time: {}'.format(delt))
+    print('model run time: {}'.format(model.Runtime))
+    st()
 
     print('Runtime {}'.format(model.Runtime))
     f_vals = []
