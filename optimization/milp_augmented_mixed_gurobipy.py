@@ -80,11 +80,12 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = [], callback="exp
 
     # remove intermediate nodes
     G_minus_I = deepcopy(G)
-    to_remove = []
-    for edge in G.edges:
-        if edge[0] in cleaned_intermed or edge[1] in cleaned_intermed:
-            to_remove.append(edge)
-    G_minus_I.remove_edges_from(to_remove)
+    # to_remove = []
+    # for edge in G.edges:
+    #     if edge[0] in cleaned_intermed or edge[1] in cleaned_intermed:
+    #         to_remove.append(edge)
+    # G_minus_I.remove_edges_from(to_remove)
+    G_minus_I.remove_nodes_from(cleaned_intermed)
 
     # create S and remove self-loops
     S = SD.graph
@@ -343,7 +344,7 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = [], callback="exp
     elif model.status == 3:
         exit_status = 'inf'
         model._data["status"] = "inf"
-        
+
 
     else:
         st()

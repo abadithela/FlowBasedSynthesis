@@ -91,11 +91,13 @@ def solve_max_gurobi(GD, SD, callback="exp_cb", logger=None, logger_runtime_dict
 
     # remove intermediate nodes
     G_minus_I = deepcopy(G)
-    to_remove = []
-    for edge in G.edges:
-        if edge[0] in cleaned_intermed or edge[1] in cleaned_intermed:
-            to_remove.append(edge)
-    G_minus_I.remove_edges_from(to_remove)
+    # to_remove = []
+    # for edge in G.edges:
+    #     if edge[0] in cleaned_intermed or edge[1] in cleaned_intermed:
+    #         to_remove.append(edge)
+    # G_minus_I.remove_edges_from(to_remove)
+
+    G_minus_I.remove_nodes_from(cleaned_intermed)
 
     # create S and remove self-loops
     S = SD.graph
@@ -228,7 +230,10 @@ def solve_max_gurobi(GD, SD, callback="exp_cb", logger=None, logger_runtime_dict
     # model.Params.InfUnbdInfo = 1
     # optimize
     if callback=="exp_cb":
+        t0 = time.time()
         model.optimize(callback=exp_cb)
+        tf = time.time()
+        delt = t0 - t1
     if callback=="rand_cb":
         model.optimize(callback=rand_cb)
     else:
@@ -237,6 +242,10 @@ def solve_max_gurobi(GD, SD, callback="exp_cb", logger=None, logger_runtime_dict
     model._data["runtime"] = model.Runtime
     model._data["flow"] = None
     model._data["ncuts"] = None
+
+    print('timed opt time: {}'.format(delt))
+    print('model run time: {}'.format(model.Runtime))
+    st()
 
     # Storing problem variables:
     model._data["n_bin_vars"] = model.NumBinVars

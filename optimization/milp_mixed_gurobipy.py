@@ -89,11 +89,13 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = [],callback=True,
 
     # remove intermediate nodes
     G_minus_I = deepcopy(G)
-    to_remove = []
-    for edge in G.edges:
-        if edge[0] in cleaned_intermed or edge[1] in cleaned_intermed:
-            to_remove.append(edge)
-    G_minus_I.remove_edges_from(to_remove)
+    # to_remove = []
+    # for edge in G.edges:
+    #     if edge[0] in cleaned_intermed or edge[1] in cleaned_intermed:
+    #         to_remove.append(edge)
+    # G_minus_I.remove_edges_from(to_remove)
+
+    G_minus_I.remove_nodes_from(cleaned_intermed)
 
     # create S and remove self-loops
     S = SD.graph
@@ -317,7 +319,7 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = [],callback=True,
     #             return exit_status, [], [], None
     elif model.status == 11 and model.SolCount < 1:
         exit_status = 'not solved'
-        
+
         model._data["status"] = "not_solved"
         model._data["exit_status"] = exit_status
 
