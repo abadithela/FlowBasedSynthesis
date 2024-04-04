@@ -14,7 +14,7 @@ def find_cuts():
     logger = setup_logger("gold_bank")
     virtual, system, b_pi, virtual_sys = get_graphs(SYS_FORMULA, TEST_FORMULA, MAZEFILE, INIT, INTS, GOALS, logger, save_figures=True)
 
-    exit_status, annot_cuts, flow, bypass = solve_problem(virtual, system, b_pi, virtual_sys, callback=True)
+    exit_status, annot_cuts, flow, bypass = solve_problem(virtual, system, b_pi, virtual_sys, callback="exp_cb")
     print('exit status {0}'.format(exit_status))
 
     logger.print_runtime_latex()

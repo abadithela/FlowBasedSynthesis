@@ -89,7 +89,7 @@ class Game:
                 t0 = time.time()
                 self.tester.find_controller(load_sol = False)
                 tf = time.time()
-                self.logger.save_runtime("Tester Controller", tf-t0)
+                self.logger.save_runtime("Tester Controller RT", tf-t0)
                 self.logger.save_data("Times resynthesized by CEx search: ", len(excluded_sols))
                 self.agent.find_controller(self.maze)
                 strategy_found = True

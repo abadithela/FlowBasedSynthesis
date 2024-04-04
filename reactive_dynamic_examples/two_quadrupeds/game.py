@@ -61,7 +61,7 @@ class Game:
             if load_sol:
                 cuts, GD, SD = self.get_optimization_results(logger = self.logger)
             else:
-                cuts, GD, SD = solve_opt(virtual, system, b_pi, virtual_sys, logger = self.logger, excluded_sols = excluded_sols)
+                cuts, GD, SD = solve_opt(virtual, system, b_pi, virtual_sys, callback="exp_cb", logger = self.logger, excluded_sols = excluded_sols)
 
             graph_cuts = [(GD.inv_node_dict[cut[0]], GD.inv_node_dict[cut[1]]) for cut in cuts]
 
@@ -70,7 +70,7 @@ class Game:
                 t0 = time.time()
                 self.tester.find_controller(load_sol = False)
                 tf = time.time()
-                self.logger.save_runtime("Tester Controller", tf-t0)
+                self.logger.save_runtime("Tester Controller RT", tf-t0)
                 self.agent.find_controller(self.maze)
                 strategy_found = True
                 print("Test Agent Strategy synthesized!.")

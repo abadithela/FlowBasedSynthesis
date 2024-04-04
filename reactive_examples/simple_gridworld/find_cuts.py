@@ -22,13 +22,15 @@ def find_cuts():
     intstr = ''.join('%s = %s, ' % (val,key) for (key,val) in INTS.items())
     print('S = '+str(INIT)+', '+intstr+' T = '+str(GOALS))
     logger = setup_logger("simple_gridworld")
-    virtual, system, b_pi, virtual_sys = get_graphs(SYS_FORMULA, TEST_FORMULA, MAZEFILE, INIT, INTS, GOALS, logger)
+    virtual, system, b_pi, virtual_sys = get_graphs(SYS_FORMULA, TEST_FORMULA, MAZEFILE, INIT, INTS, GOALS, logger, save_figures=False)
 
     exit_status, annot_cuts, flow, bypass, GD, SD = solve_problem(virtual, system, b_pi, virtual_sys)
     print('exit status {0}'.format(exit_status))
 
     make_history_plots(annot_cuts, GD, system.maze)
-
+    logger.print_runtime_latex()
+    logger.print_problem_data_latex()
+    logger.print_table()
     return annot_cuts, GD, SD
 
 

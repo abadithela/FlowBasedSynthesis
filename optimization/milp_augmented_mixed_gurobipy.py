@@ -15,7 +15,7 @@ import os
 import json
 
 # New Callback function
-def new_cb(model, where):
+def rand_cb(model, where):
     if where == GRB.Callback.MIPNODE:
         # Get model objective
         obj = model.cbGet(GRB.Callback.MIPNODE_OBJBST) # Current best objective
@@ -25,11 +25,11 @@ def new_cb(model, where):
         sol_count = model.cbGet(GRB.Callback.MIPNODE_SOLCNT) # No. of feasible solns found.
 
         # Save model and opt data:
-        model._data["opt_time"].append(opt_time)
-        model._data["best_obj"].append(obj)
-        model._data["bound"].append(obj_bound)
-        model._data["node_count"].append(node_count)
-        model._data["sol_count"].append(sol_count)
+        model._extra_data["opt_time"].append(opt_time)
+        model._extra_data["best_obj"].append(obj)
+        model._extra_data["bound"].append(obj_bound)
+        model._extra_data["node_count"].append(node_count)
+        model._extra_data["sol_count"].append(sol_count)
 
         # 5 iterations.
         # cur_obj to float(np.inf)
@@ -41,19 +41,18 @@ def new_cb(model, where):
 
         # Terminate if objective has not improved in 30s
         # Current objective is less than infinity.
-        if obj < float(np.inf):
-            # if time.time() - model._time > 30:# and model.SolCount >= 1:
-            if len(model._data["best_obj"]) > 5:
-                last_five = model._data["best_obj"][-5:]
-                if last_five.count(last_five[0]) == len(last_five): # If the objective has not changed in 5 iterations, terminate
-                    model.terminate()
+        if sol_count > 1:
+            if time.time() - model._time > 120:
+                model._data["term_condition"] = "Obj not changing"
+                model.terminate()
         else:
             # Total termination time if the optimizer has not found anything in 5 min:
-            if time.time() - model._time > 3000:
+            if time.time() - model._time > 600:
+                model._data["term_condition"] = "Timeout"
                 model.terminate()
 
 # Callback function
-def cb(model, where):
+def exp_cb(model, where):
     if where == GRB.Callback.MIPNODE:
         # Get model objective
         obj = model.cbGet(GRB.Callback.MIPNODE_OBJBST)
@@ -69,7 +68,7 @@ def cb(model, where):
         model.terminate()
 
 # Gurobi implementation
-def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = []):
+def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = [], callback="exp_cb",logger=None, logger_runtime_dict=None):
     cleaned_intermed = [x for x in GD.acc_test if x not in GD.acc_sys]
     # create G and remove self-loops
     G = GD.graph
@@ -119,8 +118,9 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = []):
     model._time = time.time()
     model.Params.Seed = np.random.randint(0,100)
     model._data = dict() # To store objective data.
+    model._extra_data = dict()
     for key in ["opt_time", "best_obj", "bound", "node_count", "sol_count"]:
-        model._data[key] = []
+        model._extra_data[key] = []
     model._data["flow"] = None
     model._data["ncuts"] = None
 
@@ -276,7 +276,12 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = []):
     # model.Params.InfUnbdInfo = 1
 
     # optimize
-    model.optimize(callback=new_cb)
+    if callback=="exp_cb":
+        model.optimize(callback=exp_cb)
+    if callback=="rand_cb":
+        model.optimize(callback=rand_cb)
+    else:
+        model.optimize()
 
     model._data["runtime"] = model.Runtime
 
@@ -284,13 +289,18 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = []):
     model._data["n_cont_vars"] = model.NumVars - model.NumBinVars
     model._data["n_constrs"] = model.NumConstrs
 
+    f_vals = []
+    d_vals = []
+    flow = None
+
     if model.status == 4:
         model.Params.DualReductions = 0
-        model.optimize(callback=cb)
+        model.optimize(callback="exp_cb")
 
         exit_status = 'inf'
+        model._data["status"] = "inf/unbounded"
 
-        return exit_status, [], [], None
+
     # elif model.status == 11:
     #     if model.SolCount <= 1:
     #
@@ -298,20 +308,25 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = []):
     #         if model.SolCount <= 1:
     #             exit_status = 'not solved'
     #             return exit_status, [], [], None
+    elif model.status == 11 and model.SolCount < 1:
+        exit_status = 'not solved'
+        model._data["status"] = "not_solved"
+        model._data["exit_status"] = exit_status
 
-    elif model.status == 2 or model.status == 11:
-        if model.status == 11 and model.SolCount < 1:
-            # model.optimize(callback=cb)
-            # if model.SolCount <= 1:
-            exit_status = 'not solved'
-            return exit_status, [], [], None
+    elif model.status == 2 or (model.status == 11 and model.SolCount > 1):
+        if model.status == 2:
+            model._data["status"] = "optimal"
+        else:
+            # feasible. maybe be optimal.
+            model._data["status"] = "feasible"
+
         # --------- parse output
         d_vals = dict()
         f_vals = dict()
 
         for (i,j) in model_edges:
             f_vals.update({(i,j): f[i,j].X})
-        for (i,j) in model_edges_without_I:
+        for (i,j) in model_edges:
             d_vals.update({(i,j): d[i,j].X})
 
         flow = sum(f[i,j].X for (i,j) in model_edges if i in src)
@@ -319,17 +334,30 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = []):
         ncuts = 0
         for key in d_vals.keys():
             if d_vals[key] > 0.9:
-                ncuts += 1
+                ncuts+=1
                 print('{0} to {1} at {2}'.format(GD.node_dict[key[0]], GD.node_dict[key[1]],d_vals[key]))
         model._data["ncuts"] = ncuts
         exit_status = 'opt'
+        model._data["exit_status"] = exit_status
+
+    elif model.status == 3:
+        exit_status = 'inf'
+        model._data["status"] = "inf"
+        
 
     else:
         st()
 
     if not os.path.exists("log"):
         os.makedirs("log")
-    with open('log/opt_data.json', 'w') as fp:
-        json.dump(model._data, fp)
+    if logger is None:
+        with open('log/opt_data.json', 'w') as fp:
+            json.dump(model._data, fp)
+        with open('log/extra_opt_data.json', 'w') as fp:
+            json.dump(model._extra_data, fp)
+    else:
+        logger.save_optimization_data(model._data)
+        logger.save_optimization_data(model._extra_data, fn="extra_opt_data")
+        logger_runtime_dict["opt_runtimes"].append(model._data["runtime"])
 
     return exit_status, f_vals, d_vals, flow

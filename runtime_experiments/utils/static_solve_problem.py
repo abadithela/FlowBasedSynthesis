@@ -46,7 +46,7 @@ def solve_problem_w_fuel(virtual, system, b_pi, virtual_sys, callback = True, pr
         return exit_status, [], [], None
 
 
-def solve_problem(virtual, system, b_pi, virtual_sys, callback = True, print_solution=True, plot_results=True, instance_logger=None, logger_runtime_dict=None):
+def solve_problem(virtual, system, b_pi, virtual_sys, callback = "rand_cb", print_solution=True, plot_results=True, instance_logger=None, logger_runtime_dict=None):
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
 
     ti = time.time()

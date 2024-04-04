@@ -9,7 +9,7 @@ import itertools
 
 from static_examples.utils.solve_problem import solve_problem
 from static_examples.utils.get_graphs import get_graphs
-# from static_examples.utils.setup_logger import logger
+from static_examples.utils.setup_logger import setup_logger
 from ipdb import set_trace as st
 
 FIXED = True
@@ -50,13 +50,15 @@ def find_cuts(number_intermediates, problem_data = []):
     for k in range(number_intermediates):
         test_formula += ')'
     print(test_formula)
+    logger = setup_logger("sequencing")
 
+    virtual, system, b_pi, virtual_sys = get_graphs(sys_formula, test_formula, mazefile, init, ints, goals, logger=logger, obs=obs, save_figures=True)
 
-    virtual, system, b_pi, virtual_sys = get_graphs(sys_formula, test_formula, mazefile, init, ints, goals, obs)
-
-    exit_status, annot_cuts, flow, bypass  = solve_problem(virtual, system, b_pi, virtual_sys, callback = False)
+    exit_status, annot_cuts, flow, bypass  = solve_problem(virtual, system, b_pi, virtual_sys, callback = "exp_cb")
     print('exit status {0}'.format(exit_status))
-
+    logger.print_runtime_latex()
+    logger.print_problem_data_latex()
+    logger.print_table()
     return annot_cuts
 
 
