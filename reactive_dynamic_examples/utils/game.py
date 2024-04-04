@@ -19,6 +19,7 @@ class Game:
         self.tester = tester
         self.logger = logger
         self.timestep = 0
+        self.timestep_idx = 0
         self.trace = []
         self.replanned = False
         self.inv_state_map = None
@@ -28,7 +29,12 @@ class Game:
         self.turn = 'sys'
         # self.state_in_G, self.G, self.node_dict = self.setup()
         # self.setup()
-        self.setup_cex()
+        self.manual_trace = None
+        # self.setup_cex()
+        self.setup()
+
+    def set_manual_trace(self, manual_trace):
+        self.manual_trace = manual_trace
 
     def get_optimization_results(self, logger = None):
     # read pickle file - if not there save a new one
@@ -160,6 +166,12 @@ class Game:
             # resynthesize controller and add the blocked state!
             unsafe = (next_z,next_x)
             self.agent.resynthesize_controller(unsafe)
+        quadruped_move('system', (self.agent.z,self.agent.x))
+
+    def agent_take_step_alternative_manual_controller(self):
+        sys_pos = self.manual_trace[self.timestep_idx]
+        self.agent.agent_manual_move(sys_pos)
+        self.timestep_idx += 1
         quadruped_move('system', (self.agent.z,self.agent.x))
 
     def agent_take_manual_step(self):
