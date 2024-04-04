@@ -1,1 +1,1 @@
-{"opt_time": [], "best_obj": [], "bound": [], "node_count": [], "sol_count": [], "Feasibility": 9, "runtime": 0.0031609535217285156, "n_bin_vars": 25, "n_cont_vars": 120, "n_constrs": 419}
+{"n_cex": 0, "Feasibility": 9, "flow": 2.0, "ncuts": 4, "runtime": 0.005916118621826172, "n_bin_vars": 25, "n_cont_vars": 120, "n_constrs": 419, "exit_status": "opt"}

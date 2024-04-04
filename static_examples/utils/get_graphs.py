@@ -8,7 +8,7 @@ from ipdb import set_trace as st
 import time
 from components.parse_specification_product import *
 from components.transition_system import ProductTransys
-from components.tools import synchronous_product
+from components.tools import synchronous_product#, instant_pruned_sync_prod
 
 def get_graphs_from_network(sys_formula, test_formula, network, init, ints, goals, logger=None, obs=[], save_figures = False):
     runtimes = dict()
@@ -40,15 +40,17 @@ def get_graphs_from_network(sys_formula, test_formula, network, init, ints, goal
     virtual_sys = synchronous_product(system, b_sys)
     t_sys_fin = time.time()
     runtimes["Gsys"] = t_sys_fin - t_sys_init
+    print('Gsys ({0},{1})'.format(len(virtual_sys.S), len(virtual_sys.E)))
 
     # get virtual product
     t_graph_init = time.time()
     virtual = synchronous_product(system, b_pi)
     t_graph_fin = time.time()
     runtimes["G"] = t_graph_fin - t_graph_init
+    print('G ({0},{1})'.format(len(virtual.S), len(virtual.E)))
 
     # Save data:
-    if logger is not None:  
+    if logger is not None:
         save_data(logger, system, b_sys, b_test, b_pi, virtual, virtual_sys, runtimes)
 
     if save_figures:

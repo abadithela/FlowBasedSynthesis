@@ -47,6 +47,51 @@ class Product(ProductTransys):
         for e_out, e_in in self.E.items():
             print("node out: " + str(e_out) +  " node in: " + str(e_in))
 
+    def instant_pruned_sync_prod(self):
+        self.construct_labels()
+        self.E = dict()
+        aut_state_edges = [(si[0], sj) for si, sj in self.automaton.delta.items()]
+
+        nodes_to_add = []
+        s0 = self.transys.I[0]
+        q0 = self.automaton.qinit
+        nodes_to_add.append((s0, q0))
+        nodes_to_keep = []
+        nodes_to_keep.append((s0, q0))
+
+        while len(nodes_to_add) > 0:
+            next_nodes = []
+            for (s,q) in nodes_to_add:
+                for a in self.transys.A:
+                    if (s,a) in list(self.transys.E.keys()):
+                        t = self.transys.E[(s,a)]
+                        for p in self.automaton.Q:
+                            if (q,p) in aut_state_edges:
+                                label = self.transys.L[t]
+                                if self.automaton.get_transition(q, label) == p:
+                                    self.E[((s,q), a)] = (t,p)
+                                    if (t,p) not in nodes_to_keep:
+                                        nodes_to_keep.append((t,p))
+                                        next_nodes.append((t,p))
+            nodes_to_add = next_nodes
+
+        self.S = nodes_to_keep
+        self.G_initial = nx.DiGraph()
+        nodes = []
+        for node in self.S:
+            nodes.append(self.Sdict[node])
+        self.G_initial.add_nodes_from(nodes)
+        edges = []
+        for state_act, in_node in self.E.items():
+            out_node = state_act[0]
+            act = state_act[1]
+            s_out = self.Sdict[out_node]
+            s_in = self.Sdict[in_node]
+            edges.append((s_out, s_in))
+        self.G_initial.add_edges_from(edges)
+        self.identify_SIT()
+        self.to_graph()
+
     def construct_transitions(self):
         # Debug product
         self.E = dict()
@@ -193,7 +238,6 @@ class Product(ProductTransys):
                 e.attr['color'] = 'red'
                 e.attr['style'] = 'dashed'
                 e.attr['penwidth'] = 2.0
-        # st()
         G_agr.draw(fn+".pdf",prog='dot')
 
     def prune_unreachable_nodes(self):
@@ -222,6 +266,7 @@ class Product(ProductTransys):
 
     def base_dot_graph(self, graph=None):
         if graph == None:
+            st()
             G_agr = nx.nx_agraph.to_agraph(self.G)
         else:
             G_agr = nx.nx_agraph.to_agraph(graph)
@@ -247,6 +292,7 @@ class Product(ProductTransys):
         return G_agr
 
     def plot_product_dot(self, fn):
+        # st()
         G_agr = self.base_dot_graph(graph=self.G_initial)
         G_agr.draw(fn+"_dot.pdf",prog='dot')
 

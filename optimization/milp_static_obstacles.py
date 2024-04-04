@@ -83,7 +83,8 @@ def solve_min(GD, SD, focus=2, cuts=2, presolve = -1):
     def obj(model):
         flow = sum(model.f[i,j] for (i,j) in model.edges if i in src)
         ncuts = sum(model.d_aux[i,j] for (i,j) in model.edges)
-        return flow - 1e-3*ncuts
+        reg = 1/len(model_edges)
+        return flow - reg*ncuts
     model.o = pyo.Objective(rule=obj, sense=pyo.maximize)
 
     # Constraints
