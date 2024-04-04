@@ -1,16 +1,16 @@
 \begin{table}[h!]
 \centering
-\begin{tabular}{l|l}
+\begin{tabular}{c|c}
 \hline
-patrol_car & 2024-03-25 14:38:41.686678 \\
+quadruped_plus & 2024-03-31 15:49:29.330145 \\
 \hline
 Object & Value \\
 Transition System & (386, 1153) \\
 Buchi (System) & (3, 6) \\
 Buchi (Test) & (2, 3) \\
 Buchi (Product) & (6, 18) \\
-Gsys & (1158, 3459) \\
-G & (2316, 6918) \\
+Gsys & (142, 410) \\
+G & (210, 621) \\
 \hline
 \end{tabular}
 \caption{Caption here}

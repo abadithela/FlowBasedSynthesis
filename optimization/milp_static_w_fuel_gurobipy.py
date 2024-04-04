@@ -205,12 +205,12 @@ def solve_max_gurobi(GD, SD, callback="exp_cb",logger=None, logger_runtime_dict=
 
 
     # ---------  add bidirectional cuts on G
-    # for count, (i,j) in enumerate(model_edges):
-    #     out_state = GD.node_dict[i][0][0]
-    #     in_state = GD.node_dict[j][0][0]
-    #     for (imap,jmap) in model_edges[count+1:]:
-    #         if in_state == GD.node_dict[imap][0][0] and out_state == GD.node_dict[jmap][0][0]:
-    #             model.addConstr(d[i, j] == d[imap, jmap])
+    for count, (i,j) in enumerate(model_edges):
+        out_state = GD.node_dict[i][0][0]
+        in_state = GD.node_dict[j][0][0]
+        for (imap,jmap) in model_edges[count+1:]:
+            if in_state == GD.node_dict[imap][0][0] and out_state == GD.node_dict[jmap][0][0]:
+                model.addConstr(d[i, j] == d[imap, jmap])
 
 
     # --------- set parameters
@@ -238,7 +238,7 @@ def solve_max_gurobi(GD, SD, callback="exp_cb",logger=None, logger_runtime_dict=
     model._data["n_bin_vars"] = model.NumBinVars
     model._data["n_cont_vars"] = model.NumVars - model.NumBinVars
     model._data["n_constrs"] = model.NumConstrs
-    
+
     f_vals = []
     d_vals = []
     flow = None
@@ -249,13 +249,13 @@ def solve_max_gurobi(GD, SD, callback="exp_cb",logger=None, logger_runtime_dict=
 
         exit_status = 'inf'
         model._data["status"] = "inf/unbounded"
-        
+
 
     elif model.status == 11 and model.SolCount < 1:
             # model.optimize(callback=cb)
             # if model.SolCount <= 1:
             exit_status = 'not solved'
-        
+
             model._data["status"] = "not_solved"
             model._data["exit_status"] = exit_status
 
@@ -266,7 +266,7 @@ def solve_max_gurobi(GD, SD, callback="exp_cb",logger=None, logger_runtime_dict=
         else:
             # feasible. maybe be optimal.
             model._data["status"] = "feasible"
-            
+
         d_vals = dict()
         f_vals = dict()
 
@@ -289,7 +289,7 @@ def solve_max_gurobi(GD, SD, callback="exp_cb",logger=None, logger_runtime_dict=
     elif model.status == 3:
         exit_status = 'inf'
         model._data["status"] = "inf"
-        
+
     else:
         st()
 

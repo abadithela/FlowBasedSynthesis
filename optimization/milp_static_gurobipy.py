@@ -173,26 +173,26 @@ def solve_max_gurobi(GD, SD, callback="exp_cb", logger=None, logger_runtime_dict
 
     # --------- add feasibility constraints to preserve flow f_s on S
     # f_s = model.addVars(model_s_edges, name="flow_on_S")
-    
+
     # # nonnegativitiy for f_s (lower bound)
     # model.addConstrs((f_s[i, j] >= 0 for (i,j) in model_s_edges), name='f_s_nonneg')
-    
+
     # # capacity on S (upper bound on f_s)
     # model.addConstrs((f_s[i, j] <= 1 for (i,j) in model_s_edges), name='capacity_f_S')
-    
+
     # # Match the edge cuts from G to S
     # for (i,j) in model_edges:
     #     imap = map_G_to_S[i]
     #     jmap = map_G_to_S[j]
     #     if (imap,jmap) in model_s_edges:
     #         model.addConstr(f_s[imap, jmap] + d[i, j] <= 1)
-    
+
     # # Preserve flow of 1 in S
     # model.addConstr((1 <= sum(f_s[i,j] for (i, j) in model_s_edges if i == s_src)), name='conserve_F_on_S')
-    
+
     # # conservation on S
     # model.addConstrs((sum(f_s[i,j] for (i,j) in model_s_edges if j == l) == sum(f_s[i,j] for (i,j) in model_s_edges if i == l) for l in model_s_nodes if l != s_src and l not in s_sink), name='conservation_f_S')
-    
+
     # # no flow into sources and out of sinks on S
     # model.addConstrs((f_s[i,j] == 0 for (i,j) in model_s_edges if j == s_src or i in s_sink), name="no_out_sink_in_src_on_S")
 
@@ -233,7 +233,7 @@ def solve_max_gurobi(GD, SD, callback="exp_cb", logger=None, logger_runtime_dict
         model.optimize(callback=rand_cb)
     else:
         model.optimize()
-    
+
     model._data["runtime"] = model.Runtime
     model._data["flow"] = None
     model._data["ncuts"] = None
@@ -248,7 +248,7 @@ def solve_max_gurobi(GD, SD, callback="exp_cb", logger=None, logger_runtime_dict
     d_vals = []
     flow = None
     exit_status = None
-    
+
     if model.status == 4:
         model.Params.DualReductions = 0
         # model.optimize(callback="exp_cb")
@@ -290,7 +290,7 @@ def solve_max_gurobi(GD, SD, callback="exp_cb", logger=None, logger_runtime_dict
         flow = sum(f[i,j].X for (i,j) in model_edges if i in src)
         model._data["flow"] = flow
         ncuts = 0
-        
+
         for key in d_vals.keys():
             if d_vals[key] > 0.9:
                 ncuts+=1
@@ -318,5 +318,5 @@ def solve_max_gurobi(GD, SD, callback="exp_cb", logger=None, logger_runtime_dict
         logger.save_optimization_data(model._data)
         logger.save_optimization_data(model._extra_data, fn="extra_opt_data")
         logger_runtime_dict["opt_runtimes"].append(model._data["runtime"])
-    
+
     return exit_status, f_vals, d_vals, flow

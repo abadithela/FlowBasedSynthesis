@@ -88,12 +88,14 @@ def get_graphs_from_network(sys_formula, test_formula, network, init, ints, goal
     virtual_sys = synchronous_product(system, b_sys)
     t_sys_fin = time.time()
     runtimes["Gsys RT"] = t_sys_fin - t_sys_init
+    print('Gsys ({0},{1})'.format(len(virtual_sys.S), len(virtual_sys.E)))
 
     # get virtual product
     t_graph_init = time.time()
     virtual = synchronous_product(system, b_pi)
     t_graph_fin = time.time()
     runtimes["G RT"] = t_graph_fin - t_graph_init
+    print('G ({0},{1})'.format(len(virtual.S), len(virtual.E)))
 
     # Saving data:
     if logger:

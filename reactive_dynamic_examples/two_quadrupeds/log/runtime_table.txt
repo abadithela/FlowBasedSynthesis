@@ -1,14 +1,14 @@
 \begin{table}[h!]
 \centering
-\begin{tabular}{l|l}
+\begin{tabular}{c|c}
 \hline
 Process & Runtime (s) \\
 \hline
-b_sys & 0.0004048347473144531 \\
-b_test & 0.0006589889526367188 \\
-b_prod & 0.0012149810791015625 \\
-Gsys & 0.03278493881225586 \\
-G & 15.35477590560913 \\
+b_sys & 0.001416921615600586 \\
+b_test & 0.0016520023345947266 \\
+b_prod & 0.002989053726196289 \\
+Gsys & 0.059220075607299805 \\
+G & 29.31553888320923 \\
 \hline
 \end{tabular}
 \caption{Caption here}

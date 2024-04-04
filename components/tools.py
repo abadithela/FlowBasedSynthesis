@@ -17,12 +17,19 @@ def conjunction(formula_list):
 def disjunction(formula_list):
     return spot.formula.Or(formula_list)
 
+def instant_pruned_sync_prod(system, aut):
+    prod = Product(system, aut)
+    prod.instant_pruned_sync_prod()
+    return prod
+
 def synchronous_product(system, aut):
     '''
     Compute the synchronous product of sys(TS) x aut(B).
     '''
-    prod = Product(system, aut)
-    prod.construct_labels()
-    prod.construct_transitions()
-    prod.prune_unreachable_nodes()
+    # prod = Product(system, aut)
+    # prod.construct_labels()
+    # prod.construct_transitions()
+    # prod.prune_unreachable_nodes()
+
+    prod = instant_pruned_sync_prod(system, aut)
     return prod

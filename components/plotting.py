@@ -57,12 +57,12 @@ def plot_flow_on_maze(maze, cuts, num_int=1):
                     ax.add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.5))
                 elif (j,i) in maze.int:
                     ax.add_patch(Rectangle((x, y), w, h, fill=True, color='#648fff', alpha=.3))
-                    ax.text(x+tilesize*0.45, y+tilesize*0.65, r'$'+maze.int[(j,i)]+'$', fontsize = 25)
+                    ax.text(x+tilesize*0.5, y+tilesize*0.5, r'$'+maze.int[(j,i)]+'$', fontsize = 25, rotation=-90, horizontalalignment='center', verticalalignment='center', rotation_mode='anchor')
                 elif (j,i) in maze.goal:
                     ax.add_patch(Rectangle((x, y), w, h, fill=True, color='#ffb000', alpha=.3))
-                    ax.text(x+tilesize*0.4, y+tilesize*0.65, r'$T$', fontsize = 25)
+                    ax.text(x+tilesize*0.5, y+tilesize*0.5, r'$T$', fontsize = 25, rotation=-90, horizontalalignment='center', verticalalignment='center', rotation_mode='anchor')
                 elif (j,i) in maze.init:
-                    ax.text(x+tilesize*0.4, y+tilesize*0.65, r'$S$', fontsize = 25)
+                    ax.text(x+tilesize*0.5, y+tilesize*0.5, r'$S$', fontsize = 25, rotation=-90, horizontalalignment='center', verticalalignment='center', rotation_mode='anchor')
                 elif maze.map[j,i]==' ':
                     ax.add_patch(Rectangle((x, y), w, h, fill=True, color='#ffffff'))
                     # if (j,i) in maze.init:

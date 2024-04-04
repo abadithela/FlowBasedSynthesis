@@ -1,1 +1,1 @@
-{"opt_time": [], "best_obj": [], "bound": [], "node_count": [], "sol_count": [], "runtime": 13.082255125045776, "n_bin_vars": 13178, "n_cont_vars": 20225, "n_constrs": 1667897}
+{"opt_time": [], "best_obj": [], "bound": [], "node_count": [], "sol_count": [], "runtime": 41.27319097518921, "n_bin_vars": 13178, "n_cont_vars": 20225, "n_constrs": 1667897}
