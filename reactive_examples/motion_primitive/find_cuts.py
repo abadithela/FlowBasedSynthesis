@@ -20,12 +20,14 @@ def find_cuts(network):
 
     intstr = ''.join('%s = %s, ' % (val,key) for (key,val) in INTS.items())
     print('S = '+str(INIT)+', '+intstr+' T = '+str(GOALS))
-    logger = setup_logger("simple_gridworld")
+    logger = setup_logger("motion_primitive")
     virtual, system, b_pi, virtual_sys = get_graphs_from_network(SYS_FORMULA, TEST_FORMULA, network, INIT, INTS, GOALS, logger)
 
     exit_status, annot_cuts, flow, bypass, GD, SD = solve_problem(virtual, system, b_pi, virtual_sys)
     print('exit status {0}'.format(exit_status))
-
+    logger.print_runtime_latex()
+    logger.print_problem_data_latex()
+    logger.print_table()
     return annot_cuts, GD, SD
 
 

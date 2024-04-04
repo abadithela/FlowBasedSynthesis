@@ -45,7 +45,7 @@ def find_cuts(logger=None):
     logger = setup_logger("two_quadruped")
     virtual, system, b_pi, virtual_sys = get_graphs(SYS_FORMULA, TEST_FORMULA, MAZEFILE, INIT, INTS, GOALS, logger)
 
-    exit_status, annot_cuts, flow, bypass, GD, SD = solve_problem(virtual, system, b_pi, virtual_sys)
+    exit_status, annot_cuts, flow, bypass, GD, SD = solve_problem(virtual, system, b_pi, virtual_sys,callback="exp_cb")
     print('exit status {0}'.format(exit_status))
 
     logger.print_runtime_latex()

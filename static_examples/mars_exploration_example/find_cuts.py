@@ -29,7 +29,7 @@ def find_cuts(network):
     logger = setup_logger("mars_exploration")
     virtual, system, b_pi, virtual_sys = get_graphs_from_network(SYS_FORMULA, TEST_FORMULA, network, INIT, INTS, GOALS, logger,save_figures = False)
 
-    exit_status, annot_cuts, flow, bypass = solve_problem_w_fuel(virtual, system, b_pi, virtual_sys, callback=True)
+    exit_status, annot_cuts, flow, bypass = solve_problem_w_fuel(virtual, system, b_pi, virtual_sys, callback="exp_cb")
     print('exit status {0}'.format(exit_status))
 
     opt_dict = {'cuts': annot_cuts}

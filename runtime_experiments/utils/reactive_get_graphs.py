@@ -20,17 +20,17 @@ def get_graphs(sys_formula, test_formula, mazefile, init, ints, goals, instance_
     t0 = time.time()
     b_sys = get_system_automaton(sys_formula)
     t_sys = time.time()
-    runtimes["b_sys"] = t_sys - t0
+    runtimes["Buchi (Sys)"] = t_sys - t0
 
     t_test_init = time.time()
     b_test = get_tester_automaton(test_formula)
     t_test_fin = time.time()
-    runtimes["b_test"] = t_test_fin - t_test_init
+    runtimes["Buchi (Test)"] = t_test_fin - t_test_init
 
     t_prod_init = time.time()
     b_pi = get_prod_automaton(sys_formula, test_formula)
     t_prod_fin = time.time()
-    runtimes["b_prod"] = t_prod_fin - t_prod_init
+    runtimes["Buchi (Product)"] = t_prod_fin - t_prod_init
 
     # get system
     system = ProductTransys()
@@ -40,17 +40,17 @@ def get_graphs(sys_formula, test_formula, mazefile, init, ints, goals, instance_
     t_sys_init = time.time()
     virtual_sys = synchronous_product(system, b_sys)
     t_sys_fin = time.time()
-    runtimes["Gsys"] = t_sys_fin - t_sys_init
+    runtimes["Gsys RT"] = t_sys_fin - t_sys_init
 
     # get virtual product
     t_graph_init = time.time()
     virtual = synchronous_product(system, b_pi)
     t_graph_fin = time.time()
-    runtimes["G"] = t_graph_fin - t_graph_init
+    runtimes["G RT"] = t_graph_fin - t_graph_init
 
     # Saving data:
     save_data(instance_logger, system, b_sys, b_test, b_pi, virtual, virtual_sys, runtimes)
-    logger_runtime_dict["graph_runtimes"].append(runtimes["G"])
+    logger_runtime_dict["graph_runtimes"].append(runtimes["G RT"])
 
     if save_figures:
         if not os.path.exists('imgs'):

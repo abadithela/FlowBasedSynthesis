@@ -15,7 +15,7 @@ def solve_problem(virtual, system, b_pi, virtual_sys, print_solution=True, plot_
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
 
     ti = time.time()
-    exit_status, ftest, d, flow = solve_max_gurobi(GD, SD, logger = instance_logger, logger_runtime_dict=logger_runtime_dict)
+    exit_status, ftest, d, flow = solve_max_gurobi(GD, SD, callback="rand_cb",logger = instance_logger, logger_runtime_dict=logger_runtime_dict)
     tf = time.time()
     del_t = tf-ti
 
