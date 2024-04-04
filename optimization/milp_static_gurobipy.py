@@ -45,7 +45,7 @@ def rand_cb(model, where):
         # Current objective is less than infinity.
 
         # if obj < float(np.inf):
-        if sol_count > 1:
+        if sol_count >= 1:
             if time.time() - model._time > 60:
                 model._data["term_condition"] = "Obj not changing"
                 model.terminate()

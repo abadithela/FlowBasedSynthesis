@@ -87,7 +87,6 @@ def static_random_experiments(mazefiles, nruns, obs_coverage=0):
         
         with open("runtimes.txt", "a") as f:
             f.write(f"Completed gridsize {gridsize}. \n")
-        f.write(" ------------------------------ \n")
 
     logger.save_experiment_data()
 
@@ -118,20 +117,19 @@ def reactive_random_experiments(mazefiles, nruns, obs_coverage=0):
                 else:
                     reactive_grids_evaluated.append(grid)
                     feasible_reactive_grid = True
-
+            
             if reactive_attempts == 50:
                 raise ValueError("Cannot run as many instances; increase grid size or decrease instances")
         
         with open("runtimes.txt", "a") as f:
             f.write(f"Completed gridsize {gridsize}. \n")
-        f.write(" ------------------------------ \n")
 
     logger.save_experiment_data()
 
 if __name__ == "__main__":
     mazefiles = {3: 'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt', 6: 'mazes/6x6.txt', 7: 'mazes/7x7.txt',8: 'mazes/8x8.txt', 9: 'mazes/9x9.txt',10: 'mazes/10x10.txt', 25:'mazes/25x25.txt', 50:'mazes/50x50.txt'}
     mazefiles = {3:'mazes/3x3.txt', 4: 'mazes/4x4.txt', 5: 'mazes/5x5.txt',10: 'mazes/10x10.txt', 15: 'mazes/15x15.txt',20: 'mazes/20x20.txt'}
-    # mazefiles = {20: 'mazes/20x20.txt', 25: 'mazes/25x25.txt', 30: 'mazes/30x30.txt'}
+    # mazefiles = {25: 'mazes/25x25.txt', 30: 'mazes/30x30.txt'}
     nruns = 20
     obs_coverage = 0
     with open("runtimes.txt", "a") as f:
