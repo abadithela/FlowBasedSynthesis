@@ -30,7 +30,7 @@ def find_graphs(logger = None):
     virtual, system, b_pi, virtual_sys = get_graphs(SYS_FORMULA, TEST_FORMULA, MAZEFILE, INIT, INTS, GOALS, logger)
     return virtual, system, b_pi, virtual_sys
 
-def solve_opt(virtual, system, b_pi, virtual_sys, logger = None, excluded_sols = [], load_sol=False, save_figures=False):
+def solve_opt(virtual, system, b_pi, virtual_sys, logger = None, excluded_sols = [], load_sol=True, save_figures=False):
     exit_status, annot_cuts, flow, bypass, GD, SD = solve_problem_augmented(virtual, system, b_pi, virtual_sys, static_area=static_area, excluded_sols=excluded_sols)
     print('exit status {0}'.format(exit_status))
     logger.print_runtime_latex()
