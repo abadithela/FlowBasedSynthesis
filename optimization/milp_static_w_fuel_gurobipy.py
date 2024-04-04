@@ -45,7 +45,7 @@ def rand_cb(model, where):
 
         # Terminate if objective has not improved
         # Current objective is less than infinity.
-        if sol_count > 1:
+        if sol_count >= 1:
             if time.time() - model._time > 120:
                 model._data["term_condition"] = "Obj not changing"
                 model.terminate()
@@ -259,7 +259,7 @@ def solve_max_gurobi(GD, SD, callback="exp_cb",logger=None, logger_runtime_dict=
             model._data["status"] = "not_solved"
             model._data["exit_status"] = exit_status
 
-    elif model.status == 2 or (model.status == 11 and model.SolCount > 1):
+    elif model.status == 2 or (model.status == 11 and model.SolCount >= 1):
         # --------- parse output
         if model.status == 2:
             model._data["status"] = "optimal"
