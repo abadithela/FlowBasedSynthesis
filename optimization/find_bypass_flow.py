@@ -7,9 +7,9 @@ import numpy as np
 from ipdb import set_trace as st
 import os
 import networkx as nx
-from pao.pyomo import *
-import pyomo.environ as pyo
-from pyomo.opt import SolverFactory
+#from pao.pyomo import *
+#import pyomo.environ as pyo
+#from pyomo.opt import SolverFactory
 from copy import deepcopy
 from optimization.max_flow import max_flow
 
