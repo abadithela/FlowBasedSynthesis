@@ -13,7 +13,7 @@ for the following grid:
 import sys
 sys.path.append('../..')
 from ipdb import set_trace as st
-
+# sys.path.append('..')
 from static_examples.utils.solve_problem import solve_problem
 from static_examples.utils.get_graphs import get_graphs
 from static_examples.medium_example.problem_data import *

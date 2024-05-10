@@ -12,7 +12,7 @@ except:
 import spot
 import pdb
 from ast import literal_eval as make_tuple
-from buddy import bddtrue
+#from buddy import bddtrue
 spot.setup()
 import matplotlib.pyplot as plt
 from itertools import chain, combinations

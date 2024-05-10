@@ -7,6 +7,7 @@ import networkx as nx
 from pao.pyomo import *
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
+from ipdb import set_trace as st
 
 def max_flow_value(graph, start, goal, cuts):
     max_f = max_flow(graph, start, goal, cuts)
