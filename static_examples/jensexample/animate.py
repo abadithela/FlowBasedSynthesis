@@ -15,13 +15,12 @@ import imageio
 import sys
 sys.path.append('..')
 sys.path.append('../..')
-# sys.path.append(r'path/to/python module file')
 from static_examples.jensexample.problem_data import *
 from components.maze_network import MazeNetwork
 
 
 TILESIZE = 50
-GRID_LINES = False
+GRID_LINES = True
 
 main_dir = os.path.dirname(os.path.dirname(os.path.realpath("__file__")))
 car_figure = main_dir + '/jensexample/imglib/robot.png'
@@ -30,7 +29,7 @@ def draw_maze(orig_maze):
     plt.rcParams.update({"text.usetex": True,"font.family": "Helvetica"})
     maze = orig_maze.map
     size = max(maze.keys())
-    z_min = -1 * TILESIZE
+    z_min = 0
     z_max = (size[0]+1) * TILESIZE
     x_min = 0
     x_max = (size[1]+1) * TILESIZE
@@ -53,26 +52,19 @@ def draw_maze(orig_maze):
                 elif (i,k) in GOALS:
                     tile = patches.Rectangle((z_tiles[k],x_tiles[i]), TILESIZE, TILESIZE, fill=True, color='#ffb000', alpha=.3)
                     ax.text(z_tiles[k]+TILESIZE*0.5, x_tiles[i]+TILESIZE*0.5, r'$T$', fontsize = 25, rotation=0, horizontalalignment='center', verticalalignment='center', rotation_mode='anchor')
-                elif i % 2 == k % 2:
-                    tile = patches.Rectangle((z_tiles[k],x_tiles[i]),TILESIZE,TILESIZE,linewidth=1,facecolor='gray', alpha=0.3)
                 else:
-                    tile = patches.Rectangle((z_tiles[k],x_tiles[i]),TILESIZE,TILESIZE, fill=True, color='gray', alpha=.1)
+                    tile = patches.Rectangle((z_tiles[k],x_tiles[i]),TILESIZE,TILESIZE, fill=True, color='lightgray', alpha=.1)
             elif maze[(i,k)] == '*':
                 tile = patches.Rectangle((z_tiles[k],x_tiles[i]),TILESIZE,TILESIZE,linewidth=1,facecolor='k', alpha=0.8)
             road_tiles.append(tile)
-    # add empty row on top
-    z_top = -1 * TILESIZE
-    for i in np.arange(0,size[0]+1):
-        tile = patches.Rectangle((z_top,x_tiles[i]),TILESIZE,TILESIZE,linewidth=1,facecolor='white', alpha=1)
-        road_tiles.append(tile)
 
     ax.add_collection(PatchCollection(road_tiles, match_original=True))
     # grid lines
     if GRID_LINES:
         for z in z_tiles:
-            plt.plot([z, z], [x_tiles[0], x_tiles[-1]], color='black', alpha=.33, linestyle=':')
+            plt.plot([z, z], [x_tiles[0], x_tiles[-1]], color='black', alpha=.33)
         for x in x_tiles:
-            plt.plot([z_tiles[0], z_tiles[-1]], [x, x], color='black', alpha=.33, linestyle=':')
+            plt.plot([z_tiles[0], z_tiles[-1]], [x, x], color='black', alpha=.33)
     plt.gca().invert_yaxis()
 
 def draw_sys(pac_data, theta_d):
