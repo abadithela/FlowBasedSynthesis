@@ -380,12 +380,11 @@ def make_history_plots(cuts, GD, maze):
                         axs[k].text(x+tilesize*0.5, y+tilesize*0.5, r'$T$', fontsize = 25, rotation=0, horizontalalignment='center', verticalalignment='center', rotation_mode='anchor')
                     elif maze.map[j,i]==' ':
                         axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='#ffffff', alpha=.2))
-                    elif maze.map[j,i]=='S':
+                        if (j,i) in maze.init:
+                            axs[k].text(x+tilesize*0.5, y+tilesize*0.5, r'$S$', fontsize = 25,rotation=0, horizontalalignment='center', verticalalignment='center', rotation_mode='anchor')
+                    elif maze.map[j,i]=='S' or (j,i) in maze.init:
                         axs[k].text(x+tilesize*0.5, y+tilesize*0.5, r'$S$', fontsize = 25,rotation=0, horizontalalignment='center', verticalalignment='center', rotation_mode='anchor')
-                    # elif maze.map[j,i]=='R':
-                    #     axs[k].text(x+tilesize*0.5, y+tilesize*0.5, r'$R$', fontsize = 25,rotation=0, horizontalalignment='center', verticalalignment='center', rotation_mode='anchor')
-            # grid lines
-            # grid lines
+
             for x in xs:
                 axs[k].plot([x, x], [ys[0], ys[-1]], color='black', alpha=.33)
             for y in ys:

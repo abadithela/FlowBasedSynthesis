@@ -141,15 +141,17 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = [], callback="exp
     m = model.addVars(model_nodes_without_I, name="m")
 
     # to count incoming cuts
-    # inc = model.addVars(model_nodes, name="inc")
+    inc = model.addVars(model_nodes, name="inc")
 
     # Define Objective
     term = sum(f[i,j] for (i, j) in model_edges if i in src)
     ncuts = sum(d[i,j] for (i, j) in model_edges)
-    # ncuts_weighted = sum(inc[i] for i in model_nodes)
-    regularizer = 1/len(model_edges)
+    ncuts_weighted = sum(inc[i] for i in model_nodes)
+    n_nodes = len(model_nodes)
+    n_edges = len(model_edges)
 
-    model.setObjective(term - regularizer*ncuts, GRB.MAXIMIZE)
+    model.setObjective(term - 1/(1+n_edges)*ncuts - 1/((1+n_edges)*n_nodes)*ncuts_weighted, GRB.MAXIMIZE)
+
 
     # Nonnegativity - lower bounds
     model.addConstrs((d[i, j] >= 0 for (i,j) in model_edges), name='d_nonneg')
@@ -286,7 +288,8 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = [], callback="exp
     # --- Exclude specific solutions that cannot be realized
     # st()
     for excluded_sol in excluded_sols:
-        model.addConstr(sum(d[i, j] for (i,j) in excluded_sol) <= len(excluded_sol)-1)
+        # model.addConstr(sum(d[i, j] for (i,j) in excluded_sol) <= len(excluded_sol)-1)
+        model.addConstr(sum(d[i, j] for (i,j) in model_edges) - sum(d[i, j] for (i,j) in excluded_sol) >= 1)
     model._data["n_cex"] = len(excluded_sols)
 
     # model.Params.InfUnbdInfo = 1
