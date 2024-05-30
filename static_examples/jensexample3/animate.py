@@ -75,12 +75,12 @@ def draw_maze(orig_maze):
         for xi,x in enumerate(x_tiles):
             if ((xi,zi), (xi,zi+1)) in CUTS:
                 plt.plot([z+TILESIZE, z+TILESIZE], [x, x+TILESIZE], color='black', alpha=1, linewidth = 5)
-            # if ((xi,zi), (xi+1,zi)) in CUTS:
-            #     plt.plot([z, z+TILESIZE], [x+TILESIZE, x+TILESIZE], color='black', alpha=1, linewidth = 5)
-            # if ((xi,zi), (xi,zi-1)) in CUTS:
-            #     plt.plot([z-TILESIZE, z-TILESIZE], [x, x+TILESIZE], color='black', alpha=1, linewidth = 5)
-            # if ((xi,zi), (xi-1,zi)) in CUTS:
-            #     plt.plot([z, z+TILESIZE], [x-TILESIZE, x-TILESIZE], color='black', alpha=1, linewidth = 5)
+            if ((xi,zi), (xi+1,zi)) in CUTS:
+                plt.plot([z, z+TILESIZE], [x+TILESIZE, x+TILESIZE], color='black', alpha=1, linewidth = 5)
+            if ((xi,zi), (xi,zi-1)) in CUTS:
+                plt.plot([z, z], [x, x+TILESIZE], color='black', alpha=1, linewidth = 5)
+            if ((xi,zi), (xi-1,zi)) in CUTS:
+                plt.plot([z, z+TILESIZE], [x, x], color='black', alpha=1, linewidth = 5)
 
     plt.gca().invert_yaxis()
 
