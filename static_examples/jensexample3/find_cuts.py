@@ -11,12 +11,12 @@ for the following grid:
 -----------
 '''
 import sys
+from problem_data import *
 sys.path.append('../..')
 from ipdb import set_trace as st
 # sys.path.append('..')
 from static_examples.utils.solve_problem import solve_problem
 from static_examples.utils.get_graphs import get_graphs
-from static_examples.jensexample3.problem_data import *
 from static_examples.utils.setup_logger import setup_logger
 
 def find_cuts():

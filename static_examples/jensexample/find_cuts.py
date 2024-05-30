@@ -11,12 +11,12 @@ for the following grid:
 -----------
 '''
 import sys
+from problem_data import *
 sys.path.append('../..')
 from ipdb import set_trace as st
 # sys.path.append('..')
 from static_examples.utils.solve_problem import solve_problem
 from static_examples.utils.get_graphs import get_graphs
-from static_examples.jensexample.problem_data import *
 from static_examples.utils.setup_logger import setup_logger
 
 def find_cuts():
@@ -25,13 +25,14 @@ def find_cuts():
     # Logger to save runtimes
     logger = setup_logger("jensexample")
     virtual, system, b_pi, virtual_sys = get_graphs(SYS_FORMULA, TEST_FORMULA, MAZEFILE, INIT, INTS, GOALS, logger, save_figures = True)
-    st()
+    # st()
     exit_status, annot_cuts, flow, bypass = solve_problem(virtual, system, b_pi, virtual_sys)
     print('exit status {0}'.format(exit_status))
 
-    logger.print_runtime_latex()
-    logger.print_problem_data_latex()
-    logger.print_table()
+    # logger.print_runtime_latex()
+    # logger.print_problem_data_latex()
+    # logger.print_table()
+    # st()
     return annot_cuts
 
 

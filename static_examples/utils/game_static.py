@@ -35,6 +35,7 @@ class Game:
         # st()
         cuts = list(set(cuts))
         for cut in cuts:
+            # st()
             self.maze.add_cut(cut)
         self.agent.find_controller(self.maze)
 

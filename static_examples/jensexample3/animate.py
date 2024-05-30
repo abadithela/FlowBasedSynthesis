@@ -17,6 +17,8 @@ from problem_data import *
 sys.path.append('..')
 sys.path.append('../..')
 from components.maze_network import MazeNetwork
+from static_examples.utils.helper import load_opt_from_pkl_file
+from ipdb import set_trace as st
 
 
 TILESIZE = 50
@@ -24,6 +26,8 @@ GRID_LINES = True
 
 main_dir = os.path.dirname(os.path.dirname(os.path.realpath("__file__")))
 car_figure = main_dir + '/jensexample/imglib/robot.png'
+
+CUTS = list(set(load_opt_from_pkl_file()))
 
 def draw_maze(orig_maze):
     plt.rcParams.update({"text.usetex": True,"font.family": "Helvetica"})
@@ -65,6 +69,19 @@ def draw_maze(orig_maze):
             plt.plot([z, z], [x_tiles[0], x_tiles[-1]], color='black', alpha=.33)
         for x in x_tiles:
             plt.plot([z_tiles[0], z_tiles[-1]], [x, x], color='black', alpha=.33)
+
+    width = TILESIZE/20
+    for zi,z in enumerate(z_tiles):
+        for xi,x in enumerate(x_tiles):
+            if ((xi,zi), (xi,zi+1)) in CUTS:
+                plt.plot([z+TILESIZE, z+TILESIZE], [x, x+TILESIZE], color='black', alpha=1, linewidth = 5)
+            # if ((xi,zi), (xi+1,zi)) in CUTS:
+            #     plt.plot([z, z+TILESIZE], [x+TILESIZE, x+TILESIZE], color='black', alpha=1, linewidth = 5)
+            # if ((xi,zi), (xi,zi-1)) in CUTS:
+            #     plt.plot([z-TILESIZE, z-TILESIZE], [x, x+TILESIZE], color='black', alpha=1, linewidth = 5)
+            # if ((xi,zi), (xi-1,zi)) in CUTS:
+            #     plt.plot([z, z+TILESIZE], [x-TILESIZE, x-TILESIZE], color='black', alpha=1, linewidth = 5)
+
     plt.gca().invert_yaxis()
 
 def draw_sys(pac_data, theta_d):

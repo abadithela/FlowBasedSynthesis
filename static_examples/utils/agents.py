@@ -40,15 +40,17 @@ class Quadruped:
         # add the dynamics for the system
         dynamics_spec =  maze.transition_specs('z','x')
         sys_safe |= dynamics_spec
+        # stay at goal
+        sys_safe |= {goalstr + '-> X('+goalstr+')' }
 
         if self.aux_formula['var']:
             sys_vars[self.aux_formula['var']] = 'boolean'
         if self.aux_formula['safe']:
-            sys_safe |= {self.aux_formula['safe']}
+            sys_safe |= self.aux_formula['safe']
         if self.aux_formula['init']:
-            sys_init |= {self.aux_formula['init']}
+            sys_init |= self.aux_formula['init']
         if self.aux_formula['prog']:
-            sys_prog |= {self.aux_formula['prog']}
+            sys_prog |= self.aux_formula['prog']
 
         env_vars = {}
         env_safe = set()

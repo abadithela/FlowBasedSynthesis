@@ -1,6 +1,7 @@
 # Simulate System under Test for static example
 
 import sys
+from problem_data import *
 sys.path.append('../..')
 import os
 
@@ -8,7 +9,6 @@ from components.maze_network import MazeNetwork
 from static_examples.utils.agents import Quadruped
 from static_examples.utils.game_static import Game
 from static_examples.utils.helper import *
-from problem_data import *
 
 def new_World(mazefile):
     network = MazeNetwork(mazefile)
