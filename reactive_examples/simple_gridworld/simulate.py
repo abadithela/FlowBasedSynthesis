@@ -6,7 +6,7 @@ import os
 
 from components.maze_network import MazeNetwork
 from reactive_examples.utils.agents import Quadruped
-from reactive_examples.utils.game_static import Game
+from reactive_examples.utils.game_reactive import Game
 from reactive_examples.utils.helper import *
 from problem_data import *
 

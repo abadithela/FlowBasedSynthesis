@@ -11,9 +11,9 @@ from optimization.milp_static_gurobipy import solve_max_gurobi
 from optimization.milp_static_w_fuel_gurobipy import solve_max_gurobi as solve_max_gurobi_w_fuel
 
 from components.setup_graphs import setup_nodes_and_edges
-from components.plotting import highlight_cuts, plot_flow_on_maze, plot_flow_on_maze_w_fuel
+from components.plotting import highlight_cuts, plot_flow_on_maze, plot_flow_on_maze_w_fuel, plot_maze_new_colors, plot_maze_new_colors_w_fuel, plot_flow_soln_on_maze, plot_flow_soln_on_maze_w_fuel, highlight_path
 
-def solve_problem_w_fuel(virtual, system, b_pi, virtual_sys, callback = True, print_solution=True, plot_results=True):
+def solve_problem_w_fuel(virtual, system, b_pi, virtual_sys, callback = "exp_cb", print_solution=True, plot_results=True):
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
 
     ti = time.time()
@@ -38,7 +38,11 @@ def solve_problem_w_fuel(virtual, system, b_pi, virtual_sys, callback = True, pr
         if plot_results:
             # highlight_cuts(cuts, GD, SD, virtual, virtual_sys)
             sys_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
-            plot_flow_on_maze_w_fuel(system.maze, sys_cuts)
+            # plot_flow_on_maze_w_fuel(system.maze, sys_cuts)
+            # highlight_path(GD, virtual, cuts)
+            # highlight_path(GD, virtual, [])
+            plot_maze_new_colors_w_fuel(system.maze)
+
 
         annot_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
         return exit_status, annot_cuts, flow, bypass_flow
@@ -46,7 +50,7 @@ def solve_problem_w_fuel(virtual, system, b_pi, virtual_sys, callback = True, pr
         return exit_status, [], [], None
 
 
-def solve_problem(virtual, system, b_pi, virtual_sys, callback = True, print_solution=True, plot_results=True):
+def solve_problem(virtual, system, b_pi, virtual_sys, callback = "exp_cb", print_solution=True, plot_results=True):
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
 
     ti = time.time()
@@ -73,8 +77,13 @@ def solve_problem(virtual, system, b_pi, virtual_sys, callback = True, print_sol
             highlight_cuts(cuts, GD, SD, virtual, virtual_sys)
             sys_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
             plot_flow_on_maze(system.maze, sys_cuts)
+            plot_maze_new_colors(system.maze)
+            highlight_path(GD, virtual, cuts)
+            highlight_path(GD, virtual, [])
+            plot_flow_soln_on_maze(system.maze, sys_cuts)
 
         annot_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
         return exit_status, annot_cuts, flow, bypass_flow
     else:
         return exit_status, [], [], None
+

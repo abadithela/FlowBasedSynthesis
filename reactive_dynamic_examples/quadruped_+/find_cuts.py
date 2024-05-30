@@ -38,7 +38,7 @@ def solve_opt(virtual, system, b_pi, virtual_sys, logger = None, excluded_sols =
     make_history_plots(annot_cuts, GD, system.maze)
     return annot_cuts, GD, SD
 
-def find_cuts(logger = None, excluded_sols=[], load_sol=True):
+def find_cuts(logger = None, excluded_sols=[], load_sol=False):
     intstr = ''.join('%s = %s, ' % (val,key) for (key,val) in INTS.items())
     print('S = '+str(INIT)+', '+intstr+' T = '+str(GOALS))
     logger = setup_logger("quadruped_plus")

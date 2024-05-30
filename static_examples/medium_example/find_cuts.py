@@ -25,10 +25,9 @@ def find_cuts():
     # Logger to save runtimes
     logger = setup_logger("medium_example")
     virtual, system, b_pi, virtual_sys = get_graphs(SYS_FORMULA, TEST_FORMULA, MAZEFILE, INIT, INTS, GOALS, logger, save_figures = True)
-    st()
     exit_status, annot_cuts, flow, bypass = solve_problem(virtual, system, b_pi, virtual_sys)
     print('exit status {0}'.format(exit_status))
-
+    
     logger.print_runtime_latex()
     logger.print_problem_data_latex()
     logger.print_table()

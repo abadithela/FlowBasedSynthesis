@@ -168,11 +168,7 @@ def angle(traces, t):
             angle = dir_dict[map[(traces[t+2].car[0][2],traces[t+2].car[0][1])]]
         elif map[(traces[t-2].car[0][2],traces[t-2].car[0][1])] != '+':
             angle = dir_dict[map[(traces[t-2].car[0][2],traces[t-2].car[0][1])]]
-
     return angle
-
-
-
 
 def make_animation():
     output_dir = os.getcwd()+'/animations/gifs/'

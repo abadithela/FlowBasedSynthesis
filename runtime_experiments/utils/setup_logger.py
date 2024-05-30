@@ -121,14 +121,39 @@ def print_runtime_in_latex_table(folder_name, runtime_data, filename=None):
     header_row = []
     row = []
     for key, data in runtime_data.items():
-        percent_solved = "{:.4f}".format((20 - data["num_not_solved"])/20)
-        graph_rt =  str(format(data["avg_graph_rt"], '.4f')) + "$\,\pm\,$ " + str(format(data["std_graph_rt"], '.4f')) 
-        opt_rt =  str(format(data["avg_opt_rt"], '.4f')) + "$\,\pm\,$" + str(format(data["std_opt_rt"], '.4f'))
-        header_row.extend(["Graph_" + key, "Opt_" + key, "\% Solved_"+key])
-        row.extend([graph_rt, opt_rt, percent_solved])
+        percent_solved = "{:.4f}".format((20 - data["num_not_solved"])/20.0*100)
+        opt_rt =  str(format(data["avg_opt_rt"], '.2f')) + "$\,\pm\,$" + str(format(data["std_opt_rt"], '.2f'))
+        header_row.extend(["Opt_" + key, "\% Solved_"+key])
+        row.extend([opt_rt, percent_solved])
     latex_code += "&"
     latex_code += " & ".join(header_row) + " \\\\\n"
     latex_code += " & ".join(row) + " \\\\\n"
+
+    # printing graph runtimes
+    header_row = []
+    row = []
+    for key, data in runtime_data.items():
+        graph_rt =  str(format(data["avg_graph_rt"], '.3f')) + "$\,\pm\,$ " + str(format(data["std_graph_rt"], '.3f')) 
+        header_row.extend(["Graph_" + key])
+        row.extend([graph_rt])
+    latex_code += "&"
+    latex_code += " & ".join(header_row) + " \\\\\n"
+    latex_code += " & ".join(row) + " \\\\\n"
+
+    # printing percentage that are optimal:
+    header_row = []
+    row = []
+    for key, data in runtime_data.items():
+        if data["num_not_solved"] < 20:
+            percent_solved = "{:.2f}".format(data["num_opt"]/(20.0 - data["num_not_solved"])*100)
+        else:
+            percent_solved = "0"
+        header_row.extend(["Opt_" + key])
+        row.extend([percent_solved])
+    latex_code += "&"
+    latex_code += " & ".join(header_row) + " \\\\\n"
+    latex_code += " & ".join(row) + " \\\\\n"
+
     # latex_code += "\\end{tabular}\n\\caption{Caption here}\n\\label{table:label_here}\n\\end{table}"
     with open(runtime_latex_output_file, "w") as fp:
         fp.write(latex_code)
@@ -151,6 +176,7 @@ def get_runtime_dict_from_log(log_folder, gridsizes):
         runtime_dict["maze_"+str(size)]["graph_data"] = []
         runtime_dict["maze_"+str(size)]["graph_runtimes"] = []
         runtime_dict["maze_"+str(size)]["opt_runtimes"] = []
+        runtime_dict["maze_"+str(size)]["num_opt"] = 0
 
         for inst_no in range(1, 21):
             inst_log = "instance_"+str(inst_no) + "_log"
@@ -161,7 +187,16 @@ def get_runtime_dict_from_log(log_folder, gridsizes):
             if os.path.exists(opt_data_file):
                 with open(opt_data_file, "r") as f:
                     opt_data = json.load(f)
-                runtime_dict["maze_"+str(size)]["opt_runtimes"].append(opt_data["runtime"])
+                
+                # if opt_data["status"] == "not_solved" or opt_data["exit status"] == "not solved"
+                if opt_data["status"] == "not_solved":
+                    runtime_dict["maze_"+str(size)]["num_not_solved"] += 1
+                    runtime_dict["maze_"+str(size)]["opt_runtimes"].append(600) # Timed out
+                else:
+                    runtime_dict["maze_"+str(size)]["opt_runtimes"].append(opt_data["runtime"])
+                
+                if opt_data["status"] == "optimal":
+                    runtime_dict["maze_"+str(size)]["num_opt"] += 1
 
                 with open(prob_data_file) as csv_file:
                     csv_reader = csv.reader(csv_file)
@@ -183,6 +218,8 @@ def get_runtime_dict_from_log(log_folder, gridsizes):
                 runtime_dict["maze_"+str(size)]["num_not_solved"] += 1
                 runtime_dict["maze_"+str(size)]["opt_runtimes"].append(600) # Timed out
                 print("Instance ", inst_no, " of gridsize ", size, " in log folder ", log_folder, " does not exist. Counting as not solved (double-check).")
+
+        # If not solved:
 
         runtime_dict[f"maze_{size}"]["avg_opt_rt"] = np.mean(runtime_dict[f"maze_{size}"]['opt_runtimes'])
         runtime_dict[f"maze_{size}"]["std_opt_rt"] = np.std(runtime_dict[f"maze_{size}"]['opt_runtimes'])

@@ -83,7 +83,7 @@ def run_reactive_instance(mazefile, logger, instance_logger, gridsize, obstacle_
 def static_random_experiments(mazefiles, nruns, obs_coverage=0):
     sys_formula, test_formula = generate_problem_data()
 
-    logger = setup_logger("run_60s_reachability_"+str(NUM_INTS), maze_dims=list(mazefiles.keys()), test_type="static", nruns=nruns, obs_coverage=obs_coverage)
+    logger = setup_logger("run2_60s_reachability_"+str(NUM_INTS), maze_dims=list(mazefiles.keys()), test_type="static", nruns=nruns, obs_coverage=obs_coverage)
     logger.set_formulas(sys_formula, test_formula)
     with open("runtimes.txt", "a") as f:
         f.write(f"Starting static experiments. \n")
@@ -117,7 +117,7 @@ def static_random_experiments(mazefiles, nruns, obs_coverage=0):
 
 def reactive_random_experiments(mazefiles, nruns, obs_coverage=0):
     sys_formula, test_formula = generate_problem_data()
-    logger = setup_logger("run_60s_reachability_"+str(NUM_INTS), maze_dims=list(mazefiles.keys()), test_type="reactive", nruns=nruns, obs_coverage=obs_coverage)
+    logger = setup_logger("run2_60s_reachability_"+str(NUM_INTS), maze_dims=list(mazefiles.keys()), test_type="reactive", nruns=nruns, obs_coverage=obs_coverage)
     logger.set_formulas(sys_formula, test_formula)
     with open("runtimes.txt", "a") as f:
         f.write("Starting reactive experiments. \n")
@@ -156,7 +156,7 @@ if __name__ == "__main__":
     # mazefiles = {3: 'mazes/3x3.txt', 4: 'mazes/4x4.txt',5: 'mazes/5x5.txt'}
     # mazefiles = {3:'mazes/3x3.txt', 4: 'mazes/4x4.txt'}
     mazefiles= {3:'mazes/3x3.txt', 4: 'mazes/4x4.txt', 5: 'mazes/5x5.txt',10: 'mazes/10x10.txt', 15: 'mazes/15x15.txt',20: 'mazes/20x20.txt'}
-    # mazefiles= {20: 'mazes/20x20.txt', 25:'mazes/25x25.txt', 30: 'mazes/30x30.txt'}
+    mazefiles= {25:'mazes/25x25.txt', 30: 'mazes/30x30.txt'}
 
     # mazefiles = {}
     nruns = 20

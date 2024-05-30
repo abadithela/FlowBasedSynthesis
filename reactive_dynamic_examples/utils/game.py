@@ -30,8 +30,8 @@ class Game:
         # self.state_in_G, self.G, self.node_dict = self.setup()
         # self.setup()
         self.manual_trace = None
-        # self.setup_cex()
-        self.setup()
+        self.setup_cex()
+        # self.setup()
 
     def set_manual_trace(self, manual_trace):
         self.manual_trace = manual_trace

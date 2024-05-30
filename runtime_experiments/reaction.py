@@ -57,7 +57,7 @@ def static_random_experiments(mazefiles, nruns, obs_coverage=0):
 
     sys_formula, test_formula, props = generate_specs_and_propositions('reaction', NUM_INTS)
 
-    logger = setup_logger("run_60s_reaction_"+str(NUM_INTS), maze_dims=list(mazefiles.keys()), test_type="static", nruns=nruns, obs_coverage=obs_coverage)
+    logger = setup_logger("run2_60s_reaction_"+str(NUM_INTS), maze_dims=list(mazefiles.keys()), test_type="static", nruns=nruns, obs_coverage=obs_coverage)
     logger.set_formulas(sys_formula, test_formula)
 
     with open("runtimes.txt", "a") as f:
@@ -72,6 +72,7 @@ def static_random_experiments(mazefiles, nruns, obs_coverage=0):
 
             while not feasible_static_grid and static_attempts<50:
                 exit_status, init, ints, goals = run_static_instance(mazefile, logger, static_instance_logger, gridsize)
+                st()
                 grid = (init, ints, goals)
                 static_attempts += 1
                 if exit_status == 'inf':
@@ -91,7 +92,7 @@ def static_random_experiments(mazefiles, nruns, obs_coverage=0):
 
 def reactive_random_experiments(mazefiles, nruns, obs_coverage=0):
     sys_formula, test_formula, props = generate_specs_and_propositions('reaction', NUM_INTS)
-    logger = setup_logger("run_60s_reaction_"+str(NUM_INTS), maze_dims=list(mazefiles.keys()), test_type="reactive", nruns=nruns, obs_coverage=obs_coverage)
+    logger = setup_logger("test_reaction_"+str(NUM_INTS), maze_dims=list(mazefiles.keys()), test_type="reactive", nruns=nruns, obs_coverage=obs_coverage)
     logger.set_formulas(sys_formula, test_formula)
 
     with open("runtimes.txt", "a") as f:
@@ -129,16 +130,16 @@ def reactive_random_experiments(mazefiles, nruns, obs_coverage=0):
 if __name__ == "__main__":
     mazefiles = {3:'mazes/3x3.txt', 4: 'mazes/4x4.txt'}
     mazefiles = {3:'mazes/3x3.txt', 4: 'mazes/4x4.txt', 5: 'mazes/5x5.txt',10: 'mazes/10x10.txt',15: 'mazes/15x15.txt',20: 'mazes/20x20.txt'}
-    # mazefiles = {20: 'mazes/20x20.txt', 25: 'mazes/25x25.txt',30: 'mazes/30x30.txt', }
+    mazefiles = {25: 'mazes/25x25.txt',30: 'mazes/30x30.txt', }
     
     nruns = 20
     obs_coverage = 0
 
-    with open("runtimes.txt", "a") as f:
-        f.write(" =============================== \n")
-        f.write(f"Starting static reaction {NUM_INTS} experiments. \n")
-        f.write(" =============================== \n")
-    static_random_experiments(mazefiles, nruns)
+    # with open("runtimes.txt", "a") as f:
+    #     f.write(" =============================== \n")
+    #     f.write(f"Starting static reaction {NUM_INTS} experiments. \n")
+    #     f.write(" =============================== \n")
+    # static_random_experiments(mazefiles, nruns)
     with open("runtimes.txt", "a") as f:
         f.write(f"Static reaction {NUM_INTS} experiments completed. \n")
         f.write(" =============================== \n")

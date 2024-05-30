@@ -89,6 +89,7 @@ def make_history_plots(cuts, GD, maze):
                         axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='#ffb000', alpha=.3))
                         axs[k].text(x+tilesize*0.4, y+tilesize*0.65, r'$T$', fontsize = 25)
                     elif (j,i) in maze.init:
+                        axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='#dc267f', alpha=.3))
                         axs[k].text(x+tilesize*0.4, y+tilesize*0.65, r'$S$', fontsize = 25)
                     elif maze.map[j,i]==' ':
                         axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='#ffffff', alpha=.2))
@@ -148,6 +149,7 @@ def make_history_plots(cuts, GD, maze):
                     elif i % 2 == j % 2:
                         axs.add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.1))
                         if (j,i) in maze.init:
+                            axs.add_patch(Rectangle((x, y), w, h, fill=True, color='#dc267f', alpha=.3))
                             axs.text(x+tilesize/2, y+tilesize/2, 'S')
                     elif maze.map[j,i]==' ':
                         axs.add_patch(Rectangle((x, y), w, h, fill=True, color='black', alpha=.2))

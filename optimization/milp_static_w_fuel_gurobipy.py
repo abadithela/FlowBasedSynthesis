@@ -236,11 +236,14 @@ def solve_max_gurobi(GD, SD, callback="exp_cb",logger=None, logger_runtime_dict=
         tf = time.time()
         delt = tf - t0
     if callback=="rand_cb":
+        t0 = time.time()
         model.optimize(callback=rand_cb)
+        tf = time.time()
+        delt = tf - t0
     else:
         model.optimize()
 
-    model._data["runtime"] = model.Runtime
+    model._data["runtime"] = delt
     model._data["n_bin_vars"] = model.NumBinVars
     model._data["n_cont_vars"] = model.NumVars - model.NumBinVars
     model._data["n_constrs"] = model.NumConstrs

@@ -245,13 +245,13 @@ def solve_max_gurobi(GD, SD, callback="exp_cb", logger=None, logger_runtime_dict
         tf = time.time()
         delt = tf - t0
 
-    model._data["runtime"] = model.Runtime
+    model._data["runtime"] = delt
     model._data["flow"] = None
     model._data["ncuts"] = None
 
     print('timed opt time: {}'.format(delt))
     print('model run time: {}'.format(model.Runtime))
-    st()
+    
 
     # Storing problem variables:
     model._data["n_bin_vars"] = model.NumBinVars

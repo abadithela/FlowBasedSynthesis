@@ -12,7 +12,7 @@ from optimization.milp_augmented_mixed_gurobipy import solve_max_gurobi as solve
 from optimization.milp_augmented_mixed_gurobipy_w_fuel import solve_max_gurobi as solve_max_gurobi_augmented_w_fuel
 
 from components.setup_graphs import setup_nodes_and_edges
-from components.plotting import highlight_cuts, plot_flow_on_maze, make_history_plots
+from components.plotting import highlight_cuts, plot_flow_on_maze, make_history_plots, plot_maze_new_colors, highlight_path, plot_flow_soln_on_maze
 
 def solve_problem(virtual, system, b_pi, virtual_sys, print_solution=True, plot_results=True, excluded_sols = []):
     GD, SD = setup_nodes_and_edges(virtual, virtual_sys, b_pi)
@@ -39,6 +39,10 @@ def solve_problem(virtual, system, b_pi, virtual_sys, print_solution=True, plot_
             sys_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
             # plot_flow_on_maze(system.maze, sys_cuts)
             make_history_plots(cuts, GD, system.maze)
+            plot_maze_new_colors(system.maze)
+            highlight_path(GD, virtual, cuts)
+            highlight_path(GD, virtual, [])
+            plot_flow_soln_on_maze(system.maze, sys_cuts)
 
         annot_cuts = [(GD.node_dict[cut[0]], GD.node_dict[cut[1]]) for cut in cuts]
         return exit_status, annot_cuts, flow, bypass_flow, GD, SD
@@ -66,6 +70,16 @@ def solve_problem_augmented(virtual, system, b_pi, virtual_sys, static_area, exc
                 print('Cutting {0} to {1}'.format(GD.node_dict[cut[0]], GD.node_dict[cut[1]]))
 
         annot_cuts = [(GD.node_dict[cut[0]], GD.node_dict[cut[1]]) for cut in cuts]
+
+        if plot_results:
+            # highlight_cuts(cuts, GD, SD, virtual, virtual_sys)
+            sys_cuts = [(GD.node_dict[cut[0]][0], GD.node_dict[cut[1]][0]) for cut in cuts]
+            # plot_flow_on_maze(system.maze, sys_cuts)
+            make_history_plots(cuts, GD, system.maze)
+            plot_maze_new_colors(system.maze)
+            highlight_path(GD, virtual, cuts)
+            highlight_path(GD, virtual, [])
+            plot_flow_soln_on_maze(system.maze, sys_cuts)
 
         return exit_status, annot_cuts, flow, bypass_flow, GD, SD
     else:

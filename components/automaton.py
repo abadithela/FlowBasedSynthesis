@@ -71,7 +71,7 @@ class Automaton:
             n = G_agr.get_node(i)
             n.attr['shape'] = 'circle'
             n.attr['fillcolor'] = '#ffffff' # default color white
-            # n.attr['label'] = ''
+            n.attr['label'] = ''
             try:
                 if n in list(self.Acc["sys"]) and n not in list(self.Acc["test"]):
                     n.attr['fillcolor'] = '#ffb000' #yellow

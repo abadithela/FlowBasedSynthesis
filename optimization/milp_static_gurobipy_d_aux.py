@@ -183,7 +183,10 @@ def solve_max_gurobi(GD, SD):
     # model.Params.InfUnbdInfo = 1
 
     # optimize
+    t0 = time.time()
     model.optimize(callback=cb)
+    tf = time.time()
+    delt = tf - t0
 
     if model.status == 4:
         model.Params.DualReductions = 0

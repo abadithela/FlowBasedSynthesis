@@ -126,18 +126,14 @@ class Product(ProductTransys):
             if node in self.sink and node not in self.int:
                 if node_st not in self.plt_sink_only:
                     self.plt_sink_only.append(node_st)
-
             if node in self.int and node not in self.sink:
                 if node_st not in self.plt_int_only:
                     self.plt_int_only.append(node_st)
-
             if node in self.int and node in self.sink:
                 if node_st not in self.plt_sink_int:
                     self.plt_sink_int.append(node_st)
-
             if node in self.src:
                 self.plt_src.append(node_st)
-
 
     def to_graph(self):
         self.G = nx.DiGraph()
@@ -158,7 +154,6 @@ class Product(ProductTransys):
             self.process_nodes([out_node, in_node])
         self.G.add_edges_from(edges)
         nx.set_edge_attributes(self.G, edge_attr)
-
 
     def plot_graph(self, fn):
         # prune_unreachable_nodes()
@@ -182,7 +177,60 @@ class Product(ProductTransys):
                         n.attr['fillcolor'] = color
         G_agr.draw(fn+".pdf",prog='dot')
 
+    def highlight_path(self, annot_cuts, path_s_t, fn):
+        self.identify_SIT()
+        self.to_graph()
+        self.G_initial = nx.DiGraph()
+        s_init = [self.Sdict[i] for i in self.I]
+        init_dfs_tree = [nx.dfs_tree(self.G, source=src) for src in s_init]
+        init_dfs_tree_nodes = []
+        for tree in init_dfs_tree:
+            for n in tree.nodes():
+                if n not in init_dfs_tree_nodes:
+                    init_dfs_tree_nodes.append(n)
+        edges = []
+        for state_act, in_node in self.E.items():
+            out_node = state_act[0]
+            act = state_act[1]
+            s_out = self.Sdict[out_node]
+            s_in = self.Sdict[in_node]
+            edge = (s_out, s_in)
+            if s_out in init_dfs_tree_nodes:
+                edges.append(edge)
+        self.G_initial.add_edges_from(edges)
+
+        # highlight path
+        G_agr = self.base_dot_graph(graph=self.G_initial)
+        highlight_path = []
+        for edge in path_s_t:
+            highlight_path.append((self.Sdict[edge[0]], self.Sdict[edge[1]]))
+        
+        for e in G_agr.edges():
+            edge = G_agr.get_edge(*e)
+            if e in highlight_path:
+                e.attr['color'] = 'blue'
+                e.attr['penwidth'] = 2.0
+                
+        # highlight cut edges
+        graph_cut_edges = []
+        for cut_edge in annot_cuts:
+            # st()
+            for state_act, in_node in self.E.items():
+                out_node = state_act[0]
+                # pdb.set_trace()
+                if out_node == cut_edge[0] and in_node == cut_edge[1]:
+                    graph_cut_edges.append((self.Sdict[out_node], self.Sdict[in_node]))
+        for e in G_agr.edges():
+            edge = G_agr.get_edge(*e)
+            if e in graph_cut_edges:
+                e.attr['color'] = 'red'
+                e.attr['style'] = 'dashed'
+                e.attr['penwidth'] = 2.0
+
+        G_agr.draw(fn+".pdf",prog='dot')
+
     def plot_with_highlighted_edges(self, cuts, fn):
+        # plt.rcParams.update({"text.usetex": True,"font.family": "Helvetica"})
         self.identify_SIT()
         self.to_graph()
         # prune unreachable nodes
@@ -266,7 +314,6 @@ class Product(ProductTransys):
 
     def base_dot_graph(self, graph=None):
         if graph == None:
-            st()
             G_agr = nx.nx_agraph.to_agraph(self.G)
         else:
             G_agr = nx.nx_agraph.to_agraph(graph)
@@ -292,7 +339,6 @@ class Product(ProductTransys):
         return G_agr
 
     def plot_product_dot(self, fn):
-        # st()
         G_agr = self.base_dot_graph(graph=self.G_initial)
         G_agr.draw(fn+"_dot.pdf",prog='dot')
 
@@ -341,11 +387,11 @@ class Product(ProductTransys):
                 edges.append(edge)
         self.G_initial.add_edges_from(edges)
         G_agr = self.base_dot_graph(graph=self.G_initial)
+
         # highlight special nodes
         state_color_dict = {'#ffffff': s_init, '#fe6100': [highlighted_node]}
 
         for color, state_list in state_color_dict.items():
-            # st()
             if not isinstance(state_list, list):
                 state_list = [state_list]
 
@@ -361,6 +407,7 @@ class Product(ProductTransys):
                         # n.attr['color'] = color
                         n.attr['fillcolor'] = color
                         n.attr['edgecolor'] = 'black'
+
         # highlight cut edges
         graph_cut_edges = []
         for cut_edge in cuts:

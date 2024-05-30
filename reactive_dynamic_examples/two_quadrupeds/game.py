@@ -23,6 +23,7 @@ class Game:
         self.inv_node_dict = None
         self.turn = 'sys'
         self.setup_cex(load_sol=False)
+        # self.setup()
 
     def get_optimization_results(self, logger = None):
     # read pickle file - if not there save a new one
@@ -47,7 +48,7 @@ class Game:
         self.tester.set_optimization_results(cuts, GD)
         self.tester.find_controller()
 
-    def setup_cex(self, load_sol = True):
+    def setup_cex(self, load_sol = False):
         self.logger = setup_logger("quadruped_plus")
         # Solving optimization with counterexample guided search.
         strategy_found = False
@@ -62,10 +63,9 @@ class Game:
                 cuts, GD, SD = self.get_optimization_results(logger = self.logger)
             else:
                 cuts, GD, SD = solve_opt(virtual, system, b_pi, virtual_sys, logger = self.logger, excluded_sols = excluded_sols)
-
             graph_cuts = [(GD.inv_node_dict[cut[0]], GD.inv_node_dict[cut[1]]) for cut in cuts]
-
             self.tester.set_optimization_results(cuts, GD, SD)
+            
             try:
                 t0 = time.time()
                 self.tester.find_controller(load_sol = False)

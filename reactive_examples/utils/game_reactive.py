@@ -24,7 +24,9 @@ class Game:
             print('Optimization results loaded successfully')
         except:
             print('Result file not found, running optimization')
-            cuts = find_cuts()
+            annot_cuts, GD, SD = find_cuts()
+            cuts = set([(cut[0][0], cut[1][0]) for cut in annot_cuts])
+
             opt_dict = {'cuts': cuts}
             with open('stored_optimization_result.p', 'wb') as pckl_file:
                 pickle.dump(opt_dict, pckl_file)

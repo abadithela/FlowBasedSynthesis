@@ -293,13 +293,19 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = [], callback="exp
 
     # optimize
     if callback=="exp_cb":
+        t0 = time.time()
         model.optimize(callback=exp_cb)
+        tf = time.time()
+        delt = tf - t0
     if callback=="rand_cb":
+        t0 = time.time()
         model.optimize(callback=rand_cb)
+        tf = time.time()
+        delt = tf - t0
     else:
         model.optimize()
 
-    model._data["runtime"] = model.Runtime
+    model._data["runtime"] = delt
     model._data["flow"] = None
     model._data["ncuts"] = None
 

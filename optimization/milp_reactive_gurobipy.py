@@ -290,7 +290,7 @@ def solve_max_gurobi(GD, SD, excluded_sols = [],callback="exp_cb",logger=None, l
         tf = time.time()
         delt = tf - t0
 
-    model._data["runtime"] = model.Runtime
+    model._data["runtime"] = delt
     model._data["n_bin_vars"] = model.NumBinVars
     model._data["n_cont_vars"] = model.NumVars - model.NumBinVars
     model._data["n_constrs"] = model.NumConstrs
@@ -298,7 +298,7 @@ def solve_max_gurobi(GD, SD, excluded_sols = [],callback="exp_cb",logger=None, l
 
     print('timed opt time: {}'.format(delt))
     print('model run time: {}'.format(model.Runtime))
-    st()
+    
 
     print('Runtime {}'.format(model.Runtime))
     f_vals = []
@@ -336,7 +336,7 @@ def solve_max_gurobi(GD, SD, excluded_sols = [],callback="exp_cb",logger=None, l
                 d_vals.update({(i,j): d[i,j].X})
         except:
             st()
-
+        st()
         flow = sum(f[i,j].X for (i,j) in model_edges if i in src)
         model._data["flow"] = flow
         ncuts = 0
