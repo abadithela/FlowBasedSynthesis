@@ -62,6 +62,7 @@ def plot_flow_on_maze(maze, cuts, num_int=1):
                     ax.add_patch(Rectangle((x, y), w, h, fill=True, color='#ffb000', alpha=.3))
                     ax.text(x+tilesize*0.5, y+tilesize*0.5, r'$T$', fontsize = 25, rotation=0, horizontalalignment='center', verticalalignment='center', rotation_mode='anchor')
                 elif (j,i) in maze.init:
+                    ax.add_patch(Rectangle((x, y), w, h, fill=True, color='#dc267f', alpha=.3))
                     ax.text(x+tilesize*0.5, y+tilesize*0.5, r'$S$', fontsize = 25, rotation=0, horizontalalignment='center', verticalalignment='center', rotation_mode='anchor')
                 elif maze.map[j,i]==' ':
                     ax.add_patch(Rectangle((x, y), w, h, fill=True, color='#ffffff'))
@@ -381,6 +382,7 @@ def make_history_plots(cuts, GD, maze):
                     elif maze.map[j,i]==' ':
                         axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='#ffffff', alpha=.2))
                         if (j,i) in maze.init:
+                            axs[k].add_patch(Rectangle((x, y), w, h, fill=True, color='#dc267f', alpha=.3))
                             axs[k].text(x+tilesize*0.5, y+tilesize*0.5, r'$S$', fontsize = 25,rotation=0, horizontalalignment='center', verticalalignment='center', rotation_mode='anchor')
                     elif maze.map[j,i]=='S' or (j,i) in maze.init:
                         axs[k].text(x+tilesize*0.5, y+tilesize*0.5, r'$S$', fontsize = 25,rotation=0, horizontalalignment='center', verticalalignment='center', rotation_mode='anchor')
