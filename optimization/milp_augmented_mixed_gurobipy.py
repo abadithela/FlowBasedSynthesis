@@ -68,7 +68,7 @@ def exp_cb(model, where):
         model.terminate()
 
 # Gurobi implementation
-def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = [], callback="exp_cb",logger=None, logger_runtime_dict=None):
+def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = [], callback="exp_cb",logger=None, logger_runtime_dict=None, alpha = 0.8):
     cleaned_intermed = [x for x in GD.acc_test if x not in GD.acc_sys]
     # create G and remove self-loops
     G = GD.graph
@@ -80,11 +80,6 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = [], callback="exp
 
     # remove intermediate nodes
     G_minus_I = deepcopy(G)
-    # to_remove = []
-    # for edge in G.edges:
-    #     if edge[0] in cleaned_intermed or edge[1] in cleaned_intermed:
-    #         to_remove.append(edge)
-    # G_minus_I.remove_edges_from(to_remove)
     G_minus_I.remove_nodes_from(cleaned_intermed)
 
     # create S and remove self-loops
@@ -139,9 +134,12 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = [], callback="exp
     term = sum(f[i,j] for (i, j) in model_edges if i in src)
     ncuts = sum(d[i,j] for (i, j) in model_edges)
     ncuts_weighted = sum(inc[i] for i in model_nodes)
-    regularizer = 1/len(model_edges)
+    n_nodes = len(model_nodes)
+    n_edges = len(model_edges)
+    
+    model.setObjective(term - 1/(1+n_edges)*ncuts - 1/((1+n_edges)*n_nodes)*ncuts_weighted, GRB.MAXIMIZE)
 
-    model.setObjective(term - regularizer*ncuts_weighted - regularizer*regularizer*ncuts, GRB.MAXIMIZE)
+    # model.setObjective(term - alpha*regularizer_nodes*ncuts_weighted - (1-alpha)*regularizer_edges*ncuts, GRB.MAXIMIZE)
 
     # Nonnegativity - lower bounds
     model.addConstrs((d[i, j] >= 0 for (i,j) in model_edges), name='d_nonneg')
@@ -271,7 +269,7 @@ def solve_max_gurobi(GD, SD, static_area = [], excluded_sols = [], callback="exp
     # --- Exclude specific solutions that cannot be realized
     # st()
     for excluded_sol in excluded_sols:
-        model.addConstr(sum(d[i, j] for (i,j) in excluded_sol) <= len(excluded_sol)-1)
+        model.addConstr(sum(d[i, j] for (i,j) in model_edges) - sum(d[i, j] for (i,j) in excluded_sol) >= 1)
     model._data["n_cex"] = len(excluded_sols)
 
     # model.Params.InfUnbdInfo = 1

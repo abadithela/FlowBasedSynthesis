@@ -1,5 +1,5 @@
 '''
-Solving a grid layout with three intermediate nodes (1, 2, and 3) using the
+Solving a grid layout with two intermediate nodes (1, and 2) using the
 MILP for reactive obstacles for the following grid:
 
 -----------
